@@ -118,12 +118,14 @@ function hexToBytes(hex: string): Uint8Array {
 
 /**
  * Submit a write tx, wait for FINALIZED, and return the tx hash.
- * Use when you don't need the contract's return value.
+ * strictWait = true (default for critical steps): throws if finalization fails.
+ * strictWait = false: logs warning and continues (for non-critical steps).
  */
 export async function glWriteAndWait(
   method: string,
   args: string[],
-  account: string
+  account: string,
+  strictWait = true
 ): Promise<string> {
   await ensureGenLayerChain();
   const client = getBrowserClient(account);
@@ -141,7 +143,15 @@ export async function glWriteAndWait(
       status: TransactionStatus.FINALIZED,
     });
   } catch (waitErr) {
-    console.warn('waitForTransactionReceipt warning (tx submitted):', waitErr);
+    if (strictWait) {
+      // For critical steps (run_evaluation, finalize_score) we must not proceed
+      // if finalization hasn't confirmed — doing so causes "No evaluation found"
+      throw new Error(
+        `Transaction submitted (${txHash}) but did not finalize in time for ${method}. ` +
+        `Please wait a moment and try again.`
+      );
+    }
+    console.warn(`waitForTransactionReceipt warning for ${method}:`, waitErr);
   }
 
   return txHash as string;
@@ -332,15 +342,63 @@ export async function contractLockProject(account: string, projectId: string): P
 }
 
 export async function contractSubmitEvaluation(account: string, projectId: string): Promise<string> {
-  return glWrite('submit_evaluation', [projectId], account);
+  // submit_evaluation just changes status to "evaluating" — we wait for it too
+  return glWriteAndWait('submit_evaluation', [projectId], account, true);
 }
 
 export async function contractRunEvaluation(account: string, projectId: string): Promise<string> {
-  return glWriteAndWait('run_evaluation', [projectId], account);
+  // run_evaluation is the slowest step — AI agents + validator consensus.
+  // Must fully finalize before finalize_score is called.
+  return glWriteAndWait('run_evaluation', [projectId], account, true);
+}
+
+/**
+ * Verify the evaluation exists on-chain before calling finalize_score.
+ * Polls get_evaluation up to 10 times with 3s intervals.
+ */
+async function waitForEvaluationOnChain(projectId: string): Promise<void> {
+  const rpc = process.env.NEXT_PUBLIC_GENLAYER_RPC_URL || 'https://studio.genlayer.com/api';
+  const CONTRACT = process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || '0x972205A6d14437bacd49a59317EAB63d0599f4ed';
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      // Use gen_call to read get_evaluation(project_id)
+      const callPayload = {
+        jsonrpc: '2.0', id: 1,
+        method: 'gen_call',
+        params: [{
+          to: CONTRACT,
+          data: JSON.stringify({ method: 'get_evaluation', args: [projectId] }),
+          type: 'read',
+        }],
+      };
+      const res = await fetch(rpc, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(callPayload),
+      });
+      const data = await res.json() as { result?: string };
+      const raw = data?.result;
+      if (raw && raw !== '{}' && raw.length > 2) {
+        // Evaluation exists
+        return;
+      }
+    } catch { /* retry */ }
+
+    // Wait 3 seconds between checks
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+
+  throw new Error(
+    'run_evaluation completed but the evaluation result is not yet readable. ' +
+    'Please wait 30 seconds and try clicking "Submit for Evaluation" again from the project page.'
+  );
 }
 
 export async function contractFinalizeScore(account: string, projectId: string): Promise<string> {
-  return glWriteAndWait('finalize_score', [projectId], account);
+  // Guard: confirm evaluation is on-chain before finalizing
+  await waitForEvaluationOnChain(projectId);
+  return glWriteAndWait('finalize_score', [projectId], account, true);
 }
 
 export async function contractRequestReevaluation(account: string, projectId: string): Promise<string> {
