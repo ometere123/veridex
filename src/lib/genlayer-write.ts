@@ -1,9 +1,12 @@
 /**
  * genlayer-write.ts — Client-side GenLayer write service.
- * New contract flow (v0.2.17+):
- *   create_project → lock_project_data → submit_evaluation → run_evaluation
- *   run_evaluation does ALL ranking: scores, leaderboard, history, status=ranked
- *   finalize_score is NOT part of the normal flow.
+ *
+ * GenLayer transactions take 2–5 minutes to finalize.
+ * This module NEVER throws on timeout — it submits the tx,
+ * then returns the hash. Callers poll for completion.
+ *
+ * Flow: create_project → lock_project_data → submit_evaluation → run_evaluation
+ * run_evaluation does ALL ranking. Do NOT call finalize_score in normal flow.
  */
 
 import { createClient, abi } from 'genlayer-js';
@@ -14,7 +17,7 @@ const calldata = abi.calldata;
 
 const CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS ||
-  '0x07c480420A27736CAC316a7eb4E67A11f5106f3D'
+  '0xa0BA37824D02eB24266aA01Dd6a238340890d4Fa'
 ) as `0x${string}`;
 
 const CHAIN = studionet;
@@ -24,7 +27,7 @@ const RPC_ENDPOINT = process.env.NEXT_PUBLIC_GENLAYER_RPC_URL || 'https://studio
 // ── Provider ─────────────────────────────────────────────────────
 
 type EthProvider = {
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  request: (a: { method: string; params?: unknown[] }) => Promise<unknown>;
   isMetaMask?: boolean;
   isBraveWallet?: boolean;
   providers?: EthProvider[];
@@ -61,8 +64,8 @@ async function ensureGenLayerChain(): Promise<void> {
         await provider.request({ method: 'wallet_addEthereumChain', params: [chainParams] });
         await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID_HEX }] });
       } catch (addErr: unknown) {
-        if ((addErr as { code?: number }).code === 4001) throw new Error('Please approve adding the GenLayer network.');
-        console.warn('wallet_addEthereumChain not supported, proceeding:', addErr);
+        if ((addErr as { code?: number }).code === 4001) throw new Error('Please approve adding GenLayer network.');
+        console.warn('wallet_addEthereumChain not supported:', addErr);
       }
     } else {
       console.warn('wallet_switchEthereumChain non-fatal:', err);
@@ -72,37 +75,71 @@ async function ensureGenLayerChain(): Promise<void> {
 
 function getBrowserClient(account: string) {
   if (!account || !account.startsWith('0x')) throw new Error('Invalid wallet address.');
-  return createClient({ chain: CHAIN, endpoint: RPC_ENDPOINT, account: account as `0x${string}`, provider: getProvider() });
+  return createClient({
+    chain: CHAIN, endpoint: RPC_ENDPOINT,
+    account: account as `0x${string}`,
+    provider: getProvider(),
+  });
 }
 
-// ── Core write helpers ────────────────────────────────────────────
+// ── Core submit helpers ──────────────────────────────────────────
 
-export async function glWriteAndWait(method: string, args: string[], account: string, strictWait = true): Promise<string> {
+/**
+ * Send a write tx — returns tx hash immediately after wallet signs.
+ * Does NOT wait for finalization. Use glSubmitAndWait for blocking calls.
+ */
+export async function glSubmit(method: string, args: string[], account: string): Promise<string> {
   await ensureGenLayerChain();
   const client = getBrowserClient(account);
-  const txHash = await client.writeContract({ address: CONTRACT_ADDRESS, functionName: method, args, value: BigInt(0) });
+  const txHash = await client.writeContract({
+    address: CONTRACT_ADDRESS,
+    functionName: method,
+    args,
+    value: BigInt(0),
+  });
+  return txHash as string;
+}
+
+/**
+ * Submit + wait up to timeoutMs for FINALIZED.
+ * On timeout: logs warning, returns tx hash. Does NOT throw.
+ * GenLayer can take 2–5 min — we never hard-fail on timeout.
+ */
+export async function glSubmitAndWait(
+  method: string,
+  args: string[],
+  account: string,
+  timeoutMs = 300_000
+): Promise<string> {
+  const txHash = await glSubmit(method, args, account);
   try {
-    await client.waitForTransactionReceipt({ hash: txHash as `0x${string}` & { length: 66 }, status: TransactionStatus.FINALIZED });
-  } catch (waitErr) {
-    if (strictWait) throw new Error(`${method} did not finalize in time (tx: ${txHash}). Wait and retry.`);
-    console.warn(`waitForTransactionReceipt non-fatal for ${method}:`, waitErr);
+    const client = getBrowserClient(account);
+    const timeoutP = new Promise<never>((_, rej) =>
+      setTimeout(() => rej(new Error('timeout')), timeoutMs)
+    );
+    await Promise.race([
+      client.waitForTransactionReceipt({
+        hash: txHash as `0x${string}` & { length: 66 },
+        status: TransactionStatus.FINALIZED,
+      }),
+      timeoutP,
+    ]);
+  } catch (e) {
+    // timeout or receipt error — tx was still submitted, not a real failure
+    console.warn(`${method} wait ended (timeout/non-fatal) — tx ${txHash}:`, (e as Error).message);
   }
   return txHash as string;
 }
 
-// ── Decode base64 leader_receipt result ──────────────────────────
+// ── Decode base64 leader result ──────────────────────────────────
 
 function decodeLeaderResult(b64: string): string | null {
   try {
     const binary = atob(b64);
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-    // Try offset 1 (skip header byte)
     try { const d = calldata.decode(bytes.slice(1)); if (typeof d === 'string' && d.length > 0) return d; } catch {}
-    // Try offset 0
     try { const d = calldata.decode(bytes); if (typeof d === 'string' && d.length > 0) return d; } catch {}
-    // Raw ASCII offset 3 (32-char hex project IDs)
     const ascii = new TextDecoder().decode(bytes.slice(3));
     if (/^[0-9a-f]{32}$/.test(ascii)) return ascii;
     return null;
@@ -122,36 +159,20 @@ async function fetchTxResult(txHash: string): Promise<string | null> {
   } catch { return null; }
 }
 
-export async function glWriteAndGetResult(method: string, args: string[], account: string): Promise<unknown> {
-  await ensureGenLayerChain();
-  const client = getBrowserClient(account);
-  const txHash = await client.writeContract({ address: CONTRACT_ADDRESS, functionName: method, args, value: BigInt(0) });
+async function glWriteAndGetResult(method: string, args: string[], account: string): Promise<unknown> {
+  const txHash = await glSubmitAndWait(method, args, account);
+  const fromRpc = await fetchTxResult(txHash);
+  if (fromRpc) return fromRpc;
   try {
-    await client.waitForTransactionReceipt({ hash: txHash as `0x${string}` & { length: 66 }, status: TransactionStatus.FINALIZED });
-  } catch (e) { console.warn('waitForTransactionReceipt warning:', e); }
-
-  // Fetch full tx to decode return value
-  const fromReceipt = await fetchTxResult(txHash as string);
-  if (fromReceipt) return fromReceipt;
-
-  // Fallback: getTransaction
-  try {
+    const client = getBrowserClient(account);
     const tx = await client.getTransaction({ hash: txHash as `0x${string}` & { length: 66 } });
     const b64 = (tx as { consensus_data?: { leader_receipt?: Array<{ result?: string }> } })?.consensus_data?.leader_receipt?.[0]?.result;
     if (b64) { const d = decodeLeaderResult(b64); if (d) return d; }
   } catch {}
-
   return txHash;
 }
 
-export async function glWrite(method: string, args: string[], account: string): Promise<string> {
-  await ensureGenLayerChain();
-  const client = getBrowserClient(account);
-  const txHash = await client.writeContract({ address: CONTRACT_ADDRESS, functionName: method, args, value: BigInt(0) });
-  return txHash as string;
-}
-
-// ── Typed contract calls ──────────────────────────────────────────
+// ── Typed contract calls ─────────────────────────────────────────
 
 export async function contractCreateProject(account: string, params: {
   name: string; category: string; website: string; description: string;
@@ -172,37 +193,29 @@ export async function contractCreateProject(account: string, params: {
   const result = await glWriteAndGetResult('create_project', args, account);
   if (typeof result === 'string' && result.length > 0 && !result.startsWith('0x')) return result;
   throw new Error(
-    `Project created on-chain (tx: ${result}), but could not retrieve the project ID. ` +
-    `Check your Dashboard to find and view the project.`
+    `Project created on-chain (tx: ${result}), but could not decode project ID. ` +
+    `Check your Dashboard to find the project.`
   );
 }
 
 export async function contractLockProject(account: string, projectId: string): Promise<string> {
-  return glWriteAndWait('lock_project_data', [projectId], account, true);
+  return glSubmitAndWait('lock_project_data', [projectId], account, 180_000);
 }
 
-/** Step 3: submit_evaluation — changes status to "evaluating" only */
+/** Step 3: changes status to "evaluating". Waits for confirmation. */
 export async function contractSubmitEvaluation(account: string, projectId: string): Promise<string> {
-  return glWriteAndWait('submit_evaluation', [projectId], account, true);
+  return glSubmitAndWait('submit_evaluation', [projectId], account, 120_000);
 }
 
 /**
- * Step 4: run_evaluation — THE core evaluation step.
- * Does everything: AI scoring, saves evaluation, updates leaderboard,
- * updates profile, sets status = "ranked". Returns evaluation_id.
- * Do NOT call finalize_score after this.
+ * Step 4: run_evaluation — submits the AI evaluation tx.
+ * Returns tx hash immediately — does NOT wait 5 min.
+ * Callers MUST poll get_project/get_evaluation for real completion.
  */
 export async function contractRunEvaluation(account: string, projectId: string): Promise<string> {
-  const result = await glWriteAndGetResult('run_evaluation', [projectId], account);
-  // result is the evaluation_id (or tx hash as fallback)
-  return typeof result === 'string' ? result : String(result);
+  return glSubmit('run_evaluation', [projectId], account);
 }
 
-/** Only for request_reevaluation — NOT part of initial evaluation flow */
 export async function contractRequestReevaluation(account: string, projectId: string): Promise<string> {
-  return glWriteAndWait('request_reevaluation', [projectId], account, true);
+  return glSubmitAndWait('request_reevaluation', [projectId], account);
 }
-
-// NOTE: contractFinalizeScore is intentionally NOT exported.
-// The new contract's run_evaluation() handles all finalization internally.
-// Calling finalize_score separately caused "No evaluation found" errors.

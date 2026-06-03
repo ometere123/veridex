@@ -171,12 +171,14 @@ class AlphaRank(gl.Contract):
 
         assert project["status"] == "evaluating", "Project not in evaluating state"
 
-        technical_score = self._evaluate_technical_quality(project)
-        team_score = self._evaluate_team_quality(project)
-        market_fit_score = self._evaluate_market_fit(project)
-        security_score = self._evaluate_security(project)
-        execution_score = self._evaluate_execution(project)
-        token_utility_score = self._evaluate_token_utility(project)
+        scores = self._evaluate_all_scores(project)
+
+        technical_score = self._bounded_score(scores.get("technical_score", 50))
+        team_score = self._bounded_score(scores.get("team_score", 50))
+        market_fit_score = self._bounded_score(scores.get("market_fit_score", 50))
+        security_score = self._bounded_score(scores.get("security_score", 50))
+        execution_score = self._bounded_score(scores.get("execution_score", 50))
+        token_utility_score = self._bounded_score(scores.get("token_utility_score", 50))
 
         overall_score = self._calculate_final_score(
             technical_score,
@@ -202,22 +204,22 @@ class AlphaRank(gl.Contract):
             "token_utility_score": token_utility_score,
             "overall_score": overall_score,
             "tier": tier,
-            "confidence": 85,
-            "strengths": self._extract_strengths(
+            "confidence": self._bounded_score(scores.get("confidence", 85)),
+            "strengths": self._safe_list(scores.get("strengths", []), self._extract_strengths(
                 project,
                 technical_score,
                 team_score,
                 market_fit_score,
                 security_score,
-            ),
-            "weaknesses": self._extract_weaknesses(
+            )),
+            "weaknesses": self._safe_list(scores.get("weaknesses", []), self._extract_weaknesses(
                 project,
                 technical_score,
                 team_score,
                 market_fit_score,
                 security_score,
-            ),
-            "recommendations": self._generate_recommendations(project, overall_score),
+            )),
+            "recommendations": self._safe_list(scores.get("recommendations", []), self._generate_recommendations(project, overall_score)),
             "evaluation_hash": self._generate_evidence_hash({
                 "project_id": project_id,
                 "overall_score": overall_score,
@@ -384,164 +386,152 @@ class AlphaRank(gl.Contract):
         })
 
     # ──────────────────────────────────────────
-    # Internal AI Evaluation Functions
+    # AI Scoring With Custom Validator
     # ──────────────────────────────────────────
 
-    def _evaluate_technical_quality(self, project: dict) -> int:
-        github_repos = project.get("github_repos", [])
-        whitepaper_url = project.get("whitepaper_url", "")
-        docs_url = project.get("docs_url", "")
-        description = project.get("description", "")
+    def _evaluate_all_scores(self, project: dict) -> dict:
+        project_context = json.dumps(project, sort_keys=True)
 
         prompt = f"""
-You are a senior blockchain protocol engineer conducting a technical evaluation of a crypto project.
+You are AlphaRank, an AI crypto project evaluation engine.
 
-Project Name: {project.get('name', '')}
-Description: {description}
-Whitepaper: {whitepaper_url}
-Documentation: {docs_url}
-GitHub Repositories: {', '.join(github_repos) if github_repos else 'None provided'}
-Category: {project.get('category', '')}
+Evaluate the project below and return ONLY valid JSON.
 
-Evaluate the TECHNICAL QUALITY score from 0 to 100 based on:
-1. Protocol architecture clarity
-2. Technical innovation
-3. Documentation completeness
-4. Repository transparency, if provided
-5. Feasibility relative to the stated category
+Project JSON:
+{project_context}
 
-Return ONLY JSON:
-{{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
+Score each category from 0 to 100:
+
+1. technical_score:
+   - protocol architecture clarity
+   - technical innovation
+   - documentation completeness
+   - repository transparency
+   - feasibility
+
+2. team_score:
+   - team completeness
+   - verifiable credentials
+   - relevant experience
+   - transparency
+   - backer credibility
+
+3. market_fit_score:
+   - problem clarity
+   - market need
+   - differentiation
+   - traction signals
+   - go-to-market credibility
+
+4. security_score:
+   - audit coverage
+   - audit credibility
+   - bug bounty
+   - open-source transparency
+   - vulnerability handling
+
+5. execution_score:
+   - roadmap specificity
+   - shipped product evidence
+   - repository activity
+   - website/app completeness
+   - delivery credibility
+
+6. token_utility_score:
+   - token utility clarity
+   - token necessity
+   - supply/emission logic
+   - value capture
+   - alignment with protocol usage
+
+Return ONLY this JSON shape:
+{{
+  "technical_score": <integer 0-100>,
+  "team_score": <integer 0-100>,
+  "market_fit_score": <integer 0-100>,
+  "security_score": <integer 0-100>,
+  "execution_score": <integer 0-100>,
+  "token_utility_score": <integer 0-100>,
+  "confidence": <integer 0-100>,
+  "strengths": ["short strength 1", "short strength 2"],
+  "weaknesses": ["short weakness 1", "short weakness 2"],
+  "recommendations": ["short recommendation 1", "short recommendation 2"]
+}}
 """
-        result = gl.eq_principle.prompt_non_comparative(prompt)
-        parsed = self._safe_json_loads(result, {"score": 50})
-        return self._bounded_score(parsed.get("score", 50))
 
-    def _evaluate_team_quality(self, project: dict) -> int:
-        team = project.get("team", [])
-        investors = project.get("investors", [])
+        def leader_fn():
+            response = gl.nondet.exec_prompt(prompt)
+            parsed = self._safe_json_loads(response, self._default_score_payload())
+            return self._normalize_score_payload(parsed)
 
-        prompt = f"""
-You are evaluating the team quality of a crypto project for AlphaRank.
+        def validator_fn(leader_result) -> bool:
+            if not isinstance(leader_result, gl.vm.Return):
+                return False
 
-Project Name: {project.get('name', '')}
-Category: {project.get('category', '')}
-Team Members: {json.dumps(team)}
-Investors/Backers: {', '.join(investors) if investors else 'Not disclosed'}
+            leader_data = self._normalize_score_payload(leader_result.calldata)
+            validator_data = leader_fn()
 
-Evaluate the TEAM QUALITY score from 0 to 100 based on:
-1. Team completeness
-2. Verifiable credentials
-3. Relevant experience
-4. Transparency
-5. Investor or backer credibility
+            return self._scores_close_enough(leader_data, validator_data)
 
-Return ONLY JSON:
-{{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
-"""
-        result = gl.eq_principle.prompt_non_comparative(prompt)
-        parsed = self._safe_json_loads(result, {"score": 50})
-        return self._bounded_score(parsed.get("score", 50))
+        result = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
+        return self._normalize_score_payload(result)
 
-    def _evaluate_market_fit(self, project: dict) -> int:
-        prompt = f"""
-You are a crypto market analyst evaluating market fit for AlphaRank.
+    def _scores_close_enough(self, leader_data: dict, validator_data: dict) -> bool:
+        keys = [
+            "technical_score",
+            "team_score",
+            "market_fit_score",
+            "security_score",
+            "execution_score",
+            "token_utility_score",
+        ]
 
-Project Name: {project.get('name', '')}
-Category: {project.get('category', '')}
-Description: {project.get('description', '')}
-Website: {project.get('website', '')}
-Partnerships: {', '.join(project.get('partnerships', [])) if project.get('partnerships') else 'None disclosed'}
-Ecosystem Integrations: {', '.join(project.get('ecosystem_integrations', [])) if project.get('ecosystem_integrations') else 'None'}
-Roadmap: {project.get('roadmap', '')[:600]}
+        tolerance = 15
 
-Evaluate MARKET FIT score from 0 to 100 based on:
-1. Problem clarity
-2. Market need
-3. Competitive differentiation
-4. Traction signals
-5. Go-to-market credibility
+        for key in keys:
+            leader_score = self._bounded_score(leader_data.get(key, 50))
+            validator_score = self._bounded_score(validator_data.get(key, 50))
 
-Return ONLY JSON:
-{{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
-"""
-        result = gl.eq_principle.prompt_non_comparative(prompt)
-        parsed = self._safe_json_loads(result, {"score": 50})
-        return self._bounded_score(parsed.get("score", 50))
+            # If either validator thinks a category is extremely weak,
+            # do not allow tolerance to hide a rejection-level score.
+            if leader_score <= 10 or validator_score <= 10:
+                if abs(leader_score - validator_score) > 5:
+                    return False
+            else:
+                if abs(leader_score - validator_score) > tolerance:
+                    return False
 
-    def _evaluate_security(self, project: dict) -> int:
-        audits = project.get("audits", [])
-        bug_bounty = project.get("bug_bounty_url", "")
+        return True
 
-        prompt = f"""
-You are a blockchain security expert evaluating security posture for AlphaRank.
+    def _default_score_payload(self) -> dict:
+        return {
+            "technical_score": 50,
+            "team_score": 50,
+            "market_fit_score": 50,
+            "security_score": 50,
+            "execution_score": 50,
+            "token_utility_score": 50,
+            "confidence": 70,
+            "strengths": [],
+            "weaknesses": [],
+            "recommendations": [],
+        }
 
-Project Name: {project.get('name', '')}
-Audit Reports: {json.dumps(audits)}
-Bug Bounty Program: {bug_bounty if bug_bounty else 'None'}
-GitHub Repos: {', '.join(project.get('github_repos', [])) if project.get('github_repos') else 'None'}
+    def _normalize_score_payload(self, data) -> dict:
+        parsed = data if isinstance(data, dict) else self._default_score_payload()
 
-Evaluate SECURITY score from 0 to 100 based on:
-1. Audit coverage
-2. Audit firm credibility
-3. Bug bounty presence
-4. Open-source transparency
-5. Disclosed vulnerability handling
-
-Return ONLY JSON:
-{{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
-"""
-        result = gl.eq_principle.prompt_non_comparative(prompt)
-        parsed = self._safe_json_loads(result, {"score": 50})
-        return self._bounded_score(parsed.get("score", 50))
-
-    def _evaluate_token_utility(self, project: dict) -> int:
-        tokenomics = project.get("tokenomics", {})
-
-        prompt = f"""
-You are a tokenomics expert evaluating token utility for AlphaRank.
-
-Project Name: {project.get('name', '')}
-Category: {project.get('category', '')}
-Tokenomics: {json.dumps(tokenomics)}
-
-Evaluate TOKEN UTILITY score from 0 to 100 based on:
-1. Token utility clarity
-2. Whether a token is necessary
-3. Supply and emission logic
-4. Value capture
-5. Alignment with protocol usage
-
-Return ONLY JSON:
-{{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
-"""
-        result = gl.eq_principle.prompt_non_comparative(prompt)
-        parsed = self._safe_json_loads(result, {"score": 50})
-        return self._bounded_score(parsed.get("score", 50))
-
-    def _evaluate_execution(self, project: dict) -> int:
-        prompt = f"""
-You are evaluating execution progress and delivery capability for AlphaRank.
-
-Project Name: {project.get('name', '')}
-Roadmap: {project.get('roadmap', '')[:600]}
-Website: {project.get('website', '')}
-GitHub Repos: {', '.join(project.get('github_repos', [])) if project.get('github_repos') else 'None'}
-Description: {project.get('description', '')[:500]}
-
-Evaluate EXECUTION PROGRESS score from 0 to 100 based on:
-1. Roadmap specificity
-2. Evidence of shipped product
-3. Repository activity, if available
-4. Website or app completeness
-5. Delivery credibility
-
-Return ONLY JSON:
-{{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
-"""
-        result = gl.eq_principle.prompt_non_comparative(prompt)
-        parsed = self._safe_json_loads(result, {"score": 50})
-        return self._bounded_score(parsed.get("score", 50))
+        return {
+            "technical_score": self._bounded_score(parsed.get("technical_score", 50)),
+            "team_score": self._bounded_score(parsed.get("team_score", 50)),
+            "market_fit_score": self._bounded_score(parsed.get("market_fit_score", 50)),
+            "security_score": self._bounded_score(parsed.get("security_score", 50)),
+            "execution_score": self._bounded_score(parsed.get("execution_score", 50)),
+            "token_utility_score": self._bounded_score(parsed.get("token_utility_score", 50)),
+            "confidence": self._bounded_score(parsed.get("confidence", 70)),
+            "strengths": self._safe_list(parsed.get("strengths", []), []),
+            "weaknesses": self._safe_list(parsed.get("weaknesses", []), []),
+            "recommendations": self._safe_list(parsed.get("recommendations", []), []),
+        }
 
     # ──────────────────────────────────────────
     # Score / Ranking Helpers
@@ -857,6 +847,14 @@ Return ONLY JSON:
             return {}
         except Exception:
             return {}
+
+    def _safe_list(self, value, fallback: list) -> list:
+        if isinstance(value, list):
+            cleaned = []
+            for item in value:
+                cleaned.append(self._clean_text(str(item), 180))
+            return cleaned[:5]
+        return fallback[:5]
 
     def _clean_text(self, value: str, max_len: int) -> str:
         if value is None:
