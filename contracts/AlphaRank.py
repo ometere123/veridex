@@ -7,9 +7,6 @@ import hashlib
 
 
 class AlphaRank(gl.Contract):
-    # ──────────────────────────────────────────
-    # Storage
-    # ──────────────────────────────────────────
     owner: str
     project_count: u256
     evaluation_count: u256
@@ -416,12 +413,7 @@ Evaluate the TECHNICAL QUALITY score from 0 to 100 based on:
 Return ONLY JSON:
 {{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
 """
-
-        result = gl.eq_principle.prompt_non_comparative(
-            prompt,
-            lambda output: self._validate_score_output(output),
-        )
-
+        result = gl.eq_principle.prompt_non_comparative(prompt)
         parsed = self._safe_json_loads(result, {"score": 50})
         return self._bounded_score(parsed.get("score", 50))
 
@@ -447,12 +439,7 @@ Evaluate the TEAM QUALITY score from 0 to 100 based on:
 Return ONLY JSON:
 {{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
 """
-
-        result = gl.eq_principle.prompt_non_comparative(
-            prompt,
-            lambda output: self._validate_score_output(output),
-        )
-
+        result = gl.eq_principle.prompt_non_comparative(prompt)
         parsed = self._safe_json_loads(result, {"score": 50})
         return self._bounded_score(parsed.get("score", 50))
 
@@ -478,12 +465,7 @@ Evaluate MARKET FIT score from 0 to 100 based on:
 Return ONLY JSON:
 {{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
 """
-
-        result = gl.eq_principle.prompt_non_comparative(
-            prompt,
-            lambda output: self._validate_score_output(output),
-        )
-
+        result = gl.eq_principle.prompt_non_comparative(prompt)
         parsed = self._safe_json_loads(result, {"score": 50})
         return self._bounded_score(parsed.get("score", 50))
 
@@ -509,12 +491,7 @@ Evaluate SECURITY score from 0 to 100 based on:
 Return ONLY JSON:
 {{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
 """
-
-        result = gl.eq_principle.prompt_non_comparative(
-            prompt,
-            lambda output: self._validate_score_output(output),
-        )
-
+        result = gl.eq_principle.prompt_non_comparative(prompt)
         parsed = self._safe_json_loads(result, {"score": 50})
         return self._bounded_score(parsed.get("score", 50))
 
@@ -538,12 +515,7 @@ Evaluate TOKEN UTILITY score from 0 to 100 based on:
 Return ONLY JSON:
 {{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
 """
-
-        result = gl.eq_principle.prompt_non_comparative(
-            prompt,
-            lambda output: self._validate_score_output(output),
-        )
-
+        result = gl.eq_principle.prompt_non_comparative(prompt)
         parsed = self._safe_json_loads(result, {"score": 50})
         return self._bounded_score(parsed.get("score", 50))
 
@@ -567,12 +539,7 @@ Evaluate EXECUTION PROGRESS score from 0 to 100 based on:
 Return ONLY JSON:
 {{"score": <integer 0-100>, "reasoning": "<short explanation>"}}
 """
-
-        result = gl.eq_principle.prompt_non_comparative(
-            prompt,
-            lambda output: self._validate_score_output(output),
-        )
-
+        result = gl.eq_principle.prompt_non_comparative(prompt)
         parsed = self._safe_json_loads(result, {"score": 50})
         return self._bounded_score(parsed.get("score", 50))
 
@@ -617,9 +584,7 @@ Return ONLY JSON:
     def _append_evaluation_history(self, project_id: str, evaluation: dict) -> None:
         history_raw = self.evaluation_history.get(project_id)
         history = json.loads(history_raw) if history_raw else []
-
         history.append(evaluation)
-
         self.evaluation_history[project_id] = json.dumps(history)
 
     def _update_historical_scores(
@@ -647,7 +612,6 @@ Return ONLY JSON:
         }
 
         history.append(entry)
-
         self.historical_scores[project_id] = json.dumps(history)
 
     def _update_project_reputation(
@@ -723,7 +687,6 @@ Return ONLY JSON:
 
         board = [e for e in board if e.get("project_id") != project_id]
         board.append(entry)
-
         board.sort(key=lambda x: x.get("overall_score", 0), reverse=True)
 
         rank = 0
@@ -820,9 +783,7 @@ Return ONLY JSON:
 
     def _load_project(self, project_id: str) -> dict:
         data = self.projects.get(project_id)
-
         assert data is not None, "Project not found"
-
         return json.loads(data)
 
     def _generate_project_id(self, owner: str, name: str) -> str:
@@ -837,14 +798,6 @@ Return ONLY JSON:
         serialized = json.dumps(data, sort_keys=True)
         return "0x" + hashlib.sha256(serialized.encode()).hexdigest()
 
-    def _validate_score_output(self, output: str) -> bool:
-        try:
-            parsed = json.loads(output)
-            score = parsed.get("score")
-            return isinstance(score, (int, float)) and 0 <= score <= 100
-        except Exception:
-            return False
-
     def _bounded_score(self, value) -> int:
         try:
             score = int(value)
@@ -858,9 +811,26 @@ Return ONLY JSON:
 
         return score
 
-    def _safe_json_loads(self, raw: str, fallback):
+    def _safe_json_loads(self, raw, fallback):
         try:
-            return json.loads(raw)
+            if isinstance(raw, dict):
+                return raw
+
+            text = str(raw).strip()
+
+            try:
+                return json.loads(text)
+            except Exception:
+                pass
+
+            start = text.find("{")
+            end = text.rfind("}")
+
+            if start != -1 and end != -1 and end > start:
+                possible_json = text[start:end + 1]
+                return json.loads(possible_json)
+
+            return fallback
         except Exception:
             return fallback
 

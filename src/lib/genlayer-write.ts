@@ -14,7 +14,7 @@ const calldata = abi.calldata;
 
 const CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS ||
-  '0x6a93064841852B9eE9b7cBaE3D2C3a0E19E7c2F4'
+  '0x07c480420A27736CAC316a7eb4E67A11f5106f3D'
 ) as `0x${string}`;
 
 const CHAIN = studionet;
