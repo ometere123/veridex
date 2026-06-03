@@ -32,22 +32,28 @@ export function formatScore(score: number): string {
   return score.toFixed(1);
 }
 
-export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
+/** Returns true if the timestamp is missing, zero, or epoch (Jan 1 1970 / Jan 1 2000) */
+function isInvalidTimestamp(raw: string | undefined | null): boolean {
+  if (!raw || raw === '' || raw === '0') return true;
+  const n = Number(raw);
+  // Unix epoch 0 = Jan 1 1970, also treat very small numbers as invalid
+  if (!isNaN(n) && n < 946684800) return true; // before Jan 1 2000 UTC
+  const d = new Date(isNaN(n) ? raw : n * 1000);
+  return isNaN(d.getTime()) || d.getFullYear() < 2000;
 }
 
-export function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+export function formatDate(dateStr: string | undefined | null): string {
+  if (isInvalidTimestamp(dateStr)) return 'Pending';
+  const n = Number(dateStr);
+  const d = isNaN(n) ? new Date(dateStr!) : new Date(n * 1000);
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+export function formatDateTime(dateStr: string | undefined | null): string {
+  if (isInvalidTimestamp(dateStr)) return 'Pending chain timestamp';
+  const n = Number(dateStr);
+  const d = isNaN(n) ? new Date(dateStr!) : new Date(n * 1000);
+  return d.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 export function truncateHash(hash: string, chars = 8): string {

@@ -34,16 +34,23 @@ function buildProof(
   project: NonNullable<Awaited<ReturnType<typeof getProject>>>,
   evaluation: Awaited<ReturnType<typeof getEvaluation>>
 ): GenLayerProof {
+  const isEvaluating = ['evaluating', 'ranked', 'reevaluation_pending'].includes(project.status);
+  const isRanked     = ['ranked', 'reevaluation_pending'].includes(project.status);
+  // Evaluation Finalized = run_evaluation succeeded = get_evaluation is not "{}"
+  const evalFinalized = !!evaluation && !!evaluation.evaluation_id;
+  // Ranking Updated = get_ranking is not "{}" or project is ranked
+  const rankUpdated  = isRanked && evalFinalized;
+
   const steps: GenLayerProofStep[] = [
-    { label: 'Project Submitted',    status: 'complete',                                                              timestamp: project.created_at,     method: 'create_project' },
-    { label: 'Evidence Locked',      status: project.evidence_hash ? 'complete' : 'pending',                         timestamp: project.locked_at,       method: 'lock_project_data' },
-    { label: 'Evaluation Started',   status: ['evaluating','ranked','reevaluation_pending'].includes(project.status) ? 'complete' : 'pending',            method: 'submit_evaluation' },
-    { label: 'Evaluation Finalized', status: evaluation ? 'complete' : 'pending',                                    timestamp: evaluation?.evaluated_at, method: 'finalize_score' },
-    { label: 'Ranking Updated',      status: ['ranked','reevaluation_pending'].includes(project.status) ? 'complete' : 'pending',                         method: 'update_leaderboard' },
+    { label: 'Project Submitted',    status: 'complete',                                          timestamp: project.created_at,      method: 'create_project' },
+    { label: 'Evidence Locked',      status: project.evidence_hash ? 'complete' : 'pending',      timestamp: project.locked_at,        method: 'lock_project_data' },
+    { label: 'Evaluation Started',   status: isEvaluating ? 'complete' : 'pending',                                                    method: 'submit_evaluation' },
+    { label: 'Evaluation Finalized', status: evalFinalized ? 'complete' : 'pending',              timestamp: evaluation?.evaluated_at,  method: 'run_evaluation' },
+    { label: 'Ranking Updated',      status: rankUpdated   ? 'complete' : 'pending',                                                    method: 'run_evaluation' },
   ];
   return {
     project_id: project.project_id,
-    contract_address: process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || '0x972205A6d14437bacd49a59317EAB63d0599f4ed',
+    contract_address: process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || '0x6a93064841852B9eE9b7cBaE3D2C3a0E19E7c2F4',
     evidence_hash: project.evidence_hash,
     evaluation_hash: evaluation?.evaluation_hash,
     steps,

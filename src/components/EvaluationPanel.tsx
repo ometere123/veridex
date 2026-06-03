@@ -8,7 +8,6 @@ import { formatScore, getScoreHex, formatDateTime } from '@/utils';
 import {
   contractSubmitEvaluation,
   contractRunEvaluation,
-  contractFinalizeScore,
   contractRequestReevaluation,
 } from '@/lib/genlayer-write';
 import type { Project, Evaluation } from '@/types';
@@ -20,13 +19,6 @@ interface EvaluationPanelProps {
   className?: string;
 }
 
-const STEPS_EVALUATE = [
-  'Submitting to GenLayer — approve in wallet…',
-  'Running AI evaluation — validators are analyzing…',
-  'Finalizing score on-chain…',
-  'Syncing results…',
-];
-
 export function EvaluationPanel({ project, evaluation, onEvaluate, className }: EvaluationPanelProps) {
   const { address } = useAccount();
   const [submitting, setSubmitting] = useState(false);
@@ -34,59 +26,34 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
   const [error, setError] = useState('');
 
   const isOwner = address?.toLowerCase() === project.owner?.toLowerCase();
-  const canEvaluate   = isOwner && project.status === 'evaluation_locked';
+
+  // A: project is locked → show Run Evaluation button
+  const canEvaluate = isOwner && project.status === 'evaluation_locked';
+  // B: project stuck in evaluating with no result → show Retry (skip submit)
+  const canRetry    = isOwner && project.status === 'evaluating' && !evaluation;
+  // C: ranked → show reevaluation request
   const canReevaluate = isOwner && project.status === 'ranked';
-  // Stuck in "evaluating" with no result yet — allow owner to retry run+finalize
-  const canRetry = isOwner && project.status === 'evaluating' && !evaluation;
 
-  async function handleEvaluate() {
+  async function runEvaluation(skipSubmit: boolean) {
     if (!address) return;
     setSubmitting(true);
     setError('');
 
     try {
-      // ① submit_evaluation — marks project as "evaluating"
-      setStep(STEPS_EVALUATE[0]);
-      await contractSubmitEvaluation(address, project.project_id);
+      if (!skipSubmit) {
+        // A: evaluation_locked → submit first, then run
+        setStep('Step 1/2 — Submitting to GenLayer. Approve in wallet…');
+        await contractSubmitEvaluation(address, project.project_id);
+      }
 
-      // ② run_evaluation — AI agents run, validators reach consensus (slow)
-      setStep(STEPS_EVALUATE[1]);
+      // B/A: run_evaluation does everything — AI scoring, leaderboard, status=ranked
+      setStep(skipSubmit
+        ? 'Running AI evaluation — validators are analyzing…'
+        : 'Step 2/2 — Running AI evaluation. This may take a few minutes…'
+      );
       await contractRunEvaluation(address, project.project_id);
 
-      // ③ finalize_score — writes tier + updates leaderboard
-      setStep(STEPS_EVALUATE[2]);
-      await contractFinalizeScore(address, project.project_id);
-
-      // ④ Sync to Supabase (reads result from GenLayer, caches it)
-      setStep(STEPS_EVALUATE[3]);
-      await fetch('/api/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ project_id: project.project_id, wallet: address }),
-      });
-
-      onEvaluate?.();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Evaluation failed');
-    } finally {
-      setSubmitting(false);
-      setStep('');
-    }
-  }
-
-  // Retry: project is stuck in "evaluating" — skip submit_evaluation, run from step 2
-  async function handleRetry() {
-    if (!address) return;
-    setSubmitting(true);
-    setError('');
-    try {
-      // Skip submit_evaluation (already "evaluating") — go straight to run + finalize
-      setStep('Running AI evaluation — validators are analyzing…');
-      await contractRunEvaluation(address, project.project_id);
-
-      setStep('Finalizing score on-chain…');
-      await contractFinalizeScore(address, project.project_id);
-
+      // Sync result to Supabase cache
       setStep('Syncing results…');
       await fetch('/api/evaluate', {
         method: 'POST',
@@ -96,7 +63,7 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
 
       onEvaluate?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Retry failed');
+      setError(e instanceof Error ? e.message : 'Evaluation failed. Please try again.');
     } finally {
       setSubmitting(false);
       setStep('');
@@ -110,16 +77,14 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
     try {
       setStep('Requesting reevaluation — approve in wallet…');
       await contractRequestReevaluation(address, project.project_id);
-
       await fetch('/api/reevaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ project_id: project.project_id, wallet: address }),
       });
-
       onEvaluate?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Reevaluation request failed');
+      setError(e instanceof Error ? e.message : 'Reevaluation request failed.');
     } finally {
       setSubmitting(false);
       setStep('');
@@ -135,36 +100,28 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
         GenLayer Evaluation
       </h3>
 
+      {/* ── Evaluation exists ──────────────────────────────────── */}
       {evaluation ? (
         <div className="space-y-4">
-          {/* Score header */}
-          <div
-            className="flex items-center justify-between pb-4"
-            style={{ borderBottom: '1px solid rgba(230,190,247,0.07)' }}
-          >
+          <div className="flex items-center justify-between pb-4" style={{ borderBottom: '1px solid rgba(230,190,247,0.07)' }}>
             <div className="flex items-baseline gap-1.5">
-              <span
-                className="text-4xl font-black font-mono"
-                style={{
-                  color: getScoreHex(evaluation.overall_score),
-                  textShadow: `0 0 20px ${getScoreHex(evaluation.overall_score)}55`,
-                }}
-              >
+              <span className="text-4xl font-black font-mono" style={{
+                color: getScoreHex(evaluation.overall_score),
+                textShadow: `0 0 20px ${getScoreHex(evaluation.overall_score)}55`,
+              }}>
                 {formatScore(evaluation.overall_score)}
               </span>
               <span className="text-sm" style={{ color: '#6b5490' }}>/ 100</span>
             </div>
             <div className="text-right">
               <TierBadge tier={evaluation.tier} size="lg" />
-              <div className="text-[10px] mt-1" style={{ color: '#6b5490' }}>
-                {evaluation.confidence}% confidence
-              </div>
+              <div className="text-[10px] mt-1" style={{ color: '#6b5490' }}>{evaluation.confidence}% confidence</div>
             </div>
           </div>
 
           <ScoreBreakdown evaluation={evaluation} />
 
-          {evaluation.strengths.length > 0 && (
+          {evaluation.strengths?.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold mb-2" style={{ color: '#4ade80' }}>Strengths</h4>
               <ul className="space-y-1">
@@ -177,7 +134,7 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
             </div>
           )}
 
-          {evaluation.weaknesses.length > 0 && (
+          {evaluation.weaknesses?.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold mb-2" style={{ color: '#f87171' }}>Weaknesses</h4>
               <ul className="space-y-1">
@@ -190,7 +147,7 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
             </div>
           )}
 
-          {evaluation.recommendations.length > 0 && (
+          {evaluation.recommendations?.length > 0 && (
             <div>
               <h4 className="text-xs font-semibold mb-2" style={{ color: '#e6bef7' }}>Recommendations</h4>
               <ul className="space-y-1">
@@ -203,102 +160,77 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
             </div>
           )}
 
-          <div
-            className="text-[10px] pt-3"
-            style={{ borderTop: '1px solid rgba(230,190,247,0.06)', color: '#6b5490' }}
-          >
+          <div className="text-[10px] pt-3" style={{ borderTop: '1px solid rgba(230,190,247,0.06)', color: '#6b5490' }}>
             Evaluated by GenLayer validators · {formatDateTime(evaluation.evaluated_at)}
           </div>
 
           {canReevaluate && (
-            <button
-              onClick={handleReevaluate}
-              disabled={submitting}
+            <button onClick={handleReevaluate} disabled={submitting}
               className="w-full text-sm font-medium py-2 px-4 rounded-lg transition-all disabled:opacity-50"
-              style={{
-                background: 'rgba(230,190,247,0.07)',
-                border: '1px solid rgba(230,190,247,0.16)',
-                color: '#e6bef7',
-              }}
-            >
+              style={{ background: 'rgba(230,190,247,0.07)', border: '1px solid rgba(230,190,247,0.16)', color: '#e6bef7' }}>
               {submitting ? (step || 'Processing…') : 'Request Reevaluation'}
             </button>
           )}
         </div>
+
       ) : (
+        /* ── No evaluation yet ─────────────────────────────────── */
         <div className="space-y-3">
           <p className="text-sm" style={{ color: '#9b86b8' }}>
             {project.status === 'evaluating'
-              ? 'GenLayer validators are analyzing this project…'
+              ? 'Evaluation submitted. Run the AI evaluation below.'
               : project.status === 'reevaluation_pending'
               ? 'Reevaluation request pending.'
-              : 'Lock evidence first, then submit for GenLayer evaluation.'}
+              : 'Lock evidence first, then run GenLayer evaluation.'}
           </p>
 
-          {project.status === 'evaluating' && !submitting && (
-            <div className="flex items-center gap-2 text-sm" style={{ color: '#e6bef7' }}>
-              <span
-                className="w-4 h-4 rounded-full border-2 animate-spin"
-                style={{ borderColor: 'rgba(230,190,247,0.3)', borderTopColor: '#e6bef7' }}
-              />
-              Evaluation in progress — this may take a few minutes…
-            </div>
-          )}
-
+          {/* Step progress */}
           {submitting && step && (
-            <div
-              className="rounded-lg p-3 text-xs flex items-center gap-2"
-              style={{ background: 'rgba(230,190,247,0.06)', color: '#e6bef7' }}
-            >
-              <span
-                className="w-3 h-3 rounded-full border-2 animate-spin flex-shrink-0"
-                style={{ borderColor: 'rgba(230,190,247,0.3)', borderTopColor: '#e6bef7' }}
-              />
+            <div className="rounded-lg p-3 text-xs flex items-center gap-2"
+              style={{ background: 'rgba(230,190,247,0.06)', color: '#e6bef7' }}>
+              <span className="w-3 h-3 rounded-full border-2 animate-spin flex-shrink-0"
+                style={{ borderColor: 'rgba(230,190,247,0.3)', borderTopColor: '#e6bef7' }} />
               {step}
             </div>
           )}
 
           {error && <p className="text-sm" style={{ color: '#f87171' }}>{error}</p>}
 
-          {/* Retry button — shown when stuck in "evaluating" with no result */}
-          {canRetry && (
+          {/* A: evaluation_locked → full flow (submit + run) */}
+          {canEvaluate && (
+            <button onClick={() => runEvaluation(false)} disabled={submitting}
+              className="w-full font-semibold py-2.5 px-4 rounded-lg text-sm transition-all disabled:opacity-50"
+              style={{
+                background: submitting ? 'rgba(168,85,247,0.3)' : 'linear-gradient(135deg,#7c3aed,#a855f7,#c084fc)',
+                color: '#fff',
+                boxShadow: submitting ? 'none' : '0 0 18px rgba(168,85,247,0.35)',
+              }}>
+              {submitting ? (step || '⬡ Processing…') : '⬡ Run GenLayer Evaluation'}
+            </button>
+          )}
+
+          {/* B: evaluating (stuck) → retry run_evaluation only */}
+          {canRetry && !submitting && (
             <div className="space-y-2">
-              <div
-                className="rounded-lg p-3 text-xs"
-                style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', color: '#fbbf24' }}
-              >
-                ⚠ Evaluation appears stuck. Click Retry to resume from the AI evaluation step.
+              <div className="rounded-lg p-3 text-xs"
+                style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', color: '#fbbf24' }}>
+                ⚠ Status is evaluating but no result yet. Click to run the AI evaluation.
               </div>
-              <button
-                onClick={handleRetry}
-                disabled={submitting}
+              <button onClick={() => runEvaluation(true)} disabled={submitting}
                 className="w-full font-semibold py-2.5 px-4 rounded-lg text-sm transition-all disabled:opacity-50"
-                style={{
-                  background: submitting ? 'rgba(168,85,247,0.3)' : 'linear-gradient(135deg,#7c3aed,#a855f7,#c084fc)',
-                  color: '#fff',
-                  boxShadow: submitting ? 'none' : '0 0 18px rgba(168,85,247,0.35)',
-                }}
-              >
-                {submitting ? (step || '⬡ Processing…') : '⬡ Retry Evaluation'}
+                style={{ background: 'linear-gradient(135deg,#7c3aed,#a855f7,#c084fc)', color: '#fff', boxShadow: '0 0 18px rgba(168,85,247,0.35)' }}>
+                ⬡ Run Evaluation
               </button>
             </div>
           )}
 
-          {canEvaluate && (
-            <button
-              onClick={handleEvaluate}
-              disabled={submitting}
-              className="w-full font-semibold py-2.5 px-4 rounded-lg text-sm transition-all disabled:opacity-50"
-              style={{
-                background: submitting
-                  ? 'rgba(168,85,247,0.3)'
-                  : 'linear-gradient(135deg,#7c3aed,#a855f7,#c084fc)',
-                color: '#fff',
-                boxShadow: submitting ? 'none' : '0 0 18px rgba(168,85,247,0.35)',
-              }}
-            >
-              {submitting ? (step || '⬡ Processing…') : '⬡ Submit for Evaluation'}
-            </button>
+          {canRetry && submitting && (
+            <div className="rounded-lg p-3 text-xs flex items-center gap-2"
+              style={{ background: 'rgba(230,190,247,0.06)', color: '#e6bef7' }}>
+              <span className="w-3 h-3 rounded-full border-2 animate-spin flex-shrink-0"
+                style={{ borderColor: 'rgba(230,190,247,0.3)', borderTopColor: '#e6bef7' }} />
+              {step}
+            </div>
           )}
         </div>
       )}

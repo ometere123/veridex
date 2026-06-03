@@ -33,7 +33,7 @@ function buildProof(project: Project, evaluation: Evaluation | null): GenLayerPr
   ];
   return {
     project_id: project.project_id,
-    contract_address: process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || '0x972205A6d14437bacd49a59317EAB63d0599f4ed',
+    contract_address: process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || '0x6a93064841852B9eE9b7cBaE3D2C3a0E19E7c2F4',
     evidence_hash: project.evidence_hash,
     evaluation_hash: evaluation?.evaluation_hash,
     steps,

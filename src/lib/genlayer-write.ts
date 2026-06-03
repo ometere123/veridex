@@ -1,30 +1,27 @@
 /**
  * genlayer-write.ts — Client-side GenLayer write service.
- * All writes sign via window.ethereum (MetaMask/Brave).
- * Import only from 'use client' components — never from API routes.
+ * New contract flow (v0.2.17+):
+ *   create_project → lock_project_data → submit_evaluation → run_evaluation
+ *   run_evaluation does ALL ranking: scores, leaderboard, history, status=ranked
+ *   finalize_score is NOT part of the normal flow.
  */
 
 import { createClient, abi } from 'genlayer-js';
-
-// calldata decoder lives under abi.calldata
-const calldata = abi.calldata;
 import { studionet } from 'genlayer-js/chains';
 import { TransactionStatus } from 'genlayer-js/types';
 
-// ── Contract address ─────────────────────────────────────────────
+const calldata = abi.calldata;
+
 const CONTRACT_ADDRESS = (
   process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS ||
-  '0x972205A6d14437bacd49a59317EAB63d0599f4ed'
+  '0x6a93064841852B9eE9b7cBaE3D2C3a0E19E7c2F4'
 ) as `0x${string}`;
 
-// ── Use the official studionet chain from the SDK ────────────────
-// This includes consensusMainContract, defaultNumberOfInitialValidators,
-// and all other required fields the SDK needs to build transactions.
 const CHAIN = studionet;
-const CHAIN_ID_HEX = `0x${CHAIN.id.toString(16)}`; // "0xf27f"
+const CHAIN_ID_HEX = `0x${CHAIN.id.toString(16)}`;
 const RPC_ENDPOINT = process.env.NEXT_PUBLIC_GENLAYER_RPC_URL || 'https://studio.genlayer.com/api';
 
-// ── Provider helpers ─────────────────────────────────────────────
+// ── Provider ─────────────────────────────────────────────────────
 
 type EthProvider = {
   request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
@@ -35,25 +32,18 @@ type EthProvider = {
 
 function getProvider(): EthProvider {
   if (typeof window === 'undefined') throw new Error('Browser only');
-
   const win = window as Window & { ethereum?: EthProvider };
   if (!win.ethereum) throw new Error('No wallet detected. Please install MetaMask.');
-
-  // If multiple wallets coexist (Brave + MetaMask), prefer MetaMask
   if (Array.isArray(win.ethereum.providers)) {
-    const metamask = win.ethereum.providers.find(
-      (p: EthProvider) => p.isMetaMask && !p.isBraveWallet
-    );
-    return metamask ?? win.ethereum.providers[0] ?? win.ethereum;
+    const mm = win.ethereum.providers.find((p: EthProvider) => p.isMetaMask && !p.isBraveWallet);
+    return mm ?? win.ethereum.providers[0] ?? win.ethereum;
   }
-
   return win.ethereum;
 }
 
 async function ensureGenLayerChain(): Promise<void> {
   let provider: EthProvider;
-  try { provider = getProvider(); } catch { return; } // no wallet → fail later in writeContract
-
+  try { provider = getProvider(); } catch { return; }
   const chainParams = {
     chainId: CHAIN_ID_HEX,
     chainName: 'GenLayer Studionet',
@@ -61,346 +51,158 @@ async function ensureGenLayerChain(): Promise<void> {
     rpcUrls: [RPC_ENDPOINT],
     blockExplorerUrls: ['https://studio.genlayer.com'],
   };
-
   try {
-    await provider.request({
-      method: 'wallet_switchEthereumChain',
-      params: [{ chainId: CHAIN_ID_HEX }],
-    });
+    await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID_HEX }] });
   } catch (err: unknown) {
     const code = (err as { code?: number }).code;
-    if (code === 4001) throw new Error('Network switch rejected. Please approve the network switch in your wallet.');
-    // Chain not added yet (4902) or unknown chain (-32603)
+    if (code === 4001) throw new Error('Network switch rejected. Please approve in your wallet.');
     if (code === 4902 || code === -32603) {
       try {
         await provider.request({ method: 'wallet_addEthereumChain', params: [chainParams] });
         await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID_HEX }] });
       } catch (addErr: unknown) {
-        if ((addErr as { code?: number }).code === 4001) {
-          throw new Error('Please approve adding the GenLayer network in your wallet.');
-        }
-        // Some wallets don't support addEthereumChain — try to proceed anyway
+        if ((addErr as { code?: number }).code === 4001) throw new Error('Please approve adding the GenLayer network.');
         console.warn('wallet_addEthereumChain not supported, proceeding:', addErr);
       }
     } else {
-      // Any other error — log and try to proceed
-      console.warn('wallet_switchEthereumChain non-fatal error:', err);
+      console.warn('wallet_switchEthereumChain non-fatal:', err);
     }
   }
 }
 
 function getBrowserClient(account: string) {
-  if (!account || !account.startsWith('0x')) {
-    throw new Error('Invalid wallet address. Please connect your wallet first.');
-  }
-  const provider = getProvider();
-
-  // Use the official studionet chain object — it has all required fields
-  return createClient({
-    chain: CHAIN,              // ← full chain config with consensusMainContract
-    endpoint: RPC_ENDPOINT,   // ← override RPC endpoint if needed
-    account: account as `0x${string}`,
-    provider,                  // ← browser wallet for signing
-  });
+  if (!account || !account.startsWith('0x')) throw new Error('Invalid wallet address.');
+  return createClient({ chain: CHAIN, endpoint: RPC_ENDPOINT, account: account as `0x${string}`, provider: getProvider() });
 }
 
-// ── Hex → Uint8Array helper ──────────────────────────────────────
-function hexToBytes(hex: string): Uint8Array {
-  const clean = hex.startsWith('0x') ? hex.slice(2) : hex;
-  const bytes = new Uint8Array(clean.length / 2);
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = parseInt(clean.slice(i * 2, i * 2 + 2), 16);
-  }
-  return bytes;
-}
+// ── Core write helpers ────────────────────────────────────────────
 
-// ── Core helpers ─────────────────────────────────────────────────
-
-/**
- * Submit a write tx, wait for FINALIZED, and return the tx hash.
- * strictWait = true (default for critical steps): throws if finalization fails.
- * strictWait = false: logs warning and continues (for non-critical steps).
- */
-export async function glWriteAndWait(
-  method: string,
-  args: string[],
-  account: string,
-  strictWait = true
-): Promise<string> {
+export async function glWriteAndWait(method: string, args: string[], account: string, strictWait = true): Promise<string> {
   await ensureGenLayerChain();
   const client = getBrowserClient(account);
-
-  const txHash = await client.writeContract({
-    address: CONTRACT_ADDRESS,
-    functionName: method,
-    args,
-    value: BigInt(0),
-  });
-
+  const txHash = await client.writeContract({ address: CONTRACT_ADDRESS, functionName: method, args, value: BigInt(0) });
   try {
-    await client.waitForTransactionReceipt({
-      hash: txHash as `0x${string}` & { length: 66 },
-      status: TransactionStatus.FINALIZED,
-    });
+    await client.waitForTransactionReceipt({ hash: txHash as `0x${string}` & { length: 66 }, status: TransactionStatus.FINALIZED });
   } catch (waitErr) {
-    if (strictWait) {
-      // For critical steps (run_evaluation, finalize_score) we must not proceed
-      // if finalization hasn't confirmed — doing so causes "No evaluation found"
-      throw new Error(
-        `Transaction submitted (${txHash}) but did not finalize in time for ${method}. ` +
-        `Please wait a moment and try again.`
-      );
-    }
-    console.warn(`waitForTransactionReceipt warning for ${method}:`, waitErr);
+    if (strictWait) throw new Error(`${method} did not finalize in time (tx: ${txHash}). Wait and retry.`);
+    console.warn(`waitForTransactionReceipt non-fatal for ${method}:`, waitErr);
   }
-
   return txHash as string;
 }
 
-/**
- * Decode a GenLayer leader_receipt result (base64-encoded calldata) into a string.
- * The result field skips the first byte (header byte) before calldata decode.
- */
+// ── Decode base64 leader_receipt result ──────────────────────────
+
 function decodeLeaderResult(b64: string): string | null {
   try {
-    // 1. base64 → bytes
-    const binaryString = atob(b64);
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
 
-    // 2. Try calldata.decode starting at offset 1 (skip header byte)
-    try {
-      const decoded = calldata.decode(bytes.slice(1));
-      if (typeof decoded === 'string' && decoded.length > 0) return decoded;
-    } catch { /* try next */ }
-
-    // 3. Try offset 0
-    try {
-      const decoded = calldata.decode(bytes);
-      if (typeof decoded === 'string' && decoded.length > 0) return decoded;
-    } catch { /* try next */ }
-
-    // 4. Fallback: read raw ASCII from offset 3 (skip 3-byte length prefix)
-    //    This works for 32-char hex project IDs
+    // Try offset 1 (skip header byte)
+    try { const d = calldata.decode(bytes.slice(1)); if (typeof d === 'string' && d.length > 0) return d; } catch {}
+    // Try offset 0
+    try { const d = calldata.decode(bytes); if (typeof d === 'string' && d.length > 0) return d; } catch {}
+    // Raw ASCII offset 3 (32-char hex project IDs)
     const ascii = new TextDecoder().decode(bytes.slice(3));
     if (/^[0-9a-f]{32}$/.test(ascii)) return ascii;
-
     return null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
-/**
- * Fetch a GenLayer transaction directly from the RPC and extract the leader result.
- */
 async function fetchTxResult(txHash: string): Promise<string | null> {
   try {
-    const rpc = process.env.NEXT_PUBLIC_GENLAYER_RPC_URL || 'https://studio.genlayer.com/api';
-    const res = await fetch(rpc, {
+    const res = await fetch(RPC_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0', id: 1,
-        method: 'eth_getTransactionByHash',
-        params: [txHash],
-      }),
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getTransactionByHash', params: [txHash] }),
     });
-    const data = await res.json() as {
-      result?: {
-        consensus_data?: {
-          leader_receipt?: Array<{ result?: string; execution_result?: string }>;
-        };
-      };
-    };
-
-    const lr = data?.result?.consensus_data?.leader_receipt;
-    if (!lr || lr.length === 0) return null;
-
-    const b64 = lr[0]?.result;
-    if (!b64) return null;
-
-    return decodeLeaderResult(b64);
-  } catch {
-    return null;
-  }
+    const data = await res.json() as { result?: { consensus_data?: { leader_receipt?: Array<{ result?: string }> } } };
+    const b64 = data?.result?.consensus_data?.leader_receipt?.[0]?.result;
+    return b64 ? decodeLeaderResult(b64) : null;
+  } catch { return null; }
 }
 
-/**
- * Submit a write tx, wait for FINALIZED, and decode the contract's return value.
- * Used for create_project() which returns the project_id string.
- */
-export async function glWriteAndGetResult(
-  method: string,
-  args: string[],
-  account: string
-): Promise<unknown> {
+export async function glWriteAndGetResult(method: string, args: string[], account: string): Promise<unknown> {
   await ensureGenLayerChain();
   const client = getBrowserClient(account);
-
-  const txHash = await client.writeContract({
-    address: CONTRACT_ADDRESS,
-    functionName: method,
-    args,
-    value: BigInt(0),
-  });
-
-  // Wait for finalization
+  const txHash = await client.writeContract({ address: CONTRACT_ADDRESS, functionName: method, args, value: BigInt(0) });
   try {
-    await client.waitForTransactionReceipt({
-      hash: txHash as `0x${string}` & { length: 66 },
-      status: TransactionStatus.FINALIZED,
-    });
-  } catch (waitErr) {
-    console.warn('waitForTransactionReceipt (tx was submitted):', waitErr);
-  }
+    await client.waitForTransactionReceipt({ hash: txHash as `0x${string}` & { length: 66 }, status: TransactionStatus.FINALIZED });
+  } catch (e) { console.warn('waitForTransactionReceipt warning:', e); }
 
-  // Fetch full tx from RPC and decode the base64 leader_receipt result
-  const projectId = await fetchTxResult(txHash as string);
-  if (projectId) return projectId;
+  // Fetch full tx to decode return value
+  const fromReceipt = await fetchTxResult(txHash as string);
+  if (fromReceipt) return fromReceipt;
 
-  // Also try via SDK getTransaction
+  // Fallback: getTransaction
   try {
-    const tx = await client.getTransaction({
-      hash: txHash as `0x${string}` & { length: 66 },
-    }) as { consensus_data?: { leader_receipt?: Array<{ result?: string }> } };
+    const tx = await client.getTransaction({ hash: txHash as `0x${string}` & { length: 66 } });
+    const b64 = (tx as { consensus_data?: { leader_receipt?: Array<{ result?: string }> } })?.consensus_data?.leader_receipt?.[0]?.result;
+    if (b64) { const d = decodeLeaderResult(b64); if (d) return d; }
+  } catch {}
 
-    const b64 = tx?.consensus_data?.leader_receipt?.[0]?.result;
-    if (b64) {
-      const decoded = decodeLeaderResult(b64);
-      if (decoded) return decoded;
-    }
-  } catch { /* non-fatal */ }
-
-  // Final fallback — return tx hash so caller can show a helpful message
   return txHash;
 }
 
 export async function glWrite(method: string, args: string[], account: string): Promise<string> {
   await ensureGenLayerChain();
   const client = getBrowserClient(account);
-  const txHash = await client.writeContract({
-    address: CONTRACT_ADDRESS,
-    functionName: method,
-    args,
-    value: BigInt(0),
-  });
+  const txHash = await client.writeContract({ address: CONTRACT_ADDRESS, functionName: method, args, value: BigInt(0) });
   return txHash as string;
 }
 
-// ── Typed contract calls ─────────────────────────────────────────
+// ── Typed contract calls ──────────────────────────────────────────
 
-export async function contractCreateProject(
-  account: string,
-  params: {
-    name: string; category: string; website: string; description: string;
-    whitepaper_url: string; docs_url: string; github_repos: string[];
-    roadmap: string; tokenomics: object; audits: object[]; team: object[];
-    investors: string[]; partnerships: string[]; bug_bounty_url: string;
-    ecosystem_integrations: string[];
-  }
-): Promise<string> {
+export async function contractCreateProject(account: string, params: {
+  name: string; category: string; website: string; description: string;
+  whitepaper_url: string; docs_url: string; github_repos: string[];
+  roadmap: string; tokenomics: object; audits: object[]; team: object[];
+  investors: string[]; partnerships: string[]; bug_bounty_url: string;
+  ecosystem_integrations: string[];
+}): Promise<string> {
   const args = [
-    params.name,
-    params.category,
-    params.website,
-    params.description,
-    params.whitepaper_url || '',
-    params.docs_url || '',
-    JSON.stringify(params.github_repos),
-    params.roadmap,
-    JSON.stringify(params.tokenomics),
-    JSON.stringify(params.audits),
-    JSON.stringify(params.team),
-    JSON.stringify(params.investors),
-    JSON.stringify(params.partnerships),
-    params.bug_bounty_url || '',
+    params.name, params.category, params.website, params.description,
+    params.whitepaper_url || '', params.docs_url || '',
+    JSON.stringify(params.github_repos), params.roadmap,
+    JSON.stringify(params.tokenomics), JSON.stringify(params.audits),
+    JSON.stringify(params.team), JSON.stringify(params.investors),
+    JSON.stringify(params.partnerships), params.bug_bounty_url || '',
     JSON.stringify(params.ecosystem_integrations),
   ];
-
-  // Use glWriteAndGetResult to get the actual project_id returned by the contract,
-  // not the tx hash. The contract's create_project() returns a sha256-derived string.
   const result = await glWriteAndGetResult('create_project', args, account);
-
-  // The decoded result should be the project_id string
-  if (typeof result === 'string' && result.length > 0 && !result.startsWith('0x')) {
-    return result;
-  }
-
-  // If decoding failed or returned the tx hash, fetch the project_id a different way:
-  // Read all projects for this wallet and find the most recently created one
+  if (typeof result === 'string' && result.length > 0 && !result.startsWith('0x')) return result;
   throw new Error(
-    `Project created successfully (tx: ${result}), but could not retrieve the project ID. ` +
+    `Project created on-chain (tx: ${result}), but could not retrieve the project ID. ` +
     `Check your Dashboard to find and view the project.`
   );
 }
 
 export async function contractLockProject(account: string, projectId: string): Promise<string> {
-  return glWriteAndWait('lock_project_data', [projectId], account);
+  return glWriteAndWait('lock_project_data', [projectId], account, true);
 }
 
+/** Step 3: submit_evaluation — changes status to "evaluating" only */
 export async function contractSubmitEvaluation(account: string, projectId: string): Promise<string> {
-  // submit_evaluation just changes status to "evaluating" — we wait for it too
   return glWriteAndWait('submit_evaluation', [projectId], account, true);
 }
 
-export async function contractRunEvaluation(account: string, projectId: string): Promise<string> {
-  // run_evaluation is the slowest step — AI agents + validator consensus.
-  // Must fully finalize before finalize_score is called.
-  return glWriteAndWait('run_evaluation', [projectId], account, true);
-}
-
 /**
- * Verify the evaluation exists on-chain before calling finalize_score.
- * Polls get_evaluation up to 10 times with 3s intervals.
+ * Step 4: run_evaluation — THE core evaluation step.
+ * Does everything: AI scoring, saves evaluation, updates leaderboard,
+ * updates profile, sets status = "ranked". Returns evaluation_id.
+ * Do NOT call finalize_score after this.
  */
-async function waitForEvaluationOnChain(projectId: string): Promise<void> {
-  const rpc = process.env.NEXT_PUBLIC_GENLAYER_RPC_URL || 'https://studio.genlayer.com/api';
-  const CONTRACT = process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || '0x972205A6d14437bacd49a59317EAB63d0599f4ed';
-
-  for (let attempt = 0; attempt < 10; attempt++) {
-    try {
-      // Use gen_call to read get_evaluation(project_id)
-      const callPayload = {
-        jsonrpc: '2.0', id: 1,
-        method: 'gen_call',
-        params: [{
-          to: CONTRACT,
-          data: JSON.stringify({ method: 'get_evaluation', args: [projectId] }),
-          type: 'read',
-        }],
-      };
-      const res = await fetch(rpc, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(callPayload),
-      });
-      const data = await res.json() as { result?: string };
-      const raw = data?.result;
-      if (raw && raw !== '{}' && raw.length > 2) {
-        // Evaluation exists
-        return;
-      }
-    } catch { /* retry */ }
-
-    // Wait 3 seconds between checks
-    await new Promise((r) => setTimeout(r, 3000));
-  }
-
-  throw new Error(
-    'run_evaluation completed but the evaluation result is not yet readable. ' +
-    'Please wait 30 seconds and try clicking "Submit for Evaluation" again from the project page.'
-  );
+export async function contractRunEvaluation(account: string, projectId: string): Promise<string> {
+  const result = await glWriteAndGetResult('run_evaluation', [projectId], account);
+  // result is the evaluation_id (or tx hash as fallback)
+  return typeof result === 'string' ? result : String(result);
 }
 
-export async function contractFinalizeScore(account: string, projectId: string): Promise<string> {
-  // Guard: confirm evaluation is on-chain before finalizing
-  await waitForEvaluationOnChain(projectId);
-  return glWriteAndWait('finalize_score', [projectId], account, true);
-}
-
+/** Only for request_reevaluation — NOT part of initial evaluation flow */
 export async function contractRequestReevaluation(account: string, projectId: string): Promise<string> {
-  return glWriteAndWait('request_reevaluation', [projectId], account);
+  return glWriteAndWait('request_reevaluation', [projectId], account, true);
 }
+
+// NOTE: contractFinalizeScore is intentionally NOT exported.
+// The new contract's run_evaluation() handles all finalization internally.
+// Calling finalize_score separately caused "No evaluation found" errors.

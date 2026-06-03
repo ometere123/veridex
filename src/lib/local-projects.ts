@@ -38,3 +38,17 @@ export function getLocalProjectsByOwner(owner: string): LocalProject[] {
     (p) => p.owner.toLowerCase() === owner.toLowerCase()
   );
 }
+
+/** Update a cached project's status */
+export function updateLocalProjectStatus(project_id: string, status: string): void {
+  try {
+    const all = getLocalProjects();
+    const updated = all.map((p) => p.project_id === project_id ? { ...p, status } : p);
+    localStorage.setItem('alpharank_projects', JSON.stringify(updated));
+  } catch {}
+}
+
+/** Clear all localStorage state (call after contract redeploy / fresh start) */
+export function clearLocalProjects(): void {
+  try { localStorage.removeItem('alpharank_projects'); } catch {}
+}

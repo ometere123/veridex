@@ -55,6 +55,7 @@ class AlphaRank(gl.Contract):
     ) -> str:
         sender = str(gl.message.sender_address)
         project_id = self._generate_project_id(sender, name)
+        now = str(self._now())
 
         project = {
             "project_id": project_id,
@@ -77,8 +78,8 @@ class AlphaRank(gl.Contract):
             "evidence_hash": "",
             "locked_at": "",
             "status": "draft",
-            "created_at": str(self._now()),
-            "updated_at": str(self._now()),
+            "created_at": now,
+            "updated_at": now,
         }
 
         self.projects[project_id] = json.dumps(project)
@@ -143,11 +144,12 @@ class AlphaRank(gl.Contract):
         assert project["status"] == "draft", "Project already locked"
 
         evidence_hash = self._generate_evidence_hash(project)
+        now = str(self._now())
 
         project["evidence_hash"] = evidence_hash
-        project["locked_at"] = str(self._now())
+        project["locked_at"] = now
         project["status"] = "evaluation_locked"
-        project["updated_at"] = str(self._now())
+        project["updated_at"] = now
 
         self.projects[project_id] = json.dumps(project)
 
@@ -189,7 +191,8 @@ class AlphaRank(gl.Contract):
         )
 
         tier = self._assign_rank_tier(overall_score)
-        evaluation_id = self._generate_evaluation_id(project_id, str(self._now()))
+        now = str(self._now())
+        evaluation_id = self._generate_evaluation_id(project_id, now)
 
         evaluation = {
             "evaluation_id": evaluation_id,
@@ -222,9 +225,9 @@ class AlphaRank(gl.Contract):
                 "project_id": project_id,
                 "overall_score": overall_score,
                 "tier": tier,
-                "timestamp": str(self._now()),
+                "timestamp": now,
             }),
-            "evaluated_at": str(self._now()),
+            "evaluated_at": now,
         }
 
         self.evaluations[project_id] = json.dumps(evaluation)
@@ -239,13 +242,17 @@ class AlphaRank(gl.Contract):
             execution_score,
         )
 
+        project["status"] = "ranked"
+        project["updated_at"] = now
+        self.projects[project_id] = json.dumps(project)
+
+        self._update_leaderboard_internal(project, evaluation)
+
         return evaluation_id
 
     @gl.public.write
     def finalize_score(self, project_id: str) -> None:
         project = self._load_project(project_id)
-
-        assert project["status"] == "evaluating", "Not in evaluating state"
 
         evaluation_raw = self.evaluations.get(project_id)
         assert evaluation_raw is not None, "No evaluation found"
