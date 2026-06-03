@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { TierBadge } from '@/components/TierBadge';
 import { WalletGate } from '@/components/WalletGate';
 import { cn, formatDate, getScoreColor, formatScore } from '@/utils';
-import { getLocalProjectsByOwner } from '@/lib/local-projects';
+import { getLocalProjectsByOwner, clearLocalProjects } from '@/lib/local-projects';
 import type { Evaluation, Profile } from '@/types';
 import type { RankTier } from '@/types';
 
@@ -116,14 +116,28 @@ export default function DashboardPage() {
         <div className="px-6 py-4 flex items-center justify-between"
           style={{ borderBottom: '1px solid rgba(230,190,247,0.07)' }}>
           <h2 className="font-semibold text-sm" style={{ color: '#f5eeff' }}>Your Projects</h2>
-          {address && (
-            <Link href={`/profile/${address}`} className="text-xs transition-colors"
-              style={{ color: '#9b86b8' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#e6bef7')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#9b86b8')}>
-              View public profile →
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            {projects.length > 0 && (
+              <button
+                onClick={() => { clearLocalProjects(); setProjects([]); }}
+                className="text-xs transition-colors px-2 py-1 rounded"
+                title="Clear locally cached projects from old contracts"
+                style={{ color: '#6b5490', border: '1px solid rgba(107,84,144,0.2)' }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#f87171'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.3)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#6b5490'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(107,84,144,0.2)'; }}
+              >
+                Clear cache
+              </button>
+            )}
+            {address && (
+              <Link href={`/profile/${address}`} className="text-xs transition-colors"
+                style={{ color: '#9b86b8' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e6bef7')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#9b86b8')}>
+                View public profile →
+              </Link>
+            )}
+          </div>
         </div>
 
         {loading && projects.length === 0 ? (
