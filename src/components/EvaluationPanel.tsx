@@ -34,8 +34,10 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
   const [error, setError] = useState('');
 
   const isOwner = address?.toLowerCase() === project.owner?.toLowerCase();
-  const canEvaluate = isOwner && project.status === 'evaluation_locked';
+  const canEvaluate   = isOwner && project.status === 'evaluation_locked';
   const canReevaluate = isOwner && project.status === 'ranked';
+  // Stuck in "evaluating" with no result yet — allow owner to retry run+finalize
+  const canRetry = isOwner && project.status === 'evaluating' && !evaluation;
 
   async function handleEvaluate() {
     if (!address) return;
@@ -66,6 +68,35 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
       onEvaluate?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Evaluation failed');
+    } finally {
+      setSubmitting(false);
+      setStep('');
+    }
+  }
+
+  // Retry: project is stuck in "evaluating" — skip submit_evaluation, run from step 2
+  async function handleRetry() {
+    if (!address) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      // Skip submit_evaluation (already "evaluating") — go straight to run + finalize
+      setStep('Running AI evaluation — validators are analyzing…');
+      await contractRunEvaluation(address, project.project_id);
+
+      setStep('Finalizing score on-chain…');
+      await contractFinalizeScore(address, project.project_id);
+
+      setStep('Syncing results…');
+      await fetch('/api/evaluate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ project_id: project.project_id, wallet: address }),
+      });
+
+      onEvaluate?.();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Retry failed');
     } finally {
       setSubmitting(false);
       setStep('');
@@ -204,7 +235,7 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
               : 'Lock evidence first, then submit for GenLayer evaluation.'}
           </p>
 
-          {project.status === 'evaluating' && (
+          {project.status === 'evaluating' && !submitting && (
             <div className="flex items-center gap-2 text-sm" style={{ color: '#e6bef7' }}>
               <span
                 className="w-4 h-4 rounded-full border-2 animate-spin"
@@ -228,6 +259,30 @@ export function EvaluationPanel({ project, evaluation, onEvaluate, className }: 
           )}
 
           {error && <p className="text-sm" style={{ color: '#f87171' }}>{error}</p>}
+
+          {/* Retry button — shown when stuck in "evaluating" with no result */}
+          {canRetry && (
+            <div className="space-y-2">
+              <div
+                className="rounded-lg p-3 text-xs"
+                style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', color: '#fbbf24' }}
+              >
+                ⚠ Evaluation appears stuck. Click Retry to resume from the AI evaluation step.
+              </div>
+              <button
+                onClick={handleRetry}
+                disabled={submitting}
+                className="w-full font-semibold py-2.5 px-4 rounded-lg text-sm transition-all disabled:opacity-50"
+                style={{
+                  background: submitting ? 'rgba(168,85,247,0.3)' : 'linear-gradient(135deg,#7c3aed,#a855f7,#c084fc)',
+                  color: '#fff',
+                  boxShadow: submitting ? 'none' : '0 0 18px rgba(168,85,247,0.35)',
+                }}
+              >
+                {submitting ? (step || '⬡ Processing…') : '⬡ Retry Evaluation'}
+              </button>
+            </div>
+          )}
 
           {canEvaluate && (
             <button
