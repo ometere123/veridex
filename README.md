@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AlphaRank
+
+AI-powered crypto intelligence platform built on [GenLayer](https://genlayer.com). AlphaRank evaluates and ranks crypto projects using on-chain AI smart contracts, delivering objective, tamper-proof scores directly on the blockchain.
+
+**Live App:** [alpharank-brown.vercel.app](https://alpharank-brown.vercel.app)
+
+---
+
+## Features
+
+- On-chain AI evaluation of crypto projects via GenLayer smart contracts
+- Real-time scoring with async polling for evaluation results
+- Dashboard with project rankings and detailed analysis
+- Wallet-connected submissions and score finalization
+
+## Tech Stack
+
+- **Frontend:** Next.js, TypeScript, Tailwind CSS
+- **Blockchain:** GenLayer (AI smart contracts)
+- **Database:** Supabase
+- **Deployment:** Vercel
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file with the required environment variables. See `DEPLOYMENT.md` for the full list.
 
-## Learn More
+## Deployment
 
-To learn more about Next.js, take a look at the following resources:
+The app is deployed on Vercel: [alpharank-brown.vercel.app](https://alpharank-brown.vercel.app)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+For self-hosting instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Smart Contract
 
-## Deploy on Vercel
+AlphaRank uses a GenLayer intelligent contract for on-chain AI evaluation. See [CONTRACT_GUIDE.md](CONTRACT_GUIDE.md) for details on the contract architecture and ABI.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Testing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See [TESTING.md](TESTING.md) for the testing guide.
