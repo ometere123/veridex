@@ -9,12 +9,12 @@ import { VeridexLogo } from './VeridexLogo';
 import { cn } from '@/utils';
 
 const NAV_LINKS = [
-  { href: '/rankings',    label: 'Tiers' },
+  { href: '/tiers',       label: 'Tiers' },
   { href: '/leaderboard', label: 'Index' },
-  { href: '/submit',      label: 'Register' },
+  { href: '/register',    label: 'Register' },
   { href: '/compare',     label: 'Compare' },
   { href: '/analytics',   label: 'Analytics' },
-  { href: '/dashboard',   label: 'Hub' },
+  { href: '/hub',         label: 'Hub' },
 ];
 
 function NavLinks({ onClose }: { onClose?: () => void }) {

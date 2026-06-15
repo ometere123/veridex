@@ -11,9 +11,7 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    return [
-      { source: '/index', destination: '/leaderboard' },
-    ];
+    return [];
   },
   typescript: {
     ignoreBuildErrors: false,

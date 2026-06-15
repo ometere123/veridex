@@ -84,12 +84,12 @@ function Footer() {
           <span className="text-xs" style={{ color: 'var(--border-2)' }}>/ GenLayer</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-5 text-xs" style={{ color: 'var(--muted-2)' }}>
-          <a href="/rankings" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Tiers</a>
+          <a href="/tiers" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Tiers</a>
           <a href="/leaderboard" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Index</a>
-          <a href="/submit" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Register</a>
+          <a href="/register" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Register</a>
           <a href="/compare" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Compare</a>
           <a href="/analytics" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Analytics</a>
-          <a href="/dashboard" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Hub</a>
+          <a href="/hub" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Hub</a>
         </div>
       </div>
     </footer>
