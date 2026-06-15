@@ -1,6 +1,6 @@
-# AlphaRank — Contract Interaction Guide
+# Veridex - Contract Interaction Guide
 
-Contract: `contracts/AlphaRank.py`
+Contract: `contracts/Veridex.py`
 Network: GenLayer Testnet
 
 ---
@@ -12,21 +12,21 @@ Network: GenLayer Testnet
 Creates a new project. Status starts as `draft`.
 
 **Args:**
-- `name: str` — Project name
-- `category: str` — One of: DeFi, AI, Gaming, Infrastructure, RWA, DePIN, Consumer, Other
+- `name: str` - Project name
+- `category: str` - One of: DeFi, AI, Gaming, Infrastructure, RWA, DePIN, Consumer, Other
 - `website: str`
 - `description: str`
 - `whitepaper_url: str`
 - `docs_url: str`
-- `github_repos: str` — JSON array string
+- `github_repos: str` - JSON array string
 - `roadmap: str`
-- `tokenomics: str` — JSON object string `{utility, emissions, supply}`
-- `audits: str` — JSON array string `[{auditor, url, date}]`
-- `team: str` — JSON array string `[{name, role, linkedin}]`
-- `investors: str` — JSON array string
-- `partnerships: str` — JSON array string
+- `tokenomics: str` - JSON object string `{utility, emissions, supply}`
+- `audits: str` - JSON array string `[{auditor, url, date}]`
+- `team: str` - JSON array string `[{name, role, linkedin}]`
+- `investors: str` - JSON array string
+- `partnerships: str` - JSON array string
 - `bug_bounty_url: str`
-- `ecosystem_integrations: str` — JSON array string
+- `ecosystem_integrations: str` - JSON array string
 
 **Returns:** `project_id: str`
 
@@ -42,7 +42,7 @@ Updates project data. Only callable when `status == "draft"`.
 
 ### `lock_project_data(project_id: str)`
 
-Locks all evidence. Generates `evidence_hash`. Status → `evaluation_locked`.
+Locks all evidence. Generates `evidence_hash`. Status -> `evaluation_locked`.
 
 **Returns:** `evidence_hash: str`
 
@@ -52,7 +52,7 @@ Locks all evidence. Generates `evidence_hash`. Status → `evaluation_locked`.
 
 ### `submit_evaluation(project_id: str)`
 
-Signals evaluation start. Status → `evaluating`.
+Signals evaluation start. Status -> `evaluating`.
 
 **Requires:** `status == "evaluation_locked"`
 
@@ -64,12 +64,12 @@ Runs all 5 AI evaluation agents via `gl.eq_principle.prompt_non_comparative()`.
 Validators reach consensus. Stores evaluation on-chain.
 
 **Agents:**
-1. `_evaluate_technical_quality()` — 25% weight
-2. `_evaluate_team_quality()` — 20% weight
-3. `_evaluate_market_fit()` — 20% weight
-4. `_evaluate_security()` — 15% weight
-5. `_evaluate_token_utility()` — 10% weight
-6. `_evaluate_execution()` — 10% weight
+1. `_evaluate_technical_quality()` - 25% weight
+2. `_evaluate_team_quality()` - 20% weight
+3. `_evaluate_market_fit()` - 20% weight
+4. `_evaluate_security()` - 15% weight
+5. `_evaluate_token_utility()` - 10% weight
+6. `_evaluate_execution()` - 10% weight
 
 **Returns:** `evaluation_id: str`
 
@@ -77,22 +77,22 @@ Validators reach consensus. Stores evaluation on-chain.
 
 ### `finalize_score(project_id: str)`
 
-Finalizes evaluation, assigns tier, updates leaderboard. Status → `ranked`.
+Finalizes evaluation, assigns tier, updates leaderboard. Status -> `ranked`.
 
 **Tier Assignment:**
-- S+ = 95–100
-- S = 90–94
-- A = 80–89
-- B = 70–79
-- C = 60–69
-- D = 50–59
-- F = 0–49
+- S+ = 95-100
+- S = 90-94
+- A = 80-89
+- B = 70-79
+- C = 60-69
+- D = 50-59
+- F = 0-49
 
 ---
 
 ### `request_reevaluation(project_id: str)`
 
-Requests a new evaluation cycle. Status → `reevaluation_pending`.
+Requests a new evaluation cycle. Status -> `reevaluation_pending`.
 
 **Requires:** `status == "ranked"`
 
@@ -106,7 +106,7 @@ Updates category leaderboard from current on-chain state.
 
 ### `archive_project(project_id: str)`
 
-Archives a project. Status → `archived`.
+Archives a project. Status -> `archived`.
 
 **Forbidden:** Cannot evaluate archived projects.
 
@@ -158,7 +158,7 @@ Returns latest evaluation JSON.
   "tier": "A",
   "confidence": 85,
   "strengths": ["..."],
-  "weaknesses": ["..."],
+```
   "recommendations": ["..."]
 }
 ```

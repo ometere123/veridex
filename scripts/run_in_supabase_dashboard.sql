@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════
--- AlphaRank — Complete Database Migration
+-- Veridex - Complete Database Migration
 --
 -- HOW TO RUN:
 --   1. Open: https://supabase.com/dashboard/project/riojawpvqawvillemios/sql/new
@@ -46,28 +46,35 @@ CREATE INDEX IF NOT EXISTS idx_projects_owner    ON projects(owner);
 CREATE INDEX IF NOT EXISTS idx_projects_status   ON projects(status);
 CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category);
 
--- Evaluations (cache only — GenLayer is source of truth)
+-- Evaluations (cache only - GenLayer is source of truth)
 CREATE TABLE IF NOT EXISTS evaluations (
-  evaluation_id       TEXT         PRIMARY KEY,
-  project_id          TEXT         NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
-  technical_score     NUMERIC(5,2) DEFAULT 0,
-  team_score          NUMERIC(5,2) DEFAULT 0,
-  market_fit_score    NUMERIC(5,2) DEFAULT 0,
-  security_score      NUMERIC(5,2) DEFAULT 0,
-  execution_score     NUMERIC(5,2) DEFAULT 0,
-  token_utility_score NUMERIC(5,2) DEFAULT 0,
-  overall_score       NUMERIC(5,2) DEFAULT 0,
-  tier                TEXT,
-  confidence          INTEGER      DEFAULT 0,
-  evaluation_hash     TEXT,
-  tx_hash             TEXT,
-  evaluated_at        TIMESTAMPTZ  DEFAULT NOW()
+  evaluation_id              TEXT         PRIMARY KEY,
+  project_id                 TEXT         NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
+  technical_score            NUMERIC(5,2) DEFAULT 0,
+  team_score                 NUMERIC(5,2) DEFAULT 0,
+  market_fit_score           NUMERIC(5,2) DEFAULT 0,
+  security_score             NUMERIC(5,2) DEFAULT 0,
+  execution_score            NUMERIC(5,2) DEFAULT 0,
+  token_utility_score        NUMERIC(5,2) DEFAULT 0,
+  protocol_architecture_score NUMERIC(5,2) DEFAULT 0,
+  team_governance_score      NUMERIC(5,2) DEFAULT 0,
+  market_traction_score      NUMERIC(5,2) DEFAULT 0,
+  security_risk_score        NUMERIC(5,2) DEFAULT 0,
+  delivery_proof_score       NUMERIC(5,2) DEFAULT 0,
+  token_design_score         NUMERIC(5,2) DEFAULT 0,
+  evidence_integrity_score   NUMERIC(5,2) DEFAULT 0,
+  overall_score              NUMERIC(5,2) DEFAULT 0,
+  tier                       TEXT,
+  confidence                 INTEGER      DEFAULT 0,
+  evaluation_hash            TEXT,
+  tx_hash                    TEXT,
+  evaluated_at               TIMESTAMPTZ  DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_evaluations_project ON evaluations(project_id);
 CREATE INDEX IF NOT EXISTS idx_evaluations_tier    ON evaluations(tier);
 
--- Rankings (cache — derived from GenLayer)
+-- Rankings (cache - derived from GenLayer)
 CREATE TABLE IF NOT EXISTS rankings (
   project_id     TEXT         PRIMARY KEY REFERENCES projects(project_id) ON DELETE CASCADE,
   rank_position  INTEGER,
@@ -78,7 +85,7 @@ CREATE TABLE IF NOT EXISTS rankings (
   updated_at     TIMESTAMPTZ  DEFAULT NOW()
 );
 
--- Historical Rankings (append-only — never overwrite)
+-- Historical Rankings (append-only - never overwrite)
 CREATE TABLE IF NOT EXISTS historical_rankings (
   id           BIGSERIAL    PRIMARY KEY,
   project_id   TEXT         NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,

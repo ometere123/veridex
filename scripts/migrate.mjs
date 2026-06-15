@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * AlphaRank — Supabase Migration Script
+ * Veridex - Supabase Migration Script
  *
  * Usage:
  *   node scripts/migrate.mjs <DB_PASSWORD>

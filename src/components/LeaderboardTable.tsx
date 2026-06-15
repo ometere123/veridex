@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { TierBadge } from './TierBadge';
-import { formatScore, getScoreHex, getScoreColor, cn } from '@/utils';
+import { formatScore, getScoreHex, getScoreColor, cn, safeNumber } from '@/utils';
 import type { LeaderboardEntry } from '@/types';
 
 interface LeaderboardTableProps {
@@ -22,7 +22,7 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
       <table className="w-full text-sm">
         <thead>
           <tr style={{ borderBottom: '1px solid rgba(230,190,247,0.08)' }}>
-            {['#', 'Project', 'Category', 'Score', 'Tier', 'Tech', 'Team', 'Security'].map((h, i) => (
+            {['#', 'Project', 'Category', 'Score', 'Tier', 'Architecture', 'Governance', 'Traction'].map((h, i) => (
               <th
                 key={h}
                 className={cn(
@@ -55,7 +55,7 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
                 <span className="font-mono text-sm font-medium" style={{
                   color: idx === 0 ? '#fbbf24' : idx === 1 ? '#e6bef7' : idx === 2 ? '#c084fc' : '#6b5490'
                 }}>
-                  {entry.rank}
+                  {Math.round(safeNumber(entry.rank))}
                 </span>
               </td>
 
@@ -82,8 +82,8 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
               {/* Score */}
               <td className="py-3 pr-4">
                 <span
-                  className={cn('font-mono font-bold text-sm', getScoreColor(entry.overall_score))}
-                  style={{ textShadow: `0 0 8px ${getScoreHex(entry.overall_score)}44` }}
+                  className={cn('font-mono font-bold text-sm', getScoreColor(safeNumber(entry.overall_score)))}
+                  style={{ textShadow: `0 0 8px ${getScoreHex(safeNumber(entry.overall_score))}44` }}
                 >
                   {formatScore(entry.overall_score)}
                 </span>
@@ -95,10 +95,10 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
               </td>
 
               {/* Sub-scores */}
-              {[entry.technical_score, entry.team_score, entry.security_score].map((v, i) => (
+              {[entry.protocol_architecture_score, entry.team_governance_score, entry.market_traction_score].map((v, i) => (
                 <td key={i} className="py-3 pr-4 hidden lg:table-cell">
-                  <span className="font-mono text-sm" style={{ color: getScoreHex(v) }}>
-                    {Math.round(v)}
+                  <span className="font-mono text-sm" style={{ color: getScoreHex(safeNumber(v)) }}>
+                    {formatScore(v)}
                   </span>
                 </td>
               ))}

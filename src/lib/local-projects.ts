@@ -15,7 +15,7 @@ export interface LocalProject {
   created_at: string;
 }
 
-const KEY = 'alpharank_projects';
+const KEY = 'veridex_projects';
 
 export function saveProjectLocally(project: LocalProject): void {
   try {
@@ -44,11 +44,11 @@ export function updateLocalProjectStatus(project_id: string, status: string): vo
   try {
     const all = getLocalProjects();
     const updated = all.map((p) => p.project_id === project_id ? { ...p, status } : p);
-    localStorage.setItem('alpharank_projects', JSON.stringify(updated));
+    localStorage.setItem('veridex_projects', JSON.stringify(updated));
   } catch {}
 }
 
 /** Clear all localStorage state (call after contract redeploy / fresh start) */
 export function clearLocalProjects(): void {
-  try { localStorage.removeItem('alpharank_projects'); } catch {}
+  try { localStorage.removeItem('veridex_projects'); } catch {}
 }

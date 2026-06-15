@@ -1,4 +1,4 @@
-# AlphaRank — Deployment Guide
+# Veridex - Deployment Guide
 
 ## Prerequisites
 
@@ -22,7 +22,8 @@ Required variables:
 
 | Variable | Description |
 |---|---|
-| `NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS` | Deployed AlphaRank contract address |
+| `NEXT_PUBLIC_VERIDEX_CONTRACT_ADDRESS` | Deployed Veridex contract address |
+| `NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS` | Legacy fallback contract address (optional) |
 | `NEXT_PUBLIC_GENLAYER_RPC_URL` | GenLayer RPC endpoint |
 | `NEXT_PUBLIC_CHAIN_ID` | GenLayer chain ID |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
@@ -42,7 +43,7 @@ pip install genlayer
 ### 2b. Deploy the contract
 
 ```bash
-genlayer deploy contracts/AlphaRank.py \
+genlayer deploy contracts/Veridex.py \
   --network testnet \
   --account YOUR_WALLET
 ```
@@ -83,7 +84,7 @@ npm run build
 npm start
 ```
 
-> **Note on build:** `npm run build` uses `--experimental-build-mode compile` to avoid a known Next.js 16 prerender bug on Windows (see: [Next.js #80000](https://github.com/vercel/next.js/issues)). This produces a fully functional server-side-rendered production build. All AlphaRank routes are dynamic (server-rendered on demand), so no static prerendering is required.
+> **Note on build:** `npm run build` uses `--experimental-build-mode compile` to avoid a known Next.js 16 prerender bug on Windows (see: [Next.js #80000](https://github.com/vercel/next.js/issues)). This produces a fully functional server-side-rendered production build. All Veridex routes are dynamic (server-rendered on demand), so no static prerendering is required.
 
 ---
 
@@ -128,7 +129,7 @@ User Browser
     │       ├── GET /api/leaderboard → reads from GenLayer on-chain state
     │       └── All ranking/scoring logic NEVER happens in API routes
     │
-    ├── GenLayer Intelligent Contract (AlphaRank.py)
+    ├── GenLayer Intelligent Contract (Veridex.py)
     │       ├── Stores all project state
     │       ├── Runs AI evaluation via gl.eq_principle.prompt_non_comparative()
     │       ├── Validators reach consensus on evaluation results

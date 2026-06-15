@@ -11,7 +11,7 @@ export default function Icon() {
           width: 32,
           height: 32,
           borderRadius: 8,
-          background: 'linear-gradient(135deg, #a855f7, #e6bef7)',
+          background: 'linear-gradient(135deg, #6b8e7a, #b8633f)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -21,7 +21,7 @@ export default function Icon() {
           fontFamily: 'serif',
         }}
       >
-        α
+        V
       </div>
     ),
     { ...size }

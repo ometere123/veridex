@@ -60,7 +60,7 @@ export function NetworkChecker() {
     >
       <span style={{ color: '#fbbf24' }}>⚠</span>
       <span style={{ color: '#ddd0f0' }}>
-        Wrong network — switch to{' '}
+        Wrong network - switch to{' '}
         <strong style={{ color: '#e6bef7' }}>GenLayer Testnet</strong>
       </span>
       <button

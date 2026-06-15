@@ -1,6 +1,6 @@
 'use client';
 
-import { formatScore, getScoreHex, getScoreColor, cn } from '@/utils';
+import { formatScore, getScoreHex, getScoreColor, cn, safeNumber } from '@/utils';
 import { TierBadge } from './TierBadge';
 import { SCORE_LABELS } from '@/constants';
 import type { Evaluation, Project } from '@/types';
@@ -14,8 +14,13 @@ interface ProjectComparisonProps {
 }
 
 const SCORE_KEYS = [
-  'technical_score', 'team_score', 'market_fit_score',
-  'security_score', 'execution_score', 'token_utility_score',
+  'protocol_architecture_score',
+  'team_governance_score',
+  'market_traction_score',
+  'security_risk_score',
+  'delivery_proof_score',
+  'token_design_score',
+  'evidence_integrity_score',
 ] as const;
 
 const ROW_STYLE = { borderBottom: '1px solid rgba(230,190,247,0.05)' };
@@ -50,10 +55,10 @@ export function ProjectComparison({ projectA, projectB, evalA, evalB, className 
           <tr style={ROW_STYLE}>
             <td className="py-3 pr-4 text-xs" style={{ color: '#6b5490' }}>Tier</td>
             <td className="py-3 pr-4 text-center">
-              {evalA ? <TierBadge tier={evalA.tier} size="sm" /> : <span style={{ color: '#3d2a6b' }}>—</span>}
+              {evalA ? <TierBadge tier={evalA.tier} size="sm" /> : <span style={{ color: '#3d2a6b' }}>-</span>}
             </td>
             <td className="py-3 text-center">
-              {evalB ? <TierBadge tier={evalB.tier} size="sm" /> : <span style={{ color: '#3d2a6b' }}>—</span>}
+              {evalB ? <TierBadge tier={evalB.tier} size="sm" /> : <span style={{ color: '#3d2a6b' }}>-</span>}
             </td>
           </tr>
 
@@ -66,7 +71,7 @@ export function ProjectComparison({ projectA, projectB, evalA, evalB, className 
                     style={{ textShadow: `0 0 10px ${getScoreHex(evalA.overall_score)}44` }}>
                     {formatScore(evalA.overall_score)}
                   </span>
-                : <span style={{ color: '#3d2a6b' }}>—</span>}
+                : <span style={{ color: '#3d2a6b' }}>-</span>}
             </td>
             <td className="py-3 text-center">
               {evalB
@@ -74,14 +79,14 @@ export function ProjectComparison({ projectA, projectB, evalA, evalB, className 
                     style={{ textShadow: `0 0 10px ${getScoreHex(evalB.overall_score)}44` }}>
                     {formatScore(evalB.overall_score)}
                   </span>
-                : <span style={{ color: '#3d2a6b' }}>—</span>}
+                : <span style={{ color: '#3d2a6b' }}>-</span>}
             </td>
           </tr>
 
           {/* Individual scores */}
           {SCORE_KEYS.map((key) => {
-            const aVal = evalA?.[key] ?? null;
-            const bVal = evalB?.[key] ?? null;
+            const aVal = evalA ? safeNumber(evalA[key]) : null;
+            const bVal = evalB ? safeNumber(evalB[key]) : null;
             const aWins = aVal !== null && bVal !== null && aVal > bVal;
             const bWins = aVal !== null && bVal !== null && bVal > aVal;
 
@@ -93,16 +98,16 @@ export function ProjectComparison({ projectA, projectB, evalA, evalB, className 
                 <td className="py-3 pr-4 text-center" style={aWins ? HIGHLIGHT : {}}>
                   {aVal !== null
                     ? <span className={cn('font-mono text-sm', aWins && 'font-bold', getScoreColor(aVal))}>
-                        {Math.round(aVal)}
+                        {formatScore(aVal)}
                       </span>
-                    : <span style={{ color: '#3d2a6b' }}>—</span>}
+                    : <span style={{ color: '#3d2a6b' }}>-</span>}
                 </td>
                 <td className="py-3 text-center" style={bWins ? HIGHLIGHT : {}}>
                   {bVal !== null
                     ? <span className={cn('font-mono text-sm', bWins && 'font-bold', getScoreColor(bVal))}>
-                        {Math.round(bVal)}
+                        {formatScore(bVal)}
                       </span>
-                    : <span style={{ color: '#3d2a6b' }}>—</span>}
+                    : <span style={{ color: '#3d2a6b' }}>-</span>}
                 </td>
               </tr>
             );

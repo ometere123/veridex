@@ -9,18 +9,18 @@ export default function Loading() {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="rounded-xl p-5 text-center space-y-2" style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}>
+          <div key={i} className="rounded-xl p-5 text-center space-y-2" style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
             <Skeleton className="h-8 w-12 mx-auto" />
             <Skeleton className="h-3 w-20 mx-auto" />
           </div>
         ))}
       </div>
-      <div className="rounded-xl overflow-hidden" style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}>
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(230,190,247,0.08)' }}>
+      <div className="rounded-xl overflow-hidden" style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(0,217,255,0.08)' }}>
           <Skeleton className="h-5 w-36" />
         </div>
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(230,190,247,0.04)' }}>
+          <div key={i} className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(0,217,255,0.04)' }}>
             <div className="space-y-1.5">
               <Skeleton className="h-4 w-40" />
               <Skeleton className="h-3 w-28" />

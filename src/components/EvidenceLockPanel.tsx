@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { truncateHash, formatDateTime } from '@/utils';
 import { contractLockProject } from '@/lib/genlayer-write';
-import { glReadContract } from '@/lib/genlayer';
+import { getProject } from '@/lib/genlayer';
 import type { Project } from '@/types';
 
 interface EvidenceLockPanelProps {
@@ -33,9 +33,8 @@ export function EvidenceLockPanel({ project, onLock, className }: EvidenceLockPa
       // ② Read the evidence_hash from the contract after finalization
       let evidenceHash = '';
       try {
-        const updated = await glReadContract('get_project', [project.project_id]);
-        const parsed = JSON.parse(updated as string);
-        evidenceHash = parsed.evidence_hash || '';
+        const updated = await getProject(project.project_id);
+        evidenceHash = updated?.evidence_hash || '';
       } catch { /* non-fatal */ }
 
       // ③ Sync status to Supabase cache
@@ -62,7 +61,7 @@ export function EvidenceLockPanel({ project, onLock, className }: EvidenceLockPa
     <div
       className={className}
       style={{
-        background: '#0e0a1a',
+        background: '#0a0f1a',
         border: isLocked
           ? '1px solid rgba(248,113,113,0.2)'
           : '1px solid rgba(74,222,128,0.15)',
@@ -81,7 +80,7 @@ export function EvidenceLockPanel({ project, onLock, className }: EvidenceLockPa
               : '0 0 6px rgba(74,222,128,0.6)',
           }}
         />
-        <h3 className="font-semibold text-sm" style={{ color: '#f5eeff' }}>
+        <h3 className="font-semibold text-sm" style={{ color: '#e2e8f0' }}>
           Evidence Status
         </h3>
       </div>
@@ -92,20 +91,20 @@ export function EvidenceLockPanel({ project, onLock, className }: EvidenceLockPa
             className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg"
             style={{ background: 'rgba(248,113,113,0.06)', color: '#f87171' }}
           >
-            🔒 Evidence Locked — Immutable
+            🔒 Evidence Locked - Immutable
           </div>
           {project.locked_at && (
-            <div className="text-xs" style={{ color: '#9b86b8' }}>
-              <span style={{ color: '#6b5490' }}>Locked: </span>
+            <div className="text-xs" style={{ color: '#94a3b8' }}>
+              <span style={{ color: '#64748b' }}>Locked: </span>
               {formatDateTime(project.locked_at)}
             </div>
           )}
           {project.evidence_hash && (
             <div
               className="rounded-lg p-3"
-              style={{ background: 'rgba(230,190,247,0.04)', border: '1px solid rgba(230,190,247,0.08)' }}
+              style={{ background: 'rgba(0,217,255,0.04)', border: '1px solid rgba(0,217,255,0.08)' }}
             >
-              <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#6b5490' }}>
+              <div className="text-[10px] uppercase tracking-wider mb-1" style={{ color: '#64748b' }}>
                 Evidence Hash
               </div>
               <code className="text-xs break-all block font-mono" style={{ color: '#4ade80' }}>
@@ -113,16 +112,16 @@ export function EvidenceLockPanel({ project, onLock, className }: EvidenceLockPa
               </code>
             </div>
           )}
-          <p className="text-xs" style={{ color: '#6b5490' }}>
+          <p className="text-xs" style={{ color: '#64748b' }}>
             No modifications permitted after locking.
           </p>
         </div>
       ) : (
         <div className="space-y-3">
-          <p className="text-sm" style={{ color: '#9b86b8' }}>
+          <p className="text-sm" style={{ color: '#94a3b8' }}>
             Evidence is{' '}
             <span className="font-semibold" style={{ color: '#4ade80' }}>editable</span>.
-            Lock it before submitting for evaluation.
+            Lock it before submitting for assessment.
           </p>
           <div
             className="rounded-lg p-3 text-xs"
@@ -150,11 +149,11 @@ export function EvidenceLockPanel({ project, onLock, className }: EvidenceLockPa
                 boxShadow: locking ? 'none' : '0 0 14px rgba(239,68,68,0.3)',
               }}
             >
-              {locking ? 'Locking — approve in wallet…' : '🔒 Lock Evidence'}
+              {locking ? 'Locking - approve in wallet…' : '🔒 Lock Evidence'}
             </button>
           )}
           {!isOwner && address && (
-            <p className="text-xs" style={{ color: '#6b5490' }}>
+            <p className="text-xs" style={{ color: '#64748b' }}>
               Only the project owner can lock evidence.
             </p>
           )}

@@ -1,12 +1,13 @@
 {
-  "name": "alpharank",
+  "name": "veridex",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build --experimental-build-mode compile",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",

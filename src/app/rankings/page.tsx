@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
 import { ProjectBoard } from '@/components/ProjectBoard';
 import { CATEGORIES } from '@/constants';
@@ -23,100 +23,75 @@ export default function RankingsPage() {
 
   const filtered = useMemo(() => {
     let list = entries;
-    if (category !== 'All') list = list.filter((e) => e.category === category);
+    if (category !== 'All') list = list.filter((entry) => entry.category === category);
     if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter((e) => e.project_name.toLowerCase().includes(q));
+      const query = search.toLowerCase();
+      list = list.filter((entry) => entry.project_name.toLowerCase().includes(query));
     }
     return list;
   }, [entries, category, search]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-black mb-2" style={{ color: '#f5eeff' }}>Global Rankings</h1>
-        <p className="text-sm" style={{ color: '#9b86b8' }}>
-          Derived from GenLayer Intelligent Contract state · Scores are immutable once finalized.
-        </p>
-      </div>
-
-      {/* Controls */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        {/* Search */}
-        <div className="relative flex-1 max-w-xs">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: '#6b5490' }}>⌕</span>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search projects…"
-            className="w-full pl-8 pr-3 py-2.5 rounded-lg text-sm"
-            style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.12)', color: '#f5eeff', outline: 'none' }}
-          />
+      <div className="mb-8 grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>Rankings</p>
+          <h1 className="mt-3 text-4xl font-semibold" style={{ color: '#1a1612' }}>Veridex Reputation Tiers</h1>
+          <p className="mt-3 text-sm leading-7" style={{ color: '#6b6360' }}>
+            Sourced from on-chain contract state. Verification score, tier, and evidence history are recorded on-chain.
+          </p>
         </div>
-
-        {/* Category filter */}
-        <div className="flex gap-2 flex-wrap">
-          {['All', ...CATEGORIES].map((c) => (
-            <button
-              key={c}
-              onClick={() => setCategory(c)}
-              className="px-3 py-2 rounded-lg text-xs font-medium transition-all"
-              style={category === c
-                ? { background: 'linear-gradient(135deg,#7c3aed,#a855f7)', color: '#fff' }
-                : { background: 'rgba(230,190,247,0.05)', border: '1px solid rgba(230,190,247,0.1)', color: '#9b86b8' }
-              }
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-
-        {/* View toggle */}
-        <div
-          className="flex rounded-lg overflow-hidden ml-auto"
-          style={{ border: '1px solid rgba(230,190,247,0.1)' }}
-        >
-          {(['table', 'board'] as const).map((v) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              className="px-3 py-2 text-xs font-medium transition-all capitalize"
-              style={view === v
-                ? { background: 'rgba(230,190,247,0.12)', color: '#e6bef7' }
-                : { background: 'transparent', color: '#6b5490' }
-              }
-            >
-              {v === 'table' ? '≡ Table' : '⊞ Board'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Results count */}
-      {!loading && (
-        <p className="text-xs mb-4" style={{ color: '#6b5490' }}>
-          {filtered.length} project{filtered.length !== 1 ? 's' : ''}
-          {search || category !== 'All' ? ' matching filters' : ' ranked'}
-        </p>
-      )}
-
-      {/* Content */}
-      <div className="rounded-2xl p-6" style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}>
-        {loading ? (
-          <div className="flex items-center justify-center py-20 gap-3" style={{ color: '#6b5490' }}>
-            <span className="w-5 h-5 rounded-full border-2 animate-spin"
-              style={{ borderColor: 'rgba(230,190,247,0.2)', borderTopColor: '#e6bef7' }} />
-            Loading rankings from GenLayer…
+        <div className="rounded-[28px] p-6" style={{ background: '#ffffff', border: '1px solid rgba(107, 142, 122, 0.12)' }}>
+          <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>Filters</p>
+          <div className="mt-4 flex flex-col gap-3">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search initiatives"
+              className="w-full rounded-2xl px-4 py-3 text-sm"
+              style={{ background: 'rgba(107, 142, 122, 0.05)', color: '#1a1612', outline: 'none' }}
+            />
+            <div className="flex flex-wrap gap-2">
+              {['All', ...CATEGORIES].map((item) => (
+                <button
+                  key={item}
+                  onClick={() => setCategory(item)}
+                  className="rounded-full px-3 py-2 text-xs"
+                  style={category === item ? { background: '#6b8e7a', color: '#ffffff' } : { background: 'rgba(107, 142, 122, 0.08)', color: '#6b6360' }}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
           </div>
+        </div>
+      </div>
+
+      <div className="mb-5 flex items-center justify-between">
+        <p className="text-sm" style={{ color: '#6b6360' }}>
+          {loading ? 'Loading ranked initiatives...' : `${filtered.length} initiative${filtered.length === 1 ? '' : 's'} in view`}
+        </p>
+        <div className="flex gap-2">
+          {(['table', 'board'] as const).map((item) => (
+            <button
+              key={item}
+              onClick={() => setView(item)}
+              className="rounded-full px-4 py-2 text-xs uppercase tracking-[0.18em]"
+              style={view === item ? { background: '#b8633f', color: '#ffffff' } : { background: 'rgba(184, 99, 63, 0.08)', color: '#b8633f' }}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-[32px] p-6" style={{ background: '#ffffff', border: '1px solid rgba(107, 142, 122, 0.12)' }}>
+        {loading ? (
+          <div className="py-20 text-center text-sm" style={{ color: '#6b6360' }}>Fetching reputation tiers...</div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-lg mb-2" style={{ color: '#6b5490' }}>No projects found.</p>
-            {(search || category !== 'All') && (
-              <button onClick={() => { setSearch(''); setCategory('All'); }}
-                className="text-sm" style={{ color: '#e6bef7' }}>
-                Clear filters
-              </button>
-            )}
+          <div className="py-20 text-center">
+            <p className="text-lg" style={{ color: '#1a1612' }}>No initiatives match these filters.</p>
+            <p className="mt-2 text-sm" style={{ color: '#6b6360' }}>Try another category or clear the search.</p>
           </div>
         ) : view === 'table' ? (
           <LeaderboardTable entries={filtered} />

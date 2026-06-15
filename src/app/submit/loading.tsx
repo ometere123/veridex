@@ -7,7 +7,7 @@ export default function Loading() {
       <Skeleton className="h-4 w-96 mb-8" />
       {[...Array(5)].map((_, i) => (
         <div key={i} className="rounded-xl p-6 space-y-4"
-          style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}>
+          style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
           <Skeleton className="h-5 w-48" />
           <div className="grid grid-cols-2 gap-4">
             <Skeleton className="h-10" />

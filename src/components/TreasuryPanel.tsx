@@ -7,10 +7,12 @@ interface TreasuryPanelProps {
 
 export function TreasuryPanel({ treasury, className }: TreasuryPanelProps) {
   const rows = [
+    { label: 'Create Project Fee',    value: `${treasury.create_project_fee} wei`, highlight: false },
     { label: 'Evaluation Fee',        value: `${treasury.evaluation_fee} GEN`,    highlight: false },
     { label: 'Reevaluation Fee',      value: `${treasury.reevaluation_fee} GEN`,  highlight: false },
-    { label: 'Total Evaluations Paid',value: String(treasury.total_evaluations_paid), highlight: false },
+    { label: 'Contract Balance',      value: `${treasury.contract_balance} GEN`, highlight: false },
     { label: 'Total Fees Collected',  value: `${treasury.total_fees_collected} GEN`, highlight: true },
+    { label: 'Fees Enabled',          value: treasury.fees_enabled ? 'Yes' : 'No', highlight: false },
   ];
 
   return (

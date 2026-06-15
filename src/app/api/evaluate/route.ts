@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getEvaluation, getProject, getRanking, getLeaderboard } from '@/lib/genlayer';
 import { getServiceClient } from '@/lib/supabase';
 
-/** GET — read evaluation from GenLayer (source of truth) */
+/** GET - read evaluation from GenLayer (source of truth) */
 export async function GET(req: NextRequest) {
   try {
     const project_id = new URL(req.url).searchParams.get('project_id');
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
  *   - sets project status to "ranked"
  *
  * This route reads the final state from GenLayer and syncs to Supabase cache.
- * SCORES ARE NEVER GENERATED HERE — only read from GenLayer.
+ * SCORES ARE NEVER GENERATED HERE - only read from GenLayer.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     // Sync evaluation to Supabase cache
     const supabase = getServiceClient();
 
-    // Parse evaluated_at — might be a Unix timestamp string from GenLayer
+    // Parse evaluated_at - might be a Unix timestamp string from GenLayer
     const rawTs = evaluation.evaluated_at;
     const parsedTs = rawTs && rawTs !== '0'
       ? (isNaN(Number(rawTs)) ? rawTs : new Date(Number(rawTs) * 1000).toISOString())
@@ -65,12 +65,13 @@ export async function POST(req: NextRequest) {
         project_id,
         overall_score:      evaluation.overall_score,
         tier:               evaluation.tier,
-        technical_score:    evaluation.technical_score,
-        team_score:         evaluation.team_score,
-        market_fit_score:   evaluation.market_fit_score,
-        security_score:     evaluation.security_score,
-        execution_score:    evaluation.execution_score,
-        token_utility_score:evaluation.token_utility_score,
+        protocol_architecture_score: evaluation.protocol_architecture_score,
+        team_governance_score:      evaluation.team_governance_score,
+        market_traction_score:      evaluation.market_traction_score,
+        security_risk_score:        evaluation.security_risk_score,
+        delivery_proof_score:       evaluation.delivery_proof_score,
+        token_design_score:         evaluation.token_design_score,
+        evidence_integrity_score:   evaluation.evidence_integrity_score,
         confidence:         evaluation.confidence ?? 85,
         evaluated_at:       parsedTs,
       });
@@ -90,7 +91,7 @@ export async function POST(req: NextRequest) {
           wallet_address: wallet,
           type:       'evaluation_complete',
           title:      'Evaluation Complete',
-          message:    `${project.name} scored ${evaluation.overall_score} — Tier ${evaluation.tier}`,
+          message:    `${project.name} scored ${evaluation.overall_score} - Tier ${evaluation.tier}`,
           project_id,
           read:       false,
           created_at: new Date().toISOString(),

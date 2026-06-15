@@ -14,7 +14,7 @@ interface Props { params: Promise<{ wallet: string }>; }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { wallet } = await params;
   return {
-    title: `${formatAddress(wallet)} — AlphaRank Profile`,
+    title: `${formatAddress(wallet)} - Veridex Profile`,
     description: `View on-chain reputation and project history for wallet ${formatAddress(wallet)}`,
   };
 }
@@ -51,38 +51,38 @@ export default async function ProfilePage({ params }: Props) {
   const projects = await getWalletProjects(wallet);
 
   const METRICS = [
-    { label: 'Credibility',  value: profile.credibility_score,  desc: 'Based on evaluation history' },
-    { label: 'Consistency',  value: profile.consistency_score,  desc: 'Variance across evaluations' },
-    { label: 'Security Avg', value: profile.security_rating,    desc: 'Average security score' },
-    { label: 'Execution Avg',value: profile.execution_rating,   desc: 'Average execution score' },
+    { label: 'Credibility',  value: profile.credibility_score,  desc: 'Derived from evaluation track record' },
+    { label: 'Consistency',  value: profile.consistency_score,  desc: 'Score variance across assessments' },
+    { label: 'Security Avg', value: profile.security_rating,    desc: 'Mean security assessment score' },
+    { label: 'Execution Avg',value: profile.execution_rating,   desc: 'Mean execution assessment score' },
   ];
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       {/* Profile header */}
       <div
-        className="rounded-2xl p-8 mb-6"
-        style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.10)' }}
+        className="rounded-sm p-8 mb-6"
+        style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.10)' }}
       >
         <div className="flex items-center gap-5 mb-6">
           <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black flex-shrink-0"
+            className="w-16 h-16 rounded-sm flex items-center justify-center text-2xl font-black flex-shrink-0"
             style={{
-              background: 'linear-gradient(135deg,#7c3aed,#e6bef7)',
+              background: 'linear-gradient(135deg,#00d9ff,#06b6d4)',
               color: '#fff',
-              boxShadow: '0 0 20px rgba(230,190,247,0.2)',
+              boxShadow: '0 0 20px rgba(0,217,255,0.2)',
             }}
           >
             {wallet.slice(2, 4).toUpperCase()}
           </div>
           <div>
-            <h1 className="text-xl font-black font-mono mb-1" style={{ color: '#f5eeff' }}>
+            <h1 className="text-xl font-black font-mono mb-1" style={{ color: '#e2e8f0' }}>
               {formatAddress(wallet)}
             </h1>
-            <p className="text-sm" style={{ color: '#6b5490' }}>
-              Member since {formatDate(profile.created_at)}
+            <p className="text-sm" style={{ color: '#64748b' }}>
+              Active since {formatDate(profile.created_at)}
             </p>
-            <code className="text-[11px] font-mono" style={{ color: '#3d2a6b' }}>{wallet}</code>
+            <code className="text-[11px] font-mono" style={{ color: '#334155' }}>{wallet}</code>
           </div>
         </div>
 
@@ -96,13 +96,13 @@ export default async function ProfilePage({ params }: Props) {
           ].map((stat) => (
             <div
               key={stat.label}
-              className="rounded-xl p-4 text-center"
-              style={{ background: 'rgba(230,190,247,0.04)', border: '1px solid rgba(230,190,247,0.07)' }}
+              className="rounded-sm p-4 text-center"
+              style={{ background: 'rgba(0,217,255,0.04)', border: '1px solid rgba(0,217,255,0.07)' }}
             >
-              <div className="text-2xl font-black font-mono mb-0.5" style={{ color: '#e6bef7' }}>
+              <div className="text-2xl font-black font-mono mb-0.5" style={{ color: '#00d9ff' }}>
                 {stat.value}
               </div>
-              <div className="text-[11px] uppercase tracking-wider" style={{ color: '#6b5490' }}>
+              <div className="text-[11px] uppercase tracking-wider" style={{ color: '#64748b' }}>
                 {stat.label}
               </div>
             </div>
@@ -115,53 +115,53 @@ export default async function ProfilePage({ params }: Props) {
         {METRICS.map((m) => (
           <div
             key={m.label}
-            className="rounded-xl p-5"
-            style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}
+            className="rounded-sm p-5"
+            style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium" style={{ color: '#ddd0f0' }}>{m.label}</span>
+              <span className="text-sm font-medium" style={{ color: '#cbd5e1' }}>{m.label}</span>
               <span className="font-mono font-bold text-sm" style={{ color: getScoreHex(m.value) }}>
                 {formatScore(m.value)}
               </span>
             </div>
             <div className="h-1.5 rounded-full overflow-hidden mb-2"
-              style={{ background: 'rgba(230,190,247,0.06)' }}>
+              style={{ background: 'rgba(0,217,255,0.06)' }}>
               <div
                 className="h-full rounded-full"
                 style={{ width: `${m.value}%`, background: `linear-gradient(90deg, ${getScoreHex(m.value)}55, ${getScoreHex(m.value)})` }}
               />
             </div>
-            <p className="text-[11px]" style={{ color: '#6b5490' }}>{m.desc}</p>
+            <p className="text-[11px]" style={{ color: '#64748b' }}>{m.desc}</p>
           </div>
         ))}
       </div>
 
       {/* Projects list */}
       <div
-        className="rounded-xl overflow-hidden"
-        style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}
+        className="rounded-sm overflow-hidden"
+        style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}
       >
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(230,190,247,0.06)' }}>
-          <h2 className="font-semibold text-sm" style={{ color: '#f5eeff' }}>Projects</h2>
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(0,217,255,0.06)' }}>
+          <h2 className="font-semibold text-sm" style={{ color: '#e2e8f0' }}>Projects</h2>
         </div>
         {projects.length === 0 ? (
-          <div className="px-6 py-12 text-center text-sm" style={{ color: '#6b5490' }}>
+          <div className="px-6 py-12 text-center text-sm" style={{ color: '#64748b' }}>
             No projects submitted.
           </div>
         ) : (
-          <div className="divide-y" style={{ borderColor: 'rgba(230,190,247,0.04)' }}>
+          <div className="divide-y" style={{ borderColor: 'rgba(0,217,255,0.04)' }}>
             {projects.map((p: { project_id: string; name: string; category: string; status: string; created_at: string; evaluation: { overall_score: number; tier: RankTier } | null }) => (
               <Link
                 key={p.project_id}
                 href={`/project/${p.project_id}`}
                 className="flex items-center justify-between px-6 py-4 transition-all"
                 style={{ display: 'flex' }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(230,190,247,0.03)')}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(0,217,255,0.03)')}
                 onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium" style={{ color: '#f5eeff' }}>{p.name}</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: '#6b5490' }}>
+                  <p className="text-sm font-medium" style={{ color: '#e2e8f0' }}>{p.name}</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: '#64748b' }}>
                     {p.category} · {formatDate(p.created_at)}
                   </p>
                 </div>
@@ -174,11 +174,11 @@ export default async function ProfilePage({ params }: Props) {
                       <TierBadge tier={p.evaluation.tier} size="sm" />
                     </>
                   ) : (
-                    <span className="text-xs capitalize" style={{ color: '#6b5490' }}>
+                    <span className="text-xs capitalize" style={{ color: '#64748b' }}>
                       {p.status.replace(/_/g, ' ')}
                     </span>
                   )}
-                  <span style={{ color: '#3d2a6b' }}>›</span>
+                  <span style={{ color: '#334155' }}>›</span>
                 </div>
               </Link>
             ))}

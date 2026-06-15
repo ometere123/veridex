@@ -23,7 +23,7 @@ export interface PendingEvaluation {
   last_polled?: number;
 }
 
-const KEY = 'alpharank_pending_eval';
+const KEY = 'veridex_pending_eval';
 
 export function savePendingEval(ev: PendingEvaluation): void {
   try { localStorage.setItem(KEY, JSON.stringify(ev)); } catch {}
@@ -48,8 +48,8 @@ export function updatePendingEvalStage(stage: EvalStage, extra?: Partial<Pending
 
 export const STAGE_LABEL: Record<EvalStage, string> = {
   signing:    'Waiting for wallet signature…',
-  submitted:  'Transaction submitted — GenLayer validators starting…',
-  validating: 'GenLayer AI evaluation running. This may take 2–5 minutes…',
+  submitted:  'Transaction submitted - GenLayer validators starting…',
+  validating: 'GenLayer AI evaluation running. This may take 2-5 minutes…',
   finalising: 'Validators reached consensus, finalising on-chain…',
   completed:  'Evaluation complete!',
   stalled:    'Still validating. Click "Refresh Status" to check.',

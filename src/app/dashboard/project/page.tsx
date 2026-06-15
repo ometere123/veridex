@@ -6,15 +6,22 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { EvidenceLockPanel } from '@/components/EvidenceLockPanel';
 import { EvaluationPanel } from '@/components/EvaluationPanel';
+import { FactCheckPanel } from '@/components/FactCheckPanel';
 import { HistoricalChart } from '@/components/HistoricalChart';
 import { GenLayerProofPanel } from '@/components/GenLayerProofPanel';
 import {
-  TechnicalScoreCard, TeamScoreCard, MarketFitCard,
-  SecurityScoreCard, ExecutionScoreCard, TokenUtilityCard,
+  DeliveryProofCard,
+  EvidenceIntegrityCard,
+  MarketTractionCard,
+  ProtocolArchitectureCard,
+  SecurityRiskCard,
+  TeamGovernanceCard,
+  TokenDesignCard,
 } from '@/components/ScoreCard';
 import { TierBadge } from '@/components/TierBadge';
 import { Skeleton } from '@/components/Skeleton';
 import { formatDate, formatScore, getScoreHex } from '@/utils';
+import { VERIDEX_CONTRACT_ADDRESS } from '@/lib/veridex-contract';
 import type { Project, Evaluation, HistoricalScore, GenLayerProof, GenLayerProofStep } from '@/types';
 
 interface DashboardProjectData {
@@ -33,7 +40,7 @@ function buildProof(project: Project, evaluation: Evaluation | null): GenLayerPr
   ];
   return {
     project_id: project.project_id,
-    contract_address: process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS || '0xa0BA37824D02eB24266aA01Dd6a238340890d4Fa',
+    contract_address: VERIDEX_CONTRACT_ADDRESS,
     evidence_hash: project.evidence_hash,
     evaluation_hash: evaluation?.evaluation_hash,
     steps,
@@ -71,7 +78,7 @@ function DashboardProjectInner() {
   if (!isConnected) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <p style={{ color: '#9b86b8' }}>Connect your wallet to view your project dashboard.</p>
+        <p style={{ color: '#94a3b8' }}>Link your wallet to access your submission details.</p>
       </div>
     );
   }
@@ -79,8 +86,8 @@ function DashboardProjectInner() {
   if (!projectId) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <p className="mb-4" style={{ color: '#9b86b8' }}>No project selected.</p>
-        <Link href="/dashboard" style={{ color: '#e6bef7' }}>← Back to Dashboard</Link>
+        <p className="mb-4" style={{ color: '#94a3b8' }}>No project selected.</p>
+        <Link href="/dashboard" style={{ color: '#00d9ff' }}>← Back to Dashboard</Link>
       </div>
     );
   }
@@ -104,8 +111,8 @@ function DashboardProjectInner() {
   if (!data) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <p style={{ color: '#9b86b8' }}>Project not found.</p>
-        <Link href="/dashboard" className="block mt-3" style={{ color: '#e6bef7' }}>← Back to Dashboard</Link>
+        <p style={{ color: '#94a3b8' }}>Project not found.</p>
+        <Link href="/dashboard" className="block mt-3" style={{ color: '#00d9ff' }}>← Back to Dashboard</Link>
       </div>
     );
   }
@@ -118,9 +125,9 @@ function DashboardProjectInner() {
     <div className="max-w-7xl mx-auto px-4 py-12">
       {/* Back */}
       <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm mb-6 transition-colors"
-        style={{ color: '#9b86b8' }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = '#e6bef7')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = '#9b86b8')}
+        style={{ color: '#94a3b8' }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = '#00d9ff')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}
       >
         ← Dashboard
       </Link>
@@ -129,7 +136,7 @@ function DashboardProjectInner() {
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-3 mb-2 flex-wrap">
-            <h1 className="text-2xl font-black" style={{ color: '#f5eeff' }}>{project.name}</h1>
+            <h1 className="text-2xl font-black" style={{ color: '#e2e8f0' }}>{project.name}</h1>
             {evaluation && <TierBadge tier={evaluation.tier} size="lg" />}
             {evaluation && (
               <span
@@ -140,15 +147,15 @@ function DashboardProjectInner() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: '#9b86b8' }}>
+          <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: '#94a3b8' }}>
             <span className="uppercase tracking-widest border rounded px-1.5 py-0.5"
-              style={{ borderColor: 'rgba(230,190,247,0.15)', color: '#9b86b8' }}>
+              style={{ borderColor: 'rgba(0,217,255,0.15)', color: '#94a3b8' }}>
               {project.category}
             </span>
             <span>{formatDate(project.created_at)}</span>
             <span
               className="flex items-center gap-1.5"
-              style={{ color: project.status === 'ranked' ? '#4ade80' : project.status === 'evaluating' ? '#fbbf24' : '#9b86b8' }}
+              style={{ color: project.status === 'ranked' ? '#4ade80' : project.status === 'evaluating' ? '#fbbf24' : '#94a3b8' }}
             >
               <span className="w-1.5 h-1.5 rounded-full"
                 style={{ background: 'currentColor' }} />
@@ -160,7 +167,7 @@ function DashboardProjectInner() {
           <Link
             href={`/project/${project.project_id}`}
             className="text-sm px-4 py-2 rounded-lg font-medium transition-all"
-            style={{ background: 'rgba(230,190,247,0.07)', border: '1px solid rgba(230,190,247,0.14)', color: '#e6bef7' }}
+            style={{ background: 'rgba(0,217,255,0.07)', border: '1px solid rgba(0,217,255,0.14)', color: '#00d9ff' }}
           >
             Public View →
           </Link>
@@ -174,16 +181,17 @@ function DashboardProjectInner() {
           {/* Individual score cards */}
           {evaluation && (
             <div>
-              <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: '#6b5490' }}>
+              <h2 className="text-sm font-semibold mb-3 uppercase tracking-wider" style={{ color: '#64748b' }}>
                 Score Breakdown
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <TechnicalScoreCard score={evaluation.technical_score} />
-                <TeamScoreCard score={evaluation.team_score} />
-                <MarketFitCard score={evaluation.market_fit_score} />
-                <SecurityScoreCard score={evaluation.security_score} />
-                <ExecutionScoreCard score={evaluation.execution_score} />
-                <TokenUtilityCard score={evaluation.token_utility_score} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                <ProtocolArchitectureCard score={evaluation.protocol_architecture_score} />
+                <TeamGovernanceCard score={evaluation.team_governance_score} />
+                <MarketTractionCard score={evaluation.market_traction_score} />
+                <SecurityRiskCard score={evaluation.security_risk_score} />
+                <DeliveryProofCard score={evaluation.delivery_proof_score} />
+                <TokenDesignCard score={evaluation.token_design_score} />
+                <EvidenceIntegrityCard score={evaluation.evidence_integrity_score} />
               </div>
             </div>
           )}
@@ -195,24 +203,26 @@ function DashboardProjectInner() {
             onEvaluate={() => setRefreshKey((k) => k + 1)}
           />
 
+          <FactCheckPanel factCheck={null} />
+
           {/* Score history */}
           {history.length > 0 && (
-            <div className="rounded-xl p-5" style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}>
-              <h2 className="font-semibold text-sm mb-4" style={{ color: '#f5eeff' }}>Score History</h2>
+            <div className="rounded-xl p-5" style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
+              <h2 className="font-semibold text-sm mb-4" style={{ color: '#e2e8f0' }}>Score History</h2>
               <HistoricalChart history={history} />
             </div>
           )}
 
           {/* Strengths / Weaknesses / Recommendations */}
           {evaluation && (evaluation.strengths.length > 0 || evaluation.recommendations.length > 0) && (
-            <div className="rounded-xl p-5 space-y-5" style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}>
-              <h2 className="font-semibold text-sm" style={{ color: '#f5eeff' }}>AI Analysis</h2>
+            <div className="rounded-xl p-5 space-y-5" style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
+              <h2 className="font-semibold text-sm" style={{ color: '#e2e8f0' }}>AI Analysis</h2>
               {evaluation.strengths.length > 0 && (
                 <div>
                   <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: '#4ade80' }}>Strengths</h3>
                   <ul className="space-y-1.5">
                     {evaluation.strengths.map((s, i) => (
-                      <li key={i} className="flex gap-2 text-xs" style={{ color: '#9b86b8' }}>
+                      <li key={i} className="flex gap-2 text-xs" style={{ color: '#94a3b8' }}>
                         <span style={{ color: '#4ade80', flexShrink: 0 }}>✓</span>{s}
                       </li>
                     ))}
@@ -224,7 +234,7 @@ function DashboardProjectInner() {
                   <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: '#f87171' }}>Weaknesses</h3>
                   <ul className="space-y-1.5">
                     {evaluation.weaknesses.map((w, i) => (
-                      <li key={i} className="flex gap-2 text-xs" style={{ color: '#9b86b8' }}>
+                      <li key={i} className="flex gap-2 text-xs" style={{ color: '#94a3b8' }}>
                         <span style={{ color: '#f87171', flexShrink: 0 }}>✗</span>{w}
                       </li>
                     ))}
@@ -233,11 +243,11 @@ function DashboardProjectInner() {
               )}
               {evaluation.recommendations.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: '#e6bef7' }}>Recommendations</h3>
+                  <h3 className="text-xs font-semibold mb-2 uppercase tracking-wider" style={{ color: '#00d9ff' }}>Recommendations</h3>
                   <ul className="space-y-1.5">
                     {evaluation.recommendations.map((r, i) => (
-                      <li key={i} className="flex gap-2 text-xs" style={{ color: '#9b86b8' }}>
-                        <span style={{ color: '#e6bef7', flexShrink: 0 }}>→</span>{r}
+                      <li key={i} className="flex gap-2 text-xs" style={{ color: '#94a3b8' }}>
+                        <span style={{ color: '#00d9ff', flexShrink: 0 }}>→</span>{r}
                       </li>
                     ))}
                   </ul>
@@ -258,34 +268,34 @@ function DashboardProjectInner() {
           <GenLayerProofPanel proof={proof} />
 
           {/* Project metadata */}
-          <div className="rounded-xl p-5 space-y-3" style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}>
-            <h3 className="font-semibold text-sm" style={{ color: '#f5eeff' }}>Project Info</h3>
+          <div className="rounded-xl p-5 space-y-3" style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
+            <h3 className="font-semibold text-sm" style={{ color: '#e2e8f0' }}>Project Info</h3>
             <div className="space-y-2 text-sm">
               {project.website && (
                 <div className="flex justify-between">
-                  <span style={{ color: '#6b5490' }}>Website</span>
+                  <span style={{ color: '#64748b' }}>Website</span>
                   <a href={project.website} target="_blank" rel="noopener noreferrer"
-                    className="font-medium hover:underline" style={{ color: '#e6bef7' }}>
+                    className="font-medium hover:underline" style={{ color: '#00d9ff' }}>
                     Visit ↗
                   </a>
                 </div>
               )}
               {project.github_repos?.length > 0 && (
                 <div className="flex justify-between">
-                  <span style={{ color: '#6b5490' }}>GitHub</span>
-                  <span style={{ color: '#9b86b8' }}>{project.github_repos.length} repo(s)</span>
+                  <span style={{ color: '#64748b' }}>GitHub</span>
+                  <span style={{ color: '#94a3b8' }}>{project.github_repos.length} repo(s)</span>
                 </div>
               )}
               {project.audits?.length > 0 && (
                 <div className="flex justify-between">
-                  <span style={{ color: '#6b5490' }}>Audits</span>
+                  <span style={{ color: '#64748b' }}>Audits</span>
                   <span style={{ color: '#4ade80' }}>{project.audits.length} audit(s)</span>
                 </div>
               )}
-              {project.tokenomics?.token_symbol && (
+              {project.tokenomics?.symbol && (
                 <div className="flex justify-between">
-                  <span style={{ color: '#6b5490' }}>Token</span>
-                  <span className="font-mono" style={{ color: '#e6bef7' }}>{project.tokenomics.token_symbol}</span>
+                  <span style={{ color: '#64748b' }}>Token</span>
+                  <span className="font-mono" style={{ color: '#00d9ff' }}>{project.tokenomics.symbol}</span>
                 </div>
               )}
             </div>
@@ -300,9 +310,9 @@ export default function DashboardProjectPage() {
   return (
     <Suspense fallback={
       <div className="max-w-7xl mx-auto px-4 py-12 flex justify-center">
-        <div className="flex items-center gap-3" style={{ color: '#6b5490' }}>
+        <div className="flex items-center gap-3" style={{ color: '#64748b' }}>
           <span className="w-5 h-5 rounded-full border-2 animate-spin"
-            style={{ borderColor: 'rgba(230,190,247,0.2)', borderTopColor: '#e6bef7' }} />
+            style={{ borderColor: 'rgba(0,217,255,0.2)', borderTopColor: '#00d9ff' }} />
           Loading project…
         </div>
       </div>

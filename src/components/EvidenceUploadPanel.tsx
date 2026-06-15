@@ -2,12 +2,14 @@
 
 import { useState, useRef } from 'react';
 import { cn } from '@/utils';
+import { supabase } from '@/lib/supabase';
 
 interface UploadedFile {
   name: string;
   size: number;
   type: string;
-  url: string; // object URL for preview
+  url: string;
+  path: string;
 }
 
 interface EvidenceUploadPanelProps {
@@ -33,20 +35,50 @@ const ACCEPTED = {
 export function EvidenceUploadPanel({ onFilesChange, disabled, className }: EvidenceUploadPanelProps) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const bucket = process.env.NEXT_PUBLIC_SUPABASE_EVIDENCE_BUCKET || 'veridex-evidence';
 
-  function addFiles(incoming: File[]) {
-    const newFiles = incoming.map((f) => ({
-      name: f.name,
-      size: f.size,
-      type: f.type,
-      url: URL.createObjectURL(f),
-    }));
-    const merged = [...files, ...newFiles].filter(
+  async function addFiles(incoming: File[]) {
+    setUploading(true);
+    setError('');
+    const uploaded: UploadedFile[] = [];
+
+    try {
+      for (const file of incoming) {
+        const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
+        const path = `submissions/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+        uploaded.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: data.publicUrl,
+          path,
+        });
+      }
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : 'Evidence upload failed');
+      setUploading(false);
+      return;
+    }
+
+    const merged = [...files, ...uploaded].filter(
       (f, i, arr) => arr.findIndex((x) => x.name === f.name) === i
     );
     setFiles(merged);
     onFilesChange?.(merged);
+    setUploading(false);
   }
 
   function removeFile(name: string) {
@@ -75,31 +107,31 @@ export function EvidenceUploadPanel({ onFilesChange, disabled, className }: Evid
         onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
-        className="relative rounded-xl cursor-pointer transition-all duration-150 flex flex-col items-center justify-center gap-3 py-10 px-6"
+        className="relative rounded-3xl cursor-pointer transition-all duration-150 flex flex-col items-center justify-center gap-3 py-10 px-6"
         style={{
-          background: dragging ? 'rgba(230,190,247,0.08)' : 'rgba(230,190,247,0.03)',
-          border: `2px dashed ${dragging ? '#e6bef7' : 'rgba(230,190,247,0.15)'}`,
+          background: dragging ? 'rgba(107, 142, 122, 0.08)' : 'rgba(107, 142, 122, 0.04)',
+          border: `2px dashed ${dragging ? 'var(--brand)' : 'rgba(107, 142, 122, 0.25)'}`,
           opacity: disabled ? 0.5 : 1,
           cursor: disabled ? 'not-allowed' : 'pointer',
         }}
       >
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-          style={{ background: 'rgba(230,190,247,0.08)', color: '#e6bef7' }}
+          className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+          style={{ background: 'rgba(107, 142, 122, 0.15)', color: 'var(--brand-deep)' }}
         >
           ↑
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold" style={{ color: '#f5eeff' }}>
-            Drop evidence files here
+          <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+            Upload evidence files to hosted storage
           </p>
-          <p className="text-xs mt-1" style={{ color: '#9b86b8' }}>
-            PDF, Markdown, JSON, Images — max 20 MB each
+            <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>
+            PDF, Markdown, JSON, Images - max 20 MB each. Only hosted URLs are sent on-chain.
           </p>
         </div>
         <div
-          className="text-xs px-4 py-1.5 rounded-lg font-medium"
-          style={{ background: 'rgba(230,190,247,0.1)', color: '#e6bef7', border: '1px solid rgba(230,190,247,0.2)' }}
+          className="text-xs px-4 py-1.5 rounded-2xl font-medium"
+          style={{ background: 'rgba(107, 142, 122, 0.12)', color: 'var(--brand-deep)', border: '1px solid rgba(107, 142, 122, 0.18)' }}
         >
           Browse Files
         </div>
@@ -111,9 +143,21 @@ export function EvidenceUploadPanel({ onFilesChange, disabled, className }: Evid
           accept={Object.values(ACCEPTED).flat().join(',')}
           className="hidden"
           onChange={onInputChange}
-          disabled={disabled}
+          disabled={disabled || uploading}
         />
       </div>
+
+      {uploading && (
+        <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'rgba(107, 142, 122, 0.08)', color: 'var(--brand-deep)' }}>
+          Uploading files to storage...
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'rgba(168, 92, 74, 0.08)', color: '#a85c4a' }}>
+          {error}
+        </div>
+      )}
 
       {/* File list */}
       {files.length > 0 && (
@@ -121,27 +165,36 @@ export function EvidenceUploadPanel({ onFilesChange, disabled, className }: Evid
           {files.map((f) => (
             <div
               key={f.name}
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5"
-              style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.08)' }}
+              className="flex items-center gap-3 rounded-3xl px-3 py-3"
+              style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
             >
-              <span className="text-lg flex-shrink-0" style={{ color: '#e6bef7' }}>
+              <span className="text-lg flex-shrink-0" style={{ color: 'var(--brand)' }}>
                 {f.type === 'application/pdf' ? '📄' : f.type.startsWith('image/') ? '🖼' : '📝'}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: '#f5eeff' }}>{f.name}</p>
-                <p className="text-[11px]" style={{ color: '#6b5490' }}>{formatBytes(f.size)}</p>
+                <p className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{f.name}</p>
+                <p className="text-[11px]" style={{ color: 'var(--muted)' }}>{formatBytes(f.size)}</p>
+                <a
+                  href={f.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] break-all hover:underline"
+                  style={{ color: 'var(--brand-deep)' }}
+                >
+                  {f.url}
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <span
                   className="text-[10px] px-1.5 py-0.5 rounded font-mono"
-                  style={{ background: 'rgba(74,222,128,0.08)', color: '#4ade80' }}
+                  style={{ background: 'rgba(107, 142, 122, 0.1)', color: 'var(--brand-deep)' }}
                 >
                   ✓ Attached
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); removeFile(f.name); }}
                   className="text-sm w-5 h-5 flex items-center justify-center rounded transition-colors hover:bg-red-500/20"
-                  style={{ color: '#6b5490' }}
+                  style={{ color: 'var(--muted)' }}
                 >
                   ×
                 </button>
@@ -152,8 +205,8 @@ export function EvidenceUploadPanel({ onFilesChange, disabled, className }: Evid
       )}
 
       {files.length > 0 && (
-        <p className="text-[11px]" style={{ color: '#6b5490' }}>
-          {files.length} file{files.length > 1 ? 's' : ''} attached · Files are hashed into the evidence record when you lock.
+        <p className="text-[11px]" style={{ color: '#64748b' }}>
+          {files.length} file{files.length > 1 ? 's' : ''} uploaded. Use the hosted URL in your verification document or supporting evidence fields.
         </p>
       )}
     </div>

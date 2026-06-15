@@ -1,29 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#07040f"/>
-  <!-- Background glow -->
-  <radialGradient id="glow" cx="50%" cy="40%" r="60%">
-    <stop offset="0%" stop-color="#a855f7" stop-opacity="0.15"/>
-    <stop offset="100%" stop-color="#07040f" stop-opacity="0"/>
-  </radialGradient>
-  <rect width="1200" height="630" fill="url(#glow)"/>
-  <!-- Logo mark -->
-  <rect x="540" y="140" width="64" height="64" rx="16" fill="url(#logoGrad)"/>
-  <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-    <stop offset="0%" stop-color="#a855f7"/>
-    <stop offset="100%" stop-color="#e6bef7"/>
-  </linearGradient>
-  <text x="572" y="184" text-anchor="middle" font-family="serif" font-size="32" font-weight="900" fill="white">α</text>
-  <!-- Title -->
-  <text x="600" y="264" text-anchor="middle" font-family="system-ui,sans-serif" font-size="64" font-weight="900" fill="#f5eeff">Alpha</text>
-  <text x="600" y="264" text-anchor="middle" font-family="system-ui,sans-serif" font-size="64" font-weight="900" fill="#e6bef7" x="740">Rank</text>
-  <text x="600" y="340" text-anchor="middle" font-family="system-ui,sans-serif" font-size="28" fill="#9b86b8">On-Chain Crypto Intelligence</text>
-  <!-- Tagline -->
-  <text x="600" y="400" text-anchor="middle" font-family="system-ui,sans-serif" font-size="18" fill="#6b5490">Powered by GenLayer Intelligent Contracts</text>
-  <!-- Bottom border accent -->
-  <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-    <stop offset="0%" stop-color="#7c3aed" stop-opacity="0"/>
-    <stop offset="50%" stop-color="#e6bef7"/>
-    <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
-  </linearGradient>
-  <rect x="200" y="480" width="800" height="2" rx="1" fill="url(#lineGrad)"/>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f7f2eb"/>
+      <stop offset="100%" stop-color="#e8e0d7"/>
+    </linearGradient>
+    <radialGradient id="markGlow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="#b8633f" stop-opacity="0.24"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6b8e7a"/>
+      <stop offset="100%" stop-color="#b8633f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect x="320" y="120" width="560" height="390" rx="40" fill="#ffffff" stroke="#d9cfc4" stroke-width="2" />
+  <rect x="520" y="180" width="160" height="160" rx="28" fill="url(#mark)" />
+  <rect x="520" y="180" width="160" height="160" rx="28" fill="url(#markGlow)" />
+  <text x="600" y="262" text-anchor="middle" font-family="serif" font-size="68" font-weight="800" fill="#ffffff">V</text>
+  <text x="600" y="360" text-anchor="middle" font-family="system-ui, sans-serif" font-size="72" font-weight="900" fill="#425859">Veridex</text>
+  <text x="600" y="418" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" fill="#6b6360">Verification-ready intelligence for crypto projects</text>
+  <text x="600" y="460" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" fill="#9b938a">Powered by GenLayer on-chain evaluation and evidence verification</text>
+  <rect x="360" y="520" width="480" height="4" rx="2" fill="#b8633f" opacity="0.8" />
 </svg>

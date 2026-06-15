@@ -1,4 +1,4 @@
-# AlphaRank — Testing Guide
+# Veridex - Testing Guide
 
 ## Local Development
 
@@ -22,13 +22,15 @@ pip install genlayer
 genlayer node start
 
 # Deploy contract locally
-genlayer deploy contracts/AlphaRank.py --network localnet
+genlayer deploy contracts/Veridex.py --network localnet
 ```
 
 Update `.env.local`:
 ```
 NEXT_PUBLIC_GENLAYER_RPC_URL=http://localhost:4000/api
-NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS=<local-address>
+NEXT_PUBLIC_VERIDEX_CONTRACT_ADDRESS=<local-address>
+# Optional legacy fallback address
+# NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS=<local-address>
 NEXT_PUBLIC_CHAIN_ID=61999
 ```
 
@@ -36,16 +38,16 @@ NEXT_PUBLIC_CHAIN_ID=61999
 
 **Test the golden path:**
 
-1. **Connect wallet** — Click "Connect Wallet" → MetaMask → select GenLayer network
-2. **Submit project** — Navigate to `/submit`, fill all fields, click Submit
-3. **Verify project created** — Redirects to `/project/[id]`, status = `draft`
-4. **Lock evidence** — Click "Lock Evidence", confirm in wallet
-5. **Verify lock** — Status = `evaluation_locked`, evidence hash displayed
-6. **Submit evaluation** — Click "Submit for GenLayer Evaluation"
-7. **Wait for validators** — Status = `evaluating`, spinner shows
-8. **Check results** — Status = `ranked`, scores displayed with tier badge
-9. **View leaderboard** — Navigate to `/leaderboard`, project appears
-10. **View proof panel** — All GenLayer proof steps show `complete`
+1. **Connect wallet** - Click "Connect Wallet" → MetaMask → select GenLayer network
+2. **Submit project** - Navigate to `/submit`, fill all fields, click Submit
+3. **Verify project created** - Redirects to `/project/[id]`, status = `draft`
+4. **Lock evidence** - Click "Lock Evidence", confirm in wallet
+5. **Verify lock** - Status = `evaluation_locked`, evidence hash displayed
+6. **Submit evaluation** - Click "Submit for GenLayer Evaluation"
+7. **Wait for validators** - Status = `evaluating`, spinner shows
+8. **Check results** - Status = `ranked`, scores displayed with tier badge
+9. **View leaderboard** - Navigate to `/leaderboard`, project appears
+10. **View proof panel** - All GenLayer proof steps show `complete`
 
 ### 4. Test Supabase Caching
 
@@ -96,10 +98,10 @@ Expect all routes to compile successfully.
 Test the GenLayer contract directly:
 
 ```python
-# test_alpharank.py
+# test_veridex.py
 from genlayer.testing import ContractTestRunner
 
-runner = ContractTestRunner('contracts/AlphaRank.py')
+runner = ContractTestRunner('contracts/Veridex.py')
 
 def test_create_project():
     result = runner.call('create_project', [
@@ -130,5 +132,5 @@ def test_cannot_edit_after_lock():
 
 Run with:
 ```bash
-genlayer test test_alpharank.py
+genlayer test test_veridex.py
 ```

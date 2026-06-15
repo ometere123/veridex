@@ -1,6 +1,6 @@
 import type { ProjectCategory, RankTier } from '@/types';
 
-export const APP_NAME = 'AlphaRank';
+export const APP_NAME = 'Veridex';
 export const APP_TAGLINE = 'Crypto project rankings powered by GenLayer intelligence.';
 
 export const CATEGORIES: ProjectCategory[] = [
@@ -18,43 +18,45 @@ export const RANK_TIERS: { tier: RankTier; min: number; max: number; label: stri
 ];
 
 export const SCORE_WEIGHTS = {
-  technical:     0.25,
-  team:          0.20,
-  market_fit:    0.20,
-  security:      0.15,
-  execution:     0.10,
-  token_utility: 0.10,
+  protocol_architecture: 0.20,
+  team_governance:      0.15,
+  market_traction:      0.15,
+  security_risk:        0.15,
+  delivery_proof:       0.15,
+  token_design:         0.10,
+  evidence_integrity:   0.10,
 };
 
-// Tier colours — all built around #e6bef7 brand palette
+// Tier colours - built around #00d9ff brand palette
 export const TIER_COLORS: Record<RankTier, string> = {
-  'S+': 'text-amber-300  bg-amber-300/10  border-amber-300/30',
-  'S':  'text-[#e6bef7] bg-[#e6bef7]/10 border-[#e6bef7]/30',
-  'A':  'text-violet-400 bg-violet-400/10 border-violet-400/30',
+  'S+': 'text-amber-400  bg-amber-400/10  border-amber-400/30',
+  'S':  'text-[#00d9ff] bg-[#00d9ff]/10 border-[#00d9ff]/30',
+  'A':  'text-indigo-400 bg-indigo-400/10 border-indigo-400/30',
   'B':  'text-emerald-400 bg-emerald-400/10 border-emerald-400/30',
-  'C':  'text-cyan-400   bg-cyan-400/10   border-cyan-400/30',
+  'C':  'text-violet-400  bg-violet-400/10  border-violet-400/30',
   'D':  'text-orange-400 bg-orange-400/10 border-orange-400/30',
   'F':  'text-red-400    bg-red-400/10    border-red-400/30',
 };
 
 // Raw hex values for inline styles / recharts
 export const TIER_HEX: Record<RankTier, string> = {
-  'S+': '#fbbf24',
-  'S':  '#e6bef7',
-  'A':  '#a78bfa',
+  'S+': '#f59e0b',
+  'S':  '#00d9ff',
+  'A':  '#818cf8',
   'B':  '#34d399',
-  'C':  '#22d3ee',
+  'C':  '#a78bfa',
   'D':  '#fb923c',
   'F':  '#f87171',
 };
 
 export const SCORE_LABELS: Record<string, string> = {
-  technical_score:    'Technical Innovation',
-  team_score:         'Team Quality',
-  market_fit_score:   'Market Fit',
-  security_score:     'Security',
-  execution_score:    'Execution Progress',
-  token_utility_score:'Token Utility',
+  protocol_architecture_score: 'Protocol Architecture',
+  team_governance_score:      'Team & Governance',
+  market_traction_score:      'Market Traction',
+  security_risk_score:        'Security & Risk',
+  delivery_proof_score:       'Delivery Proof',
+  token_design_score:         'Token Design',
+  evidence_integrity_score:   'Evidence Integrity',
 };
 
 export const CONTRACT_METHODS = {

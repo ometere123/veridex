@@ -1,11 +1,3 @@
--- AlphaRank — Supabase Schema
--- IMPORTANT: GenLayer is the source of truth.
--- Supabase is used ONLY for: caching, indexing, search, notifications, analytics.
--- Rankings and scores are NEVER generated in Supabase — only synced from GenLayer.
-
--- ─────────────────────────────────────────────────────────────────
--- Profiles (cache of on-chain profiles)
--- ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS profiles (
   wallet_address TEXT PRIMARY KEY,
   display_name TEXT,
@@ -24,9 +16,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────────────────────────
--- Projects (cache for fast indexing/search)
--- ─────────────────────────────────────────────────────────────────
+
 CREATE TABLE IF NOT EXISTS projects (
   project_id TEXT PRIMARY KEY,
   owner TEXT NOT NULL,
@@ -46,9 +36,6 @@ CREATE INDEX IF NOT EXISTS idx_projects_owner ON projects(owner);
 CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
 CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category);
 
--- ─────────────────────────────────────────────────────────────────
--- Evaluations (cache synced from GenLayer — NEVER source of truth)
--- ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS evaluations (
   evaluation_id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
@@ -58,6 +45,13 @@ CREATE TABLE IF NOT EXISTS evaluations (
   security_score NUMERIC(5,2) DEFAULT 0,
   execution_score NUMERIC(5,2) DEFAULT 0,
   token_utility_score NUMERIC(5,2) DEFAULT 0,
+  protocol_architecture_score NUMERIC(5,2) DEFAULT 0,
+  team_governance_score NUMERIC(5,2) DEFAULT 0,
+  market_traction_score NUMERIC(5,2) DEFAULT 0,
+  security_risk_score NUMERIC(5,2) DEFAULT 0,
+  delivery_proof_score NUMERIC(5,2) DEFAULT 0,
+  token_design_score NUMERIC(5,2) DEFAULT 0,
+  evidence_integrity_score NUMERIC(5,2) DEFAULT 0,
   overall_score NUMERIC(5,2) DEFAULT 0,
   tier TEXT,
   confidence INTEGER DEFAULT 0,
@@ -69,9 +63,6 @@ CREATE TABLE IF NOT EXISTS evaluations (
 CREATE INDEX IF NOT EXISTS idx_evaluations_project ON evaluations(project_id);
 CREATE INDEX IF NOT EXISTS idx_evaluations_tier ON evaluations(tier);
 
--- ─────────────────────────────────────────────────────────────────
--- Rankings (cache — derived from GenLayer, never generated here)
--- ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS rankings (
   project_id TEXT PRIMARY KEY REFERENCES projects(project_id) ON DELETE CASCADE,
   rank_position INTEGER,
@@ -82,9 +73,6 @@ CREATE TABLE IF NOT EXISTS rankings (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────────────────────────
--- Historical Rankings (append-only, never overwrite)
--- ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS historical_rankings (
   id BIGSERIAL PRIMARY KEY,
   project_id TEXT NOT NULL REFERENCES projects(project_id) ON DELETE CASCADE,
@@ -99,9 +87,6 @@ CREATE TABLE IF NOT EXISTS historical_rankings (
 
 CREATE INDEX IF NOT EXISTS idx_historical_project ON historical_rankings(project_id);
 
--- ─────────────────────────────────────────────────────────────────
--- Leaderboards (category snapshots)
--- ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS leaderboards (
   id BIGSERIAL PRIMARY KEY,
   category TEXT NOT NULL,
@@ -115,9 +100,6 @@ CREATE TABLE IF NOT EXISTS leaderboards (
 
 CREATE INDEX IF NOT EXISTS idx_leaderboards_category ON leaderboards(category);
 
--- ─────────────────────────────────────────────────────────────────
--- Transactions (GenLayer tx log)
--- ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS transactions (
   id BIGSERIAL PRIMARY KEY,
   tx_hash TEXT UNIQUE,
@@ -128,9 +110,6 @@ CREATE TABLE IF NOT EXISTS transactions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ─────────────────────────────────────────────────────────────────
--- Notifications
--- ─────────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS notifications (
   id BIGSERIAL PRIMARY KEY,
   wallet_address TEXT NOT NULL,
@@ -145,11 +124,10 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE INDEX IF NOT EXISTS idx_notifications_wallet ON notifications(wallet_address);
 CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(wallet_address, read) WHERE read = FALSE;
 
--- ─────────────────────────────────────────────────────────────────
--- Row Level Security
--- ─────────────────────────────────────────────────────────────────
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
+-- Ensure idempotent policy creation: drop if it already exists
+DROP POLICY IF EXISTS "Users read own notifications" ON notifications;
 CREATE POLICY "Users read own notifications"
   ON notifications FOR SELECT
   USING (wallet_address = current_setting('request.jwt.claims', true)::json->>'wallet');

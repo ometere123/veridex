@@ -2,6 +2,8 @@ import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { RankTier, EvaluationScores } from '@/types';
 import { RANK_TIERS, SCORE_WEIGHTS } from '@/constants';
+import { safeNumber } from '@/lib/parsers';
+export { safeJsonParse, safeArray, safeNumber } from '@/lib/parsers';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,12 +16,13 @@ export function getTier(score: number): RankTier {
 
 export function calculateOverallScore(scores: Omit<EvaluationScores, 'overall_score'>): number {
   const weighted =
-    scores.technical_score * SCORE_WEIGHTS.technical +
-    scores.team_score * SCORE_WEIGHTS.team +
-    scores.market_fit_score * SCORE_WEIGHTS.market_fit +
-    scores.security_score * SCORE_WEIGHTS.security +
-    scores.execution_score * SCORE_WEIGHTS.execution +
-    scores.token_utility_score * SCORE_WEIGHTS.token_utility;
+    scores.protocol_architecture_score * SCORE_WEIGHTS.protocol_architecture +
+    scores.team_governance_score * SCORE_WEIGHTS.team_governance +
+    scores.market_traction_score * SCORE_WEIGHTS.market_traction +
+    scores.security_risk_score * SCORE_WEIGHTS.security_risk +
+    scores.delivery_proof_score * SCORE_WEIGHTS.delivery_proof +
+    scores.token_design_score * SCORE_WEIGHTS.token_design +
+    scores.evidence_integrity_score * SCORE_WEIGHTS.evidence_integrity;
   return Math.round(weighted * 10) / 10;
 }
 
@@ -28,8 +31,16 @@ export function formatAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
-export function formatScore(score: number): string {
-  return score.toFixed(1);
+export function formatScore(score: unknown): string {
+  return safeNumber(score, 0).toFixed(1);
+}
+
+export function formatPercent(value: unknown): string {
+  return `${safeNumber(value, 0).toFixed(0)}%`;
+}
+
+export function getScoreValue<T extends Record<string, unknown>>(source: T, key: keyof T): number {
+  return safeNumber(source[key], 0);
 }
 
 /** Returns true if the timestamp is missing, zero, or epoch (Jan 1 1970 / Jan 1 2000) */
@@ -78,6 +89,7 @@ export function getRankChange(current: number, previous?: number): number {
 }
 
 export function getScoreColor(score: number): string {
+  score = safeNumber(score, 0);
   if (score >= 95) return 'text-amber-300';
   if (score >= 90) return 'text-[#e6bef7]';
   if (score >= 80) return 'text-violet-400';
@@ -89,6 +101,7 @@ export function getScoreColor(score: number): string {
 
 /** Return a hex colour for use in recharts/inline styles */
 export function getScoreHex(score: number): string {
+  score = safeNumber(score, 0);
   if (score >= 95) return '#fbbf24';
   if (score >= 90) return '#e6bef7';
   if (score >= 80) return '#a78bfa';

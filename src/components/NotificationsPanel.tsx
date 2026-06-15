@@ -13,7 +13,7 @@ const ICONS: Record<string, string> = {
 };
 
 export function NotificationsPanel() {
-  // ── ALL hooks first — no early returns before this point ──────
+  // ── ALL hooks first - no early returns before this point ──────
   const { address } = useAccount();
   const [mounted, setMounted]               = useState(false);
   const [open, setOpen]                     = useState(false);
@@ -21,7 +21,7 @@ export function NotificationsPanel() {
   const [loading, setLoading]               = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Mount guard — only renders bell after client hydration
+  // Mount guard - only renders bell after client hydration
   useEffect(() => { setMounted(true); }, []);
 
   // Fetch notifications when wallet connects
@@ -70,9 +70,9 @@ export function NotificationsPanel() {
         onClick={() => setOpen((o) => !o)}
         className="relative w-9 h-9 rounded-lg flex items-center justify-center transition-all"
         style={{
-          background: open ? 'rgba(230,190,247,0.12)' : 'rgba(230,190,247,0.05)',
-          border: '1px solid rgba(230,190,247,0.12)',
-          color: '#e6bef7',
+          background: open ? 'rgba(184,99,63,0.12)' : 'rgba(184,99,63,0.05)',
+          border: '1px solid rgba(184,99,63,0.12)',
+          color: '#b8633f',
         }}
         aria-label="Notifications"
       >
@@ -83,7 +83,7 @@ export function NotificationsPanel() {
         {unread > 0 && (
           <span
             className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center"
-            style={{ background: '#a855f7', color: '#fff' }}
+            style={{ background: '#8b7355', color: '#fff' }}
           >
             {unread > 9 ? '9+' : unread}
           </span>
@@ -95,22 +95,22 @@ export function NotificationsPanel() {
         <div
           className="absolute right-0 top-11 w-80 rounded-xl overflow-hidden shadow-2xl z-50"
           style={{
-            background: '#0e0a1a',
-            border: '1px solid rgba(230,190,247,0.14)',
-            boxShadow: '0 16px 48px rgba(0,0,0,0.6)',
+            background: '#fcf2e8',
+            border: '1px solid rgba(184,99,63,0.14)',
+            boxShadow: '0 24px 56px rgba(118,84,62,0.16)',
           }}
         >
           {/* Header */}
           <div
             className="flex items-center justify-between px-4 py-3"
-            style={{ borderBottom: '1px solid rgba(230,190,247,0.08)' }}
+            style={{ borderBottom: '1px solid rgba(184,99,63,0.12)' }}
           >
-            <span className="text-sm font-semibold" style={{ color: '#f5eeff' }}>
+            <span className="text-sm font-semibold" style={{ color: '#4d3d30' }}>
               Notifications
               {unread > 0 && (
                 <span
                   className="ml-2 text-[10px] font-mono px-1.5 py-0.5 rounded-full"
-                  style={{ background: 'rgba(168,85,247,0.2)', color: '#e6bef7' }}
+                  style={{ background: 'rgba(184,99,63,0.16)', color: '#4d3d30' }}
                 >
                   {unread} new
                 </span>
@@ -120,9 +120,9 @@ export function NotificationsPanel() {
               <button
                 onClick={markAllRead}
                 className="text-[11px] transition-colors"
-                style={{ color: '#9b86b8' }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#e6bef7')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#9b86b8')}
+                style={{ color: '#8c6f58' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#b07f5b')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#8c6f58')}
               >
                 Mark all read
               </button>
@@ -132,15 +132,15 @@ export function NotificationsPanel() {
           {/* List */}
           <div className="max-h-80 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center py-10 gap-2" style={{ color: '#6b5490' }}>
+              <div className="flex items-center justify-center py-10 gap-2" style={{ color: '#a38c7b' }}>
                 <span
                   className="w-4 h-4 rounded-full border-2 animate-spin"
-                  style={{ borderColor: 'rgba(230,190,247,0.2)', borderTopColor: '#e6bef7' }}
+                  style={{ borderColor: 'rgba(184,99,63,0.2)', borderTopColor: '#b8633f' }}
                 />
                 Loading…
               </div>
             ) : notifications.length === 0 ? (
-              <div className="py-10 text-center text-sm" style={{ color: '#6b5490' }}>
+              <div className="py-10 text-center text-sm" style={{ color: '#a38c7b' }}>
                 No notifications yet
               </div>
             ) : (
@@ -149,31 +149,31 @@ export function NotificationsPanel() {
                   key={n.id}
                   className="px-4 py-3 transition-colors"
                   style={{
-                    borderBottom: '1px solid rgba(230,190,247,0.04)',
-                    background: n.read ? 'transparent' : 'rgba(230,190,247,0.03)',
+                    borderBottom: '1px solid rgba(184,99,63,0.04)',
+                    background: n.read ? 'transparent' : 'rgba(184,99,63,0.03)',
                   }}
                 >
                   <div className="flex items-start gap-3">
                     <span
                       className="w-7 h-7 rounded-lg flex items-center justify-center text-xs flex-shrink-0 mt-0.5"
-                      style={{ background: 'rgba(230,190,247,0.08)', color: '#e6bef7' }}
+                      style={{ background: 'rgba(184,99,63,0.12)', color: '#b8633f' }}
                     >
                       {ICONS[n.type] ?? '•'}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold mb-0.5" style={{ color: n.read ? '#9b86b8' : '#f5eeff' }}>
+                      <p className="text-xs font-semibold mb-0.5" style={{ color: n.read ? '#8c6f58' : '#4d3d30' }}>
                         {n.title}
                         {!n.read && (
                           <span
                             className="ml-1.5 w-1.5 h-1.5 rounded-full inline-block align-middle"
-                            style={{ background: '#a855f7' }}
+                            style={{ background: '#b8633f' }}
                           />
                         )}
                       </p>
-                      <p className="text-[11px] leading-relaxed" style={{ color: '#6b5490' }}>
+                      <p className="text-[11px] leading-relaxed" style={{ color: '#6b584a' }}>
                         {n.message}
                       </p>
-                      <p className="text-[10px] mt-1" style={{ color: '#3d2a6b' }}>
+                      <p className="text-[10px] mt-1" style={{ color: '#8c7968' }}>
                         {formatDateTime(n.created_at)}
                       </p>
                     </div>

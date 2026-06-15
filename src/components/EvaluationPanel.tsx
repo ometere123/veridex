@@ -30,8 +30,8 @@ const MAX_POLLS     = 20;     // 20 × 15s = 5 minutes
 // ── Stage chip ────────────────────────────────────────────────────
 
 const STAGE_COLOR: Record<EvalStage, string> = {
-  signing:    '#e6bef7',
-  submitted:  '#a78bfa',
+  signing:    '#00d9ff',
+  submitted:  '#06b6d4',
   validating: '#fbbf24',
   finalising: '#34d399',
   completed:  '#4ade80',
@@ -131,7 +131,7 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
     if (pending && pending.project_id === project.project_id && !evaluation) {
       const elapsed = Date.now() - pending.started_at;
       if (elapsed < 300_000) {
-        // Still within 5 min window — resume polling
+        // Still within 5 min window - resume polling
         setStage(pending.stage === 'completed' ? 'validating' : pending.stage);
         startPolling();
       } else {
@@ -166,7 +166,7 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
         }
       }
 
-      // Now submit run_evaluation — returns tx hash immediately
+      // Now submit run_evaluation - returns tx hash immediately
       setStage('signing');
       updatePendingEvalStage('signing', { method: 'run_evaluation' });
 
@@ -175,11 +175,11 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
       setStage('validating');
       updatePendingEvalStage('validating', { tx_hash: runTx });
 
-      // Start polling — this is where the 2–5 min wait happens
+      // Start polling - this is where the 2-5 min wait happens
       startPolling();
 
     } catch (e) {
-      // Only real errors — wallet rejection, network failure, contract revert
+      // Only real errors - wallet rejection, network failure, contract revert
       const msg = e instanceof Error ? e.message : 'Unknown error';
       setError(msg);
       setStage(null);
@@ -216,15 +216,15 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
 
   return (
     <div className={className}
-      style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.10)', borderRadius: '12px', padding: '20px' }}>
+      style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.10)', borderRadius: '12px', padding: '20px' }}>
 
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-sm" style={{ color: '#f5eeff' }}>GenLayer Evaluation</h3>
-        {/* Refresh status button — always visible during/after evaluation */}
+        <h3 className="font-semibold text-sm" style={{ color: '#e2e8f0' }}>GenLayer Assessment</h3>
+        {/* Refresh status button - always visible during/after assessment */}
         {(isPolling || stage === 'stalled' || evaluation) && (
           <button onClick={handleRefresh}
             className="text-xs px-3 py-1.5 rounded-lg transition-all"
-            style={{ background: 'rgba(230,190,247,0.07)', border: '1px solid rgba(230,190,247,0.15)', color: '#e6bef7' }}>
+            style={{ background: 'rgba(0,217,255,0.07)', border: '1px solid rgba(0,217,255,0.15)', color: '#00d9ff' }}>
             ↻ Refresh Status
           </button>
         )}
@@ -234,17 +234,17 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
       {evaluation ? (
         <div className="space-y-4">
           <div className="flex items-center justify-between pb-4"
-            style={{ borderBottom: '1px solid rgba(230,190,247,0.07)' }}>
+            style={{ borderBottom: '1px solid rgba(0,217,255,0.07)' }}>
             <div className="flex items-baseline gap-1.5">
               <span className="text-4xl font-black font-mono"
                 style={{ color: getScoreHex(evaluation.overall_score), textShadow: `0 0 20px ${getScoreHex(evaluation.overall_score)}55` }}>
                 {formatScore(evaluation.overall_score)}
               </span>
-              <span className="text-sm" style={{ color: '#6b5490' }}>/ 100</span>
+              <span className="text-sm" style={{ color: '#64748b' }}>/ 100</span>
             </div>
             <div className="text-right">
               <TierBadge tier={evaluation.tier} size="lg" />
-              <div className="text-[10px] mt-1" style={{ color: '#6b5490' }}>{evaluation.confidence}% confidence</div>
+              <div className="text-[10px] mt-1" style={{ color: '#64748b' }}>{evaluation.confidence}% confidence</div>
             </div>
           </div>
 
@@ -255,7 +255,7 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
               <h4 className="text-xs font-semibold mb-2" style={{ color: '#4ade80' }}>Strengths</h4>
               <ul className="space-y-1">
                 {evaluation.strengths.map((s, i) => (
-                  <li key={i} className="text-xs flex gap-2" style={{ color: '#9b86b8' }}>
+                  <li key={i} className="text-xs flex gap-2" style={{ color: '#94a3b8' }}>
                     <span style={{ color: '#4ade80', flexShrink: 0 }}>✓</span>{s}
                   </li>
                 ))}
@@ -268,7 +268,7 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
               <h4 className="text-xs font-semibold mb-2" style={{ color: '#f87171' }}>Weaknesses</h4>
               <ul className="space-y-1">
                 {evaluation.weaknesses.map((w, i) => (
-                  <li key={i} className="text-xs flex gap-2" style={{ color: '#9b86b8' }}>
+                  <li key={i} className="text-xs flex gap-2" style={{ color: '#94a3b8' }}>
                     <span style={{ color: '#f87171', flexShrink: 0 }}>✗</span>{w}
                   </li>
                 ))}
@@ -278,11 +278,11 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
 
           {evaluation.recommendations?.length > 0 && (
             <div>
-              <h4 className="text-xs font-semibold mb-2" style={{ color: '#e6bef7' }}>Recommendations</h4>
+              <h4 className="text-xs font-semibold mb-2" style={{ color: '#00d9ff' }}>Recommendations</h4>
               <ul className="space-y-1">
                 {evaluation.recommendations.map((r, i) => (
-                  <li key={i} className="text-xs flex gap-2" style={{ color: '#9b86b8' }}>
-                    <span style={{ color: '#e6bef7', flexShrink: 0 }}>→</span>{r}
+                  <li key={i} className="text-xs flex gap-2" style={{ color: '#94a3b8' }}>
+                    <span style={{ color: '#00d9ff', flexShrink: 0 }}>→</span>{r}
                   </li>
                 ))}
               </ul>
@@ -290,15 +290,15 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
           )}
 
           <div className="text-[10px] pt-3"
-            style={{ borderTop: '1px solid rgba(230,190,247,0.06)', color: '#6b5490' }}>
-            Evaluated by GenLayer validators · {formatDateTime(evaluation.evaluated_at)}
+            style={{ borderTop: '1px solid rgba(0,217,255,0.06)', color: '#64748b' }}>
+            Assessed by GenLayer validators · {formatDateTime(evaluation.evaluated_at)}
           </div>
 
           {canReevaluate && (
             <button onClick={handleReevaluate} disabled={!!stage}
               className="w-full text-sm font-medium py-2 px-4 rounded-lg transition-all disabled:opacity-50"
-              style={{ background: 'rgba(230,190,247,0.07)', border: '1px solid rgba(230,190,247,0.16)', color: '#e6bef7' }}>
-              {stage ? (STAGE_LABEL[stage] || 'Processing…') : 'Request Reevaluation'}
+              style={{ background: 'rgba(0,217,255,0.07)', border: '1px solid rgba(0,217,255,0.16)', color: '#00d9ff' }}>
+              {stage ? (STAGE_LABEL[stage] || 'Processing…') : 'Request Reassessment'}
             </button>
           )}
         </div>
@@ -312,17 +312,17 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
 
           {/* Poll progress indicator */}
           {isPolling && pollCount > 0 && (
-            <div className="text-[11px]" style={{ color: '#6b5490' }}>
+            <div className="text-[11px]" style={{ color: '#64748b' }}>
               Checking on-chain state… ({pollCount * 15}s elapsed)
             </div>
           )}
 
-          {/* Stalled state — not failure */}
+          {/* Stalled state - not failure */}
           {stage === 'stalled' && (
             <div className="rounded-lg p-3 text-xs"
               style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', color: '#fbbf24' }}>
               GenLayer validation can take up to 5 minutes. Click "Refresh Status" to check again.
-              A timeout is NOT a failure — your transaction was submitted successfully.
+              A timeout is NOT a failure - your transaction was submitted successfully.
             </div>
           )}
 
@@ -336,12 +336,12 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
 
           {/* Status text when not actively running */}
           {!stage && (
-            <p className="text-sm" style={{ color: '#9b86b8' }}>
+            <p className="text-sm" style={{ color: '#94a3b8' }}>
               {project.status === 'evaluating'
-                ? 'Status: evaluating. Click below to run the AI evaluation.'
+                ? 'Status: assessing. Click below to run the AI assessment.'
                 : project.status === 'reevaluation_pending'
-                ? 'Reevaluation request pending.'
-                : 'Lock your evidence first, then run the GenLayer evaluation.'}
+                ? 'Reassessment request pending.'
+                : 'Lock your evidence first, then run the GenLayer assessment.'}
             </p>
           )}
 
@@ -349,22 +349,22 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
           {canEvaluate && !stage && (
             <button onClick={() => handleEvaluate(false)}
               className="w-full font-semibold py-2.5 px-4 rounded-lg text-sm transition-all"
-              style={{ background: 'linear-gradient(135deg,#7c3aed,#a855f7,#c084fc)', color: '#fff', boxShadow: '0 0 18px rgba(168,85,247,0.35)' }}>
-              ⬡ Run GenLayer Evaluation
+              style={{ background: 'linear-gradient(135deg,#00d9ff,#06b6d4)', color: '#fff', boxShadow: '0 0 18px rgba(0,217,255,0.35)' }}>
+              ⬡ Run GenLayer Assessment
             </button>
           )}
 
-          {/* B: stuck in evaluating — retry run only */}
+          {/* B: stuck in evaluating - retry run only */}
           {canRetry && !stage && (
             <div className="space-y-2">
               <div className="rounded-lg p-3 text-xs"
                 style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)', color: '#fbbf24' }}>
-                ⚠ Project is in evaluating state. Click below to submit the AI evaluation.
+                ⚠ Project is in assessing state. Click below to submit the AI assessment.
               </div>
               <button onClick={() => handleEvaluate(true)}
                 className="w-full font-semibold py-2.5 px-4 rounded-lg text-sm transition-all"
-                style={{ background: 'linear-gradient(135deg,#7c3aed,#a855f7,#c084fc)', color: '#fff', boxShadow: '0 0 18px rgba(168,85,247,0.35)' }}>
-                ⬡ Run Evaluation
+                style={{ background: 'linear-gradient(135deg,#00d9ff,#06b6d4)', color: '#fff', boxShadow: '0 0 18px rgba(0,217,255,0.35)' }}>
+                ⬡ Run Assessment
               </button>
             </div>
           )}

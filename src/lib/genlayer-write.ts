@@ -1,8 +1,8 @@
 /**
- * genlayer-write.ts — Client-side GenLayer write service.
+ * genlayer-write.ts - Client-side GenLayer write service.
  *
- * GenLayer transactions take 2–5 minutes to finalize.
- * This module NEVER throws on timeout — it submits the tx,
+ * GenLayer transactions take 2-5 minutes to finalize.
+ * This module NEVER throws on timeout - it submits the tx,
  * then returns the hash. Callers poll for completion.
  *
  * Flow: create_project → lock_project_data → submit_evaluation → run_evaluation
@@ -12,13 +12,11 @@
 import { createClient, abi } from 'genlayer-js';
 import { studionet } from 'genlayer-js/chains';
 import { TransactionStatus } from 'genlayer-js/types';
+import { VERIDEX_CONTRACT_ADDRESS } from './veridex-contract';
 
 const calldata = abi.calldata;
 
-const CONTRACT_ADDRESS = (
-  process.env.NEXT_PUBLIC_GENLAYER_CONTRACT_ADDRESS ||
-  '0xa0BA37824D02eB24266aA01Dd6a238340890d4Fa'
-) as `0x${string}`;
+const CONTRACT_ADDRESS = VERIDEX_CONTRACT_ADDRESS;
 
 const CHAIN = studionet;
 const CHAIN_ID_HEX = `0x${CHAIN.id.toString(16)}`;
@@ -32,6 +30,8 @@ type EthProvider = {
   isBraveWallet?: boolean;
   providers?: EthProvider[];
 };
+
+type ContractArg = string | number | bigint | boolean | null | Uint8Array | ContractArg[] | { [k: string]: ContractArg };
 
 function getProvider(): EthProvider {
   if (typeof window === 'undefined') throw new Error('Browser only');
@@ -85,17 +85,17 @@ function getBrowserClient(account: string) {
 // ── Core submit helpers ──────────────────────────────────────────
 
 /**
- * Send a write tx — returns tx hash immediately after wallet signs.
+ * Send a write tx - returns tx hash immediately after wallet signs.
  * Does NOT wait for finalization. Use glSubmitAndWait for blocking calls.
  */
-export async function glSubmit(method: string, args: string[], account: string): Promise<string> {
+export async function glSubmit(method: string, args: ContractArg[], account: string, value: bigint = BigInt(0)): Promise<string> {
   await ensureGenLayerChain();
   const client = getBrowserClient(account);
   const txHash = await client.writeContract({
     address: CONTRACT_ADDRESS,
     functionName: method,
     args,
-    value: BigInt(0),
+    value,
   });
   return txHash as string;
 }
@@ -103,15 +103,16 @@ export async function glSubmit(method: string, args: string[], account: string):
 /**
  * Submit + wait up to timeoutMs for FINALIZED.
  * On timeout: logs warning, returns tx hash. Does NOT throw.
- * GenLayer can take 2–5 min — we never hard-fail on timeout.
+ * GenLayer can take 2-5 min - we never hard-fail on timeout.
  */
 export async function glSubmitAndWait(
   method: string,
-  args: string[],
+  args: ContractArg[],
   account: string,
-  timeoutMs = 300_000
+  timeoutMs = 300_000,
+  value: bigint = BigInt(0)
 ): Promise<string> {
-  const txHash = await glSubmit(method, args, account);
+  const txHash = await glSubmit(method, args, account, value);
   try {
     const client = getBrowserClient(account);
     const timeoutP = new Promise<never>((_, rej) =>
@@ -125,8 +126,8 @@ export async function glSubmitAndWait(
       timeoutP,
     ]);
   } catch (e) {
-    // timeout or receipt error — tx was still submitted, not a real failure
-    console.warn(`${method} wait ended (timeout/non-fatal) — tx ${txHash}:`, (e as Error).message);
+    // timeout or receipt error - tx was still submitted, not a real failure
+    console.warn(`${method} wait ended (timeout/non-fatal) - tx ${txHash}:`, (e as Error).message);
   }
   return txHash as string;
 }
@@ -159,8 +160,8 @@ async function fetchTxResult(txHash: string): Promise<string | null> {
   } catch { return null; }
 }
 
-async function glWriteAndGetResult(method: string, args: string[], account: string): Promise<unknown> {
-  const txHash = await glSubmitAndWait(method, args, account);
+async function glWriteAndGetResult(method: string, args: ContractArg[], account: string, value: bigint = BigInt(0)): Promise<unknown> {
+  const txHash = await glSubmitAndWait(method, args, account, 300_000, value);
   const fromRpc = await fetchTxResult(txHash);
   if (fromRpc) return fromRpc;
   try {
@@ -176,10 +177,11 @@ async function glWriteAndGetResult(method: string, args: string[], account: stri
 
 export async function contractCreateProject(account: string, params: {
   name: string; category: string; website: string; description: string;
-  whitepaper_url: string; docs_url: string; github_repos: string[];
+  whitepaper_url: string; docs_url: string; github_repos: Array<{ url: string }>;
   roadmap: string; tokenomics: object; audits: object[]; team: object[];
   investors: string[]; partnerships: string[]; bug_bounty_url: string;
   ecosystem_integrations: string[];
+  verification_document_url: string;
 }): Promise<string> {
   const args = [
     params.name, params.category, params.website, params.description,
@@ -189,8 +191,21 @@ export async function contractCreateProject(account: string, params: {
     JSON.stringify(params.team), JSON.stringify(params.investors),
     JSON.stringify(params.partnerships), params.bug_bounty_url || '',
     JSON.stringify(params.ecosystem_integrations),
+    params.verification_document_url || '',
   ];
-  const result = await glWriteAndGetResult('create_project', args, account);
+  
+  let feeValue = BigInt(0);
+  try {
+    const { getProtocolFees } = await import('./genlayer');
+    const fees = await getProtocolFees();
+    if (fees.fees_enabled) {
+      feeValue = BigInt(fees.create_project_fee || '0');
+    }
+  } catch (e) {
+    console.warn('Failed to fetch fees:', e);
+  }
+  
+  const result = await glWriteAndGetResult('create_project', args, account, feeValue);
   if (typeof result === 'string' && result.length > 0 && !result.startsWith('0x')) return result;
   throw new Error(
     `Project created on-chain (tx: ${result}), but could not decode project ID. ` +
@@ -204,12 +219,27 @@ export async function contractLockProject(account: string, projectId: string): P
 
 /** Step 3: changes status to "evaluating". Waits for confirmation. */
 export async function contractSubmitEvaluation(account: string, projectId: string): Promise<string> {
-  return glSubmitAndWait('submit_evaluation', [projectId], account, 120_000);
+  let feeValue = BigInt(0);
+  try {
+    const { getProject, getProtocolFees } = await import('./genlayer');
+    const [project, fees] = await Promise.all([getProject(projectId), getProtocolFees()]);
+    if (fees.fees_enabled) {
+      feeValue = BigInt(
+        project?.status === 'reevaluation_pending'
+          ? fees.reevaluation_fee || '0'
+          : fees.evaluation_fee || '0',
+      );
+    }
+  } catch (e) {
+    console.warn('Failed to fetch fees:', e);
+  }
+  
+  return glSubmitAndWait('submit_evaluation', [projectId], account, 120_000, feeValue);
 }
 
 /**
- * Step 4: run_evaluation — submits the AI evaluation tx.
- * Returns tx hash immediately — does NOT wait 5 min.
+ * Step 4: run_evaluation - submits the AI evaluation tx.
+ * Returns tx hash immediately - does NOT wait 5 min.
  * Callers MUST poll get_project/get_evaluation for real completion.
  */
 export async function contractRunEvaluation(account: string, projectId: string): Promise<string> {
@@ -218,4 +248,22 @@ export async function contractRunEvaluation(account: string, projectId: string):
 
 export async function contractRequestReevaluation(account: string, projectId: string): Promise<string> {
   return glSubmitAndWait('request_reevaluation', [projectId], account);
+}
+
+export async function contractSetProtocolFees(
+  account: string,
+  createProjectFee: string,
+  evaluationFee: string,
+  reevaluationFee: string,
+  feesEnabled: boolean,
+): Promise<string> {
+  return glSubmitAndWait(
+    'set_protocol_fees',
+    [createProjectFee, evaluationFee, reevaluationFee, feesEnabled],
+    account,
+  );
+}
+
+export async function contractWithdrawProtocolFees(account: string): Promise<string> {
+  return glSubmitAndWait('withdraw_protocol_fees', [], account);
 }

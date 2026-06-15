@@ -8,12 +8,12 @@ import { NotificationsPanel } from './NotificationsPanel';
 import { cn } from '@/utils';
 
 const NAV_LINKS = [
-  { href: '/rankings',    label: 'Rankings' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-  { href: '/submit',      label: 'Submit' },
+  { href: '/rankings',    label: 'Tiers' },
+  { href: '/leaderboard', label: 'Index' },
+  { href: '/submit',      label: 'Register' },
   { href: '/compare',     label: 'Compare' },
   { href: '/analytics',   label: 'Analytics' },
-  { href: '/dashboard',   label: 'Dashboard' },
+  { href: '/dashboard',   label: 'Hub' },
 ];
 
 function NavLinks({ onClose }: { onClose?: () => void }) {
@@ -26,10 +26,10 @@ function NavLinks({ onClose }: { onClose?: () => void }) {
           href={link.href}
           onClick={onClose}
           className={cn(
-            'px-3.5 py-2 rounded-lg text-sm font-medium transition-all duration-150 block md:inline-block',
+            'px-3 py-1.5 text-xs font-medium tracking-widest uppercase transition-all duration-150 block md:inline-block border-b-2',
             pathname === link.href
-              ? 'text-[#e6bef7] bg-[#e6bef7]/10 shadow-[inset_0_0_0_1px_rgba(230,190,247,0.18)]'
-              : 'text-[#9b86b8] hover:text-[#e6bef7] hover:bg-[#e6bef7]/6'
+              ? 'text-[#6b8e7a] border-[#6b8e7a]'
+              : 'text-[#9b938a] border-transparent hover:text-[#6b8e7a] hover:border-[#6b8e7a]/40'
           )}
         >
           {link.label}
@@ -44,38 +44,41 @@ export function Navbar() {
 
   return (
     <nav
-      className="sticky top-0 z-50 backdrop-blur-xl"
+      className="sticky top-0 z-50 backdrop-blur-md border-b"
       style={{
-        background: 'linear-gradient(180deg, rgba(14,10,26,0.97) 0%, rgba(14,10,26,0.90) 100%)',
-        borderBottom: '1px solid rgba(230,190,247,0.08)',
+        background: 'rgba(245, 241, 237, 0.98)',
+        borderColor: 'var(--border)',
       }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-14 items-center justify-between">
 
-          {/* ── Logo ─────────────────────────────────────── */}
+          {/* ── Logo ──────────────────────────────────────── */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2.5 group">
+            <Link href="/" className="flex items-center gap-3 group">
               <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 font-black text-sm"
+                className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0 font-black text-[10px] font-mono"
                 style={{
-                  background: 'linear-gradient(135deg,#a855f7,#e6bef7)',
-                  boxShadow: '0 0 12px rgba(230,190,247,0.3)',
-                  color: '#fff',
+                  background: 'linear-gradient(135deg, #6b8e7a, #8b7355)',
+                  color: '#ffffff',
+                  letterSpacing: '-0.02em',
                 }}
               >
-                α
+                VDX
               </div>
-              <span className="text-base font-bold tracking-tight text-white group-hover:text-[#e6bef7] transition-colors">
-                Alpha<span style={{ color: '#e6bef7' }}>Rank</span>
+              <span
+                className="text-sm font-bold tracking-[0.12em] uppercase group-hover:text-[#6b8e7a] transition-colors"
+                style={{ fontFamily: 'var(--font-jetbrains-mono)', color: '#1a1612' }}
+              >
+                Veridex
               </span>
               <span
-                className="hidden sm:block text-[10px] font-medium px-1.5 py-0.5 rounded"
+                className="hidden sm:block text-[9px] font-medium px-1.5 py-0.5 rounded font-mono"
                 style={{
-                  color: '#9b86b8',
-                  border: '1px solid rgba(230,190,247,0.12)',
-                  background: 'rgba(230,190,247,0.04)',
-                  letterSpacing: '0.05em',
+                  color: '#6b8360',
+                  border: '1px solid rgba(107, 142, 122, 0.12)',
+                  background: 'rgba(107, 142, 122, 0.05)',
+                  letterSpacing: '0.06em',
                 }}
               >
                 GenLayer
@@ -83,8 +86,8 @@ export function Navbar() {
             </Link>
 
             {/* Desktop nav */}
-            <div className="hidden md:flex items-center gap-0.5">
-              <Suspense fallback={<div className="h-9 w-64" />}>
+            <div className="hidden md:flex items-center gap-0">
+              <Suspense fallback={<div className="h-8 w-64" />}>
                 <NavLinks />
               </Suspense>
             </div>
@@ -92,46 +95,44 @@ export function Navbar() {
 
           {/* ── Right side ───────────────────────────────── */}
           <div className="flex items-center gap-2">
-            {/* Notification bell */}
             <Suspense fallback={null}>
               <NotificationsPanel />
             </Suspense>
 
-            {/* Wallet button — desktop */}
             <div className="hidden sm:block">
-              <Suspense fallback={<div className="w-32 h-9 rounded-lg bg-[#160f29] animate-pulse" />}>
+              <Suspense fallback={<div className="w-32 h-8 rounded-sm bg-[#091628] animate-pulse" />}>
                 <WalletConnectButton />
               </Suspense>
             </div>
 
-            {/* Hamburger — mobile */}
+            {/* Hamburger - mobile */}
             <button
               onClick={() => setMobileOpen((o) => !o)}
-              className="md:hidden w-9 h-9 flex flex-col items-center justify-center gap-1.5 rounded-lg transition-all"
+              className="md:hidden w-8 h-8 flex flex-col items-center justify-center gap-1.5 rounded transition-all"
               style={{
-                background: mobileOpen ? 'rgba(230,190,247,0.12)' : 'transparent',
-                border: '1px solid rgba(230,190,247,0.12)',
+                background: mobileOpen ? 'rgba(107, 142, 122, 0.1)' : 'transparent',
+                border: '1px solid rgba(107, 142, 122, 0.15)',
               }}
               aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             >
               <span
-                className="block h-0.5 w-5 rounded-full transition-all duration-200"
+                className="block h-px w-4 rounded-full transition-all duration-200"
                 style={{
-                  background: '#e6bef7',
+                  background: '#6b8e7a',
                   transform: mobileOpen ? 'translateY(4px) rotate(45deg)' : 'none',
                 }}
               />
               <span
-                className="block h-0.5 w-5 rounded-full transition-all duration-200"
+                className="block h-px w-4 rounded-full transition-all duration-200"
                 style={{
-                  background: '#e6bef7',
+                  background: '#6b8e7a',
                   opacity: mobileOpen ? 0 : 1,
                 }}
               />
               <span
-                className="block h-0.5 w-5 rounded-full transition-all duration-200"
+                className="block h-px w-4 rounded-full transition-all duration-200"
                 style={{
-                  background: '#e6bef7',
+                  background: '#6b8e7a',
                   transform: mobileOpen ? 'translateY(-4px) rotate(-45deg)' : 'none',
                 }}
               />
@@ -143,8 +144,8 @@ export function Navbar() {
       {/* ── Mobile drawer ─────────────────────────────────── */}
       {mobileOpen && (
         <div
-          className="md:hidden px-4 pb-5 pt-2 space-y-1"
-          style={{ borderTop: '1px solid rgba(230,190,247,0.06)' }}
+          className="md:hidden px-4 pb-5 pt-2 space-y-0"
+          style={{ borderTop: '1px solid rgba(107, 142, 122, 0.12)' }}
         >
           <Suspense fallback={null}>
             <NavLinks onClose={() => setMobileOpen(false)} />

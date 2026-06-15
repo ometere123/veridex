@@ -16,7 +16,7 @@ interface HistoricalChartProps {
 export function HistoricalChart({ history, className }: HistoricalChartProps) {
   if (history.length === 0) {
     return (
-      <div className={cn('text-center py-12', className)} style={{ color: '#6b5490' }}>
+      <div className={cn('text-center py-12', className)} style={{ color: '#64748b' }}>
         No evaluation history yet.
       </div>
     );
@@ -39,7 +39,7 @@ export function HistoricalChart({ history, className }: HistoricalChartProps) {
           <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
             <defs>
               <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%"   stopColor="#7c3aed" />
+                <stop offset="0%"   stopColor="#00d9ff" />
                 <stop offset="50%"  stopColor="#e6bef7" />
                 <stop offset="100%" stopColor="#a855f7" />
               </linearGradient>
@@ -51,13 +51,13 @@ export function HistoricalChart({ history, className }: HistoricalChartProps) {
             />
             <XAxis
               dataKey="date"
-              tick={{ fill: '#6b5490', fontSize: 10 }}
+              tick={{ fill: '#64748b', fontSize: 10 }}
               axisLine={{ stroke: 'rgba(230,190,247,0.08)' }}
               tickLine={false}
             />
             <YAxis
               domain={[0, 100]}
-              tick={{ fill: '#6b5490', fontSize: 10 }}
+              tick={{ fill: '#64748b', fontSize: 10 }}
               axisLine={false}
               tickLine={false}
             />

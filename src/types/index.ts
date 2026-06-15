@@ -20,27 +20,23 @@ export type ProjectStatus =
 export type RankTier = 'S+' | 'S' | 'A' | 'B' | 'C' | 'D' | 'F';
 
 export interface Tokenomics {
+  symbol: string;
+  total_supply: string;
   utility: string;
-  emissions: string;
-  supply: string;
-  token_symbol?: string;
-  total_supply?: number;
-  circulating_supply?: number;
+  emission_schedule: string;
 }
 
 export interface TeamMember {
   name: string;
   role: string;
   linkedin?: string;
-  twitter?: string;
-  github?: string;
+  x?: string;
 }
 
 export interface AuditReport {
-  auditor: string;
-  url: string;
-  date: string;
-  score?: number;
+  firm: string;
+  report_url: string;
+  audit_date: string;
 }
 
 export interface Project {
@@ -52,16 +48,22 @@ export interface Project {
   description: string;
   whitepaper_url?: string;
   docs_url?: string;
+  verification_document_url?: string;
   github_repos: string[];
   roadmap: string;
-  investors?: string[];
-  partnerships?: string[];
+  investors: string[];
+  partnerships: string[];
   tokenomics: Tokenomics;
   audits: AuditReport[];
   bug_bounty_url?: string;
   team: TeamMember[];
-  ecosystem_integrations?: string[];
+  ecosystem_integrations: string[];
   evidence_hash?: string;
+  fact_check_hash?: string;
+  fact_checked_at?: string;
+  verification_score: number;
+  verification_status: string;
+  verified_source_count: number;
   locked_at?: string;
   status: ProjectStatus;
   created_at: string;
@@ -69,25 +71,53 @@ export interface Project {
 }
 
 export interface EvaluationScores {
-  technical_score: number;
-  team_score: number;
-  market_fit_score: number;
-  security_score: number;
-  execution_score: number;
-  token_utility_score: number;
+  protocol_architecture_score: number;
+  team_governance_score: number;
+  market_traction_score: number;
+  security_risk_score: number;
+  delivery_proof_score: number;
+  token_design_score: number;
+  evidence_integrity_score: number;
   overall_score: number;
+}
+
+export interface FactCheckItem {
+  source_type: string;
+  url: string;
+  status: string;
+  note: string;
+}
+
+export interface FactCheckReport {
+  verification_score: number;
+  verification_status: string;
+  confidence: number;
+  verified_source_count: number;
+  summary: string;
+  verified_claims: string[];
+  contradictions: string[];
+  missing_evidence: string[];
+  source_summaries: FactCheckItem[];
+  fact_check_hash?: string;
+  project_id?: string;
+  checked_at?: string;
 }
 
 export interface Evaluation extends EvaluationScores {
   evaluation_id: string;
   project_id: string;
+  score_model_version: string;
   tier: RankTier;
+  verification_score: number;
+  verification_status: string;
+  verified_source_count: number;
+  fact_check_hash: string;
+  fact_check_summary: string;
   confidence: number;
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
   evaluation_hash?: string;
-  tx_hash?: string;
   evaluated_at: string;
 }
 
@@ -108,10 +138,8 @@ export interface Ranking {
   category: ProjectCategory;
   overall_score: number;
   tier: RankTier;
-  rank_position: number;
+  overall_rank: number;
   category_rank: number;
-  previous_rank?: number;
-  rank_change?: number;
   updated_at: string;
 }
 
@@ -123,13 +151,13 @@ export interface LeaderboardEntry {
   website: string;
   overall_score: number;
   tier: RankTier;
-  technical_score: number;
-  team_score: number;
-  market_fit_score: number;
-  security_score: number;
-  execution_score: number;
-  token_utility_score: number;
-  evaluation_count: number;
+  protocol_architecture_score: number;
+  team_governance_score: number;
+  market_traction_score: number;
+  security_risk_score: number;
+  delivery_proof_score: number;
+  token_design_score: number;
+  evidence_integrity_score: number;
   last_evaluated: string;
 }
 
@@ -147,6 +175,7 @@ export interface Profile {
   consistency_score: number;
   security_rating: number;
   execution_rating: number;
+  evidence_rating: number;
   created_at: string;
 }
 
@@ -189,9 +218,11 @@ export interface AnalyticsData {
 }
 
 export interface TreasuryState {
-  total_fees_collected: number;
-  total_evaluations_paid: number;
-  evaluation_fee: number;
-  reevaluation_fee: number;
+  total_fees_collected: string;
+  contract_balance: string;
+  create_project_fee: string;
+  evaluation_fee: string;
+  reevaluation_fee: string;
+  fees_enabled: boolean;
   owner: string;
 }

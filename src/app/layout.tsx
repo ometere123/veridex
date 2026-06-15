@@ -1,55 +1,64 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/providers';
 import { Navbar } from '@/components/Navbar';
 import { NetworkChecker } from '@/components/NetworkChecker';
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] });
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
-
 export const viewport: Viewport = {
-  themeColor: '#e6bef7',
+  themeColor: '#6b8e7a',
 };
 
 export const metadata: Metadata = {
-  title: {
-    default: 'AlphaRank — On-Chain Crypto Intelligence',
-    template: '%s — AlphaRank',
+    title: {
+    default: 'Veridex - On-Chain Crypto Intelligence',
+    template: '%s - Veridex',
   },
   description:
     'Crypto project rankings powered by GenLayer Intelligent Contracts. Submit, lock evidence, let AI evaluate, build verifiable on-chain reputation.',
   keywords: ['crypto', 'rankings', 'GenLayer', 'blockchain', 'AI', 'DeFi', 'evaluation', 'research'],
-  authors: [{ name: 'AlphaRank' }],
+  authors: [{ name: 'Veridex' }],
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://alpharank.app',
-    siteName: 'AlphaRank',
-    title: 'AlphaRank — On-Chain Crypto Intelligence',
+    url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://veridex.app',
+    siteName: 'Veridex',
+    title: 'Veridex - On-Chain Crypto Intelligence',
     description: 'Crypto project rankings powered by GenLayer Intelligent Contracts.',
     images: [
       {
-        url: '/og-image.png',
+        url: '/og-image.svg',
         width: 1200,
         height: 630,
-        alt: 'AlphaRank — On-Chain Crypto Intelligence',
+        alt: 'Veridex - On-Chain Crypto Intelligence',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'AlphaRank — On-Chain Crypto Intelligence',
+    title: 'Veridex - On-Chain Crypto Intelligence',
     description: 'Crypto project rankings powered by GenLayer Intelligent Contracts.',
-    images: ['/og-image.png'],
+    images: ['/og-image.svg'],
   },
   robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col bg-gray-950 text-gray-100">
+    <html lang="en" className="h-full antialiased">
+      <body
+        className="min-h-full flex flex-col"
+        style={{
+          background: 'var(--background)',
+          color: 'var(--foreground)',
+          ['--font-space-grotesk' as string]: '"Segoe UI", "Trebuchet MS", sans-serif',
+          ['--font-jetbrains-mono' as string]: '"Consolas", "Courier New", monospace',
+        }}
+      >
         <Providers>
           <Navbar />
           <main className="flex-1">{children}</main>
@@ -64,29 +73,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 function Footer() {
   return (
     <footer
-      className="mt-auto py-8 px-4"
-      style={{ borderTop: '1px solid rgba(230,190,247,0.06)' }}
+      className="mt-auto py-6 px-4"
+      style={{ borderTop: '1px solid rgba(107,142,122,0.15)' }}
     >
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <div
-            className="w-5 h-5 rounded flex items-center justify-center text-[10px] font-black"
-            style={{ background: 'linear-gradient(135deg,#a855f7,#e6bef7)', color: '#fff' }}
+            className="w-6 h-6 rounded flex items-center justify-center text-[9px] font-black font-mono"
+            style={{ background: 'linear-gradient(135deg, #6b8e7a, #b8633f)', color: '#fff' }}
           >
-            α
+            VDX
           </div>
-          <span className="text-xs font-semibold" style={{ color: '#6b5490' }}>
-            AlphaRank
+          <span className="text-xs font-semibold tracking-wide" style={{ color: 'var(--muted-2)', fontFamily: 'var(--font-jetbrains-mono)' }}>
+            VERIDEX
           </span>
-          <span className="text-xs" style={{ color: '#3d2a6b' }}>
-            · Powered by GenLayer
-          </span>
+          <span className="text-xs" style={{ color: 'var(--border-2)' }}>/ GenLayer</span>
         </div>
-        <div className="flex items-center gap-6 text-xs" style={{ color: '#6b5490' }}>
-          <a href="/rankings"    className="hover:text-[#e6bef7] transition-colors">Rankings</a>
-          <a href="/leaderboard" className="hover:text-[#e6bef7] transition-colors">Leaderboard</a>
-          <a href="/analytics"   className="hover:text-[#e6bef7] transition-colors">Analytics</a>
-          <a href="/treasury"    className="hover:text-[#e6bef7] transition-colors">Treasury</a>
+        <div className="flex items-center gap-6 text-xs" style={{ color: 'var(--muted-2)' }}>
+          <a href="/rankings"    className="hover:text-[#00d9ff] transition-colors tracking-wide">Rankings</a>
+          <a href="/leaderboard" className="hover:text-[#00d9ff] transition-colors tracking-wide">Leaderboard</a>
+          <a href="/analytics"   className="hover:text-[#00d9ff] transition-colors tracking-wide">Analytics</a>
+          <a href="/treasury"    className="hover:text-[#00d9ff] transition-colors tracking-wide">Treasury</a>
         </div>
       </div>
     </footer>

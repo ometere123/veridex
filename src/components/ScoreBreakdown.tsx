@@ -8,12 +8,13 @@ interface ScoreBreakdownProps {
 }
 
 const SCORE_KEYS = [
-  { key: 'technical_score',     weight: SCORE_WEIGHTS.technical },
-  { key: 'team_score',          weight: SCORE_WEIGHTS.team },
-  { key: 'market_fit_score',    weight: SCORE_WEIGHTS.market_fit },
-  { key: 'security_score',      weight: SCORE_WEIGHTS.security },
-  { key: 'execution_score',     weight: SCORE_WEIGHTS.execution },
-  { key: 'token_utility_score', weight: SCORE_WEIGHTS.token_utility },
+  { key: 'protocol_architecture_score', weight: SCORE_WEIGHTS.protocol_architecture },
+  { key: 'team_governance_score',      weight: SCORE_WEIGHTS.team_governance },
+  { key: 'market_traction_score',      weight: SCORE_WEIGHTS.market_traction },
+  { key: 'security_risk_score',        weight: SCORE_WEIGHTS.security_risk },
+  { key: 'delivery_proof_score',       weight: SCORE_WEIGHTS.delivery_proof },
+  { key: 'token_design_score',         weight: SCORE_WEIGHTS.token_design },
+  { key: 'evidence_integrity_score',   weight: SCORE_WEIGHTS.evidence_integrity },
 ] as const;
 
 export function ScoreBreakdown({ evaluation, className }: ScoreBreakdownProps) {
@@ -27,7 +28,7 @@ export function ScoreBreakdown({ evaluation, className }: ScoreBreakdownProps) {
         return (
           <div key={key}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs" style={{ color: '#9b86b8' }}>
+              <span className="text-xs" style={{ color: '#9b938a' }}>
                 {SCORE_LABELS[key]}
                 <span className="ml-1 opacity-50">({pct}%)</span>
               </span>
@@ -40,15 +41,15 @@ export function ScoreBreakdown({ evaluation, className }: ScoreBreakdownProps) {
             {/* Track */}
             <div
               className="h-1.5 rounded-full overflow-hidden"
-              style={{ background: 'rgba(230,190,247,0.07)' }}
+              style={{ background: 'rgba(107, 142, 122, 0.1)' }}
             >
               {/* Fill */}
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{
                   width: `${score}%`,
-                  background: `linear-gradient(90deg, ${hex}55, ${hex})`,
-                  boxShadow: `0 0 6px ${hex}66`,
+                  background: `linear-gradient(90deg, ${hex}44, ${hex})`,
+                  boxShadow: `0 0 6px ${hex}55`,
                 }}
               />
             </div>
