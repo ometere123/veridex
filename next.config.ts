@@ -12,10 +12,6 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     return [
-      { source: '/hub', destination: '/dashboard' },
-      { source: '/hub/project', destination: '/dashboard/project' },
-      { source: '/register', destination: '/submit' },
-      { source: '/tiers', destination: '/rankings' },
       { source: '/index', destination: '/leaderboard' },
     ];
   },

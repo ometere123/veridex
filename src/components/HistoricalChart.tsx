@@ -17,7 +17,7 @@ export function HistoricalChart({ history, className }: HistoricalChartProps) {
   if (history.length === 0) {
     return (
       <div className={cn('text-center py-12', className)} style={{ color: '#64748b' }}>
-        No evaluation history yet.
+        No assessment history recorded yet.
       </div>
     );
   }
@@ -40,19 +40,19 @@ export function HistoricalChart({ history, className }: HistoricalChartProps) {
             <defs>
               <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%"   stopColor="#00d9ff" />
-                <stop offset="50%"  stopColor="#e6bef7" />
-                <stop offset="100%" stopColor="#a855f7" />
+                <stop offset="50%"  stopColor="#00d9ff" />
+                <stop offset="100%" stopColor="#06b6d4" />
               </linearGradient>
             </defs>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(230,190,247,0.06)"
+              stroke="rgba(0,217,255,0.06)"
               vertical={false}
             />
             <XAxis
               dataKey="date"
               tick={{ fill: '#64748b', fontSize: 10 }}
-              axisLine={{ stroke: 'rgba(230,190,247,0.08)' }}
+              axisLine={{ stroke: 'rgba(0,217,255,0.08)' }}
               tickLine={false}
             />
             <YAxis
@@ -63,15 +63,15 @@ export function HistoricalChart({ history, className }: HistoricalChartProps) {
             />
             <ReferenceLine
               y={avgScore}
-              stroke="rgba(230,190,247,0.2)"
+              stroke="rgba(0,217,255,0.2)"
               strokeDasharray="4 2"
             />
             <Tooltip
               contentStyle={{
-                background: '#0e0a1a',
-                border: '1px solid rgba(230,190,247,0.16)',
+                background: '#0a0f1a',
+                border: '1px solid rgba(0,217,255,0.16)',
                 borderRadius: '8px',
-                color: '#f5eeff',
+                color: '#e2e8f0',
                 fontSize: 12,
               }}
               formatter={(val) => [
@@ -86,8 +86,8 @@ export function HistoricalChart({ history, className }: HistoricalChartProps) {
               dataKey="score"
               stroke="url(#lineGrad)"
               strokeWidth={2.5}
-              dot={{ fill: '#e6bef7', r: 4, strokeWidth: 0 }}
-              activeDot={{ fill: '#e6bef7', r: 6, strokeWidth: 0, filter: 'drop-shadow(0 0 6px #e6bef7)' }}
+              dot={{ fill: '#00d9ff', r: 4, strokeWidth: 0 }}
+              activeDot={{ fill: '#00d9ff', r: 6, strokeWidth: 0, filter: 'drop-shadow(0 0 6px #00d9ff)' }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -99,11 +99,11 @@ export function HistoricalChart({ history, className }: HistoricalChartProps) {
           <div
             key={i}
             className="flex items-center justify-between py-2.5 px-3 rounded-lg"
-            style={{ background: i % 2 === 0 ? 'rgba(230,190,247,0.02)' : 'transparent' }}
+            style={{ background: i % 2 === 0 ? 'rgba(0,217,255,0.02)' : 'transparent' }}
           >
             <div className="flex items-center gap-2.5">
               <TierBadge tier={h.new_tier as RankTier} size="sm" />
-              <span className="text-xs" style={{ color: '#9b86b8' }}>
+              <span className="text-xs" style={{ color: '#94a3b8' }}>
                 {formatDate(h.timestamp)}
               </span>
             </div>

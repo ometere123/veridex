@@ -91,7 +91,7 @@ export function Navbar() {
             </Suspense>
 
             <div className="hidden sm:block">
-              <Suspense fallback={<div className="w-32 h-8 rounded-sm bg-[#091628] animate-pulse" />}>
+              <Suspense fallback={<div className="h-9 w-32 rounded-full border border-[rgba(107,142,122,0.12)] bg-[rgba(107,142,122,0.08)] animate-pulse" />}>
                 <WalletConnectButton />
               </Suspense>
             </div>

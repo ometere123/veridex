@@ -52,25 +52,25 @@ export function NetworkChecker() {
     <div
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium"
       style={{
-        background: '#160f29',
+        background: '#111827',
         border: '1px solid rgba(251,191,36,0.3)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(251,191,36,0.1)',
         maxWidth: '90vw',
       }}
     >
       <span style={{ color: '#fbbf24' }}>⚠</span>
-      <span style={{ color: '#ddd0f0' }}>
-        Wrong network - switch to{' '}
-        <strong style={{ color: '#e6bef7' }}>GenLayer Testnet</strong>
+      <span style={{ color: '#cbd5e1' }}>
+        Incorrect chain — connect to{' '}
+        <strong style={{ color: '#00d9ff' }}>GenLayer Testnet</strong>
       </span>
       <button
         onClick={addAndSwitch}
         disabled={isPending || adding}
         className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-60"
         style={{
-          background: 'linear-gradient(135deg,#7c3aed,#a855f7)',
-          color: '#fff',
-          boxShadow: '0 0 10px rgba(168,85,247,0.4)',
+          background: '#00d9ff',
+          color: '#0a0f1a',
+          boxShadow: '0 0 10px rgba(0,217,255,0.4)',
         }}
       >
         {isPending || adding ? 'Switching…' : 'Switch Network'}

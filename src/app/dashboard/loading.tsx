@@ -2,25 +2,25 @@ import { Skeleton } from '@/components/Skeleton';
 
 export default function Loading() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <div className="flex justify-between mb-8">
+    <div className="mx-auto max-w-7xl px-4 py-12">
+      <div className="mb-8 flex justify-between">
         <Skeleton className="h-9 w-44" />
         <Skeleton className="h-10 w-36 rounded-lg" />
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="rounded-xl p-5 text-center space-y-2" style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
-            <Skeleton className="h-8 w-12 mx-auto" />
-            <Skeleton className="h-3 w-20 mx-auto" />
+          <div key={i} className="rounded-[28px] p-5 text-center space-y-2" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <Skeleton className="mx-auto h-8 w-12" />
+            <Skeleton className="mx-auto h-3 w-20" />
           </div>
         ))}
       </div>
-      <div className="rounded-xl overflow-hidden" style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
-        <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(0,217,255,0.08)' }}>
+      <div className="overflow-hidden rounded-[28px]" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+        <div className="px-6 py-4" style={{ borderBottom: '1px solid rgba(107,142,122,0.08)' }}>
           <Skeleton className="h-5 w-36" />
         </div>
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="px-6 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(0,217,255,0.04)' }}>
+          <div key={i} className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid rgba(107,142,122,0.06)' }}>
             <div className="space-y-1.5">
               <Skeleton className="h-4 w-40" />
               <Skeleton className="h-3 w-28" />

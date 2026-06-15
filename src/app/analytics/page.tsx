@@ -42,57 +42,52 @@ export default function AnalyticsPage() {
   const catChartData = CATEGORIES.map((c) => ({
     cat: c,
     count: data?.category_distribution?.[c] ?? 0,
-  })).filter((d) => d.count > 0).sort((a, b) => b.count - a.count);
+  }))
+    .filter((d) => d.count > 0)
+    .sort((a, b) => b.count - a.count);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--foreground)' }}>Network Metrics</h1>
-        <p className="text-sm" style={{ color: 'var(--muted)' }}>
+        <p className="mb-3 text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>Analytics</p>
+        <h1 className="mb-3 text-4xl font-semibold" style={{ color: '#1a1612' }}>Network Metrics</h1>
+        <p className="text-base leading-8" style={{ color: '#6b6360' }}>
           Real-time protocol metrics sourced from on-chain contract state.
         </p>
       </div>
 
-      {/* Top stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: 'Total Submissions',  value: loading ? '-' : data?.total_projects ?? 0 },
-          { label: 'Assessments Run',    value: loading ? '-' : data?.total_evaluations ?? 0 },
-          { label: 'Ranked Entries',     value: loading ? '-' : data?.ranked_projects ?? 0 },
-          { label: 'Protocol Mean',      value: loading ? '-' : (data?.average_score ?? 0).toFixed(1) },
+          { label: 'Total Submissions', value: loading ? '-' : data?.total_projects ?? 0 },
+          { label: 'Assessments Run', value: loading ? '-' : data?.total_evaluations ?? 0 },
+          { label: 'Ranked Entries', value: loading ? '-' : data?.ranked_projects ?? 0 },
+          { label: 'Protocol Mean', value: loading ? '-' : (data?.average_score ?? 0).toFixed(1) },
         ].map((s) => (
           <div
             key={s.label}
-            className="rounded-sm p-5 text-center"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+            className="rounded-[28px] p-5 text-center"
+            style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.12)' }}
           >
-            <div
-              className="text-3xl font-black font-mono mb-1"
-              style={{ color: '#00d9ff', textShadow: '0 0 12px rgba(0,217,255,0.3)' }}
-            >
+            <div className="mb-1 text-3xl font-black font-mono" style={{ color: '#6b8e7a' }}>
               {s.value}
             </div>
-            <div className="text-[11px] uppercase tracking-wider" style={{ color: 'var(--muted-2)' }}>{s.label}</div>
+            <div className="text-[11px] uppercase tracking-wider" style={{ color: '#9b938a' }}>{s.label}</div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Tier distribution chart */}
-        <div
-          className="rounded-sm p-6"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-        >
-          <h2 className="font-semibold text-sm mb-5" style={{ color: 'var(--foreground)' }}>Tier Allocation</h2>
-          <div className="h-44">
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="rounded-[28px] p-6" style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.12)' }}>
+          <h2 className="mb-5 text-sm font-semibold" style={{ color: '#1a1612' }}>Tier Allocation</h2>
+          <div className="h-44 min-w-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={tierChartData} margin={{ top: 0, right: 0, bottom: 0, left: -20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,217,255,0.05)" vertical={false} />
-                <XAxis dataKey="tier" tick={{ fill: 'var(--muted-2)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: 'var(--muted-2)', fontSize: 10 }} axisLine={false} tickLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(107,142,122,0.08)" vertical={false} />
+                <XAxis dataKey="tier" tick={{ fill: '#9b938a', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: '#9b938a', fontSize: 10 }} axisLine={false} tickLine={false} />
                 <Tooltip
-                  contentStyle={{ background: 'var(--surface)', border: '1px solid rgba(0,217,255,0.14)', borderRadius: '4px', color: 'var(--foreground)', fontSize: 12 }}
-                  cursor={{ fill: 'rgba(0,217,255,0.05)' }}
+                  contentStyle={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.14)', borderRadius: '16px', color: '#1a1612', fontSize: 12 }}
+                  cursor={{ fill: 'rgba(107,142,122,0.05)' }}
                 />
                 <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                   {tierChartData.map((entry, i) => (
@@ -102,43 +97,39 @@ export default function AnalyticsPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          {/* Legend */}
-          <div className="flex flex-wrap gap-2 mt-4">
+          <div className="mt-4 flex flex-wrap gap-2">
             {RANK_TIERS.map((t) => (
               <div key={t.tier} className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ background: TIER_HEX[t.tier] }} />
-                <span className="text-[11px] font-mono" style={{ color: 'var(--muted)' }}>
-                  {t.tier} <span style={{ color: 'var(--muted-2)' }}>({data?.tier_distribution?.[t.tier] ?? 0})</span>
+                <div className="h-2 w-2 rounded-full" style={{ background: TIER_HEX[t.tier] }} />
+                <span className="text-[11px] font-mono" style={{ color: '#6b6360' }}>
+                  {t.tier} <span style={{ color: '#9b938a' }}>({data?.tier_distribution?.[t.tier] ?? 0})</span>
                 </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Category distribution */}
-        <div
-          className="rounded-sm p-6"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-        >
-          <h2 className="font-semibold text-sm mb-5" style={{ color: 'var(--foreground)' }}>Segment Composition</h2>
+        <div className="rounded-[28px] p-6" style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.12)' }}>
+          <h2 className="mb-5 text-sm font-semibold" style={{ color: '#1a1612' }}>Segment Composition</h2>
           <div className="space-y-3">
             {catChartData.length === 0 ? (
-              <p className="text-sm" style={{ color: 'var(--muted-2)' }}>No entries recorded yet.</p>
+              <p className="text-sm" style={{ color: '#9b938a' }}>No entries recorded yet.</p>
             ) : catChartData.map((d) => {
               const total = catChartData.reduce((a, b) => a + b.count, 0);
               const pct = total > 0 ? Math.round((d.count / total) * 100) : 0;
+
               return (
                 <div key={d.cat}>
-                  <div className="flex justify-between items-center mb-1 text-xs">
-                    <span style={{ color: '#cbd5e1' }}>{d.cat}</span>
-                    <span style={{ color: 'var(--muted-2)' }}>{d.count} ({pct}%)</span>
+                  <div className="mb-1 flex items-center justify-between text-xs">
+                    <span style={{ color: '#6b6360' }}>{d.cat}</span>
+                    <span style={{ color: '#9b938a' }}>{d.count} ({pct}%)</span>
                   </div>
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(0,217,255,0.06)' }}>
+                  <div className="h-1.5 overflow-hidden rounded-full" style={{ background: 'rgba(107,142,122,0.08)' }}>
                     <div
                       className="h-full rounded-full"
                       style={{
                         width: `${pct}%`,
-                        background: 'linear-gradient(90deg,#00d9ff,#06b6d4)',
+                        background: 'linear-gradient(90deg,#6b8e7a,#b8633f)',
                       }}
                     />
                   </div>
@@ -149,16 +140,12 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Top 10 table */}
-      {entries.length > 0 && (
-        <div
-          className="rounded-sm p-6"
-          style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-        >
-          <h2 className="font-semibold text-sm mb-5" style={{ color: 'var(--foreground)' }}>Highest-Ranked Submissions</h2>
+      {entries.length > 0 ? (
+        <div className="rounded-[28px] p-6" style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.12)' }}>
+          <h2 className="mb-5 text-sm font-semibold" style={{ color: '#1a1612' }}>Highest-Ranked Submissions</h2>
           <LeaderboardTable entries={entries.slice(0, 10)} />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

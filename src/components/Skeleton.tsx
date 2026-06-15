@@ -11,7 +11,7 @@ export function Skeleton({ className, height, rounded = '8px' }: SkeletonProps) 
     <div
       className={cn('animate-pulse', className)}
       style={{
-        background: 'linear-gradient(90deg, rgba(230,190,247,0.04) 25%, rgba(230,190,247,0.08) 50%, rgba(230,190,247,0.04) 75%)',
+        background: 'linear-gradient(90deg, rgba(107,142,122,0.07) 25%, rgba(184,99,63,0.12) 50%, rgba(107,142,122,0.07) 75%)',
         backgroundSize: '200% 100%',
         animation: 'skeleton-shimmer 1.5s infinite',
         borderRadius: rounded,
@@ -23,7 +23,7 @@ export function Skeleton({ className, height, rounded = '8px' }: SkeletonProps) 
 
 export function CardSkeleton() {
   return (
-    <div className="rounded-xl p-5 space-y-3" style={{ background: '#0e0a1a', border: '1px solid rgba(230,190,247,0.06)' }}>
+    <div className="rounded-[28px] p-5 space-y-3" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-3">
         <Skeleton className="w-8 h-5" />
         <Skeleton className="h-4 flex-1" />
@@ -39,7 +39,7 @@ export function CardSkeleton() {
 
 export function TableRowSkeleton({ cols = 5 }: { cols?: number }) {
   return (
-    <tr style={{ borderBottom: '1px solid rgba(230,190,247,0.04)' }}>
+    <tr style={{ borderBottom: '1px solid rgba(107,142,122,0.08)' }}>
       {[...Array(cols)].map((_, i) => (
         <td key={i} className="py-3 pr-4">
           <Skeleton className={i === 1 ? 'h-4 w-32' : 'h-4 w-16'} />

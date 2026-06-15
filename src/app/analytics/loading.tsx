@@ -2,22 +2,24 @@ import { Skeleton } from '@/components/Skeleton';
 
 export default function Loading() {
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <Skeleton className="h-9 w-44 mb-2" />
-      <Skeleton className="h-4 w-80 mb-8" />
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+    <div className="mx-auto max-w-7xl px-4 py-12">
+      <Skeleton className="mb-2 h-9 w-44" />
+      <Skeleton className="mb-8 h-4 w-80" />
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="rounded-xl p-5 space-y-2 text-center" style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
-            <Skeleton className="h-8 w-16 mx-auto" />
-            <Skeleton className="h-3 w-24 mx-auto" />
+          <div key={i} className="rounded-[28px] p-5 text-center space-y-2" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <Skeleton className="mx-auto h-8 w-16" />
+            <Skeleton className="mx-auto h-3 w-24" />
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {[...Array(2)].map((_, i) => (
-          <div key={i} className="rounded-xl p-6 space-y-4" style={{ background: '#0a0f1a', border: '1px solid rgba(0,217,255,0.08)' }}>
+          <div key={i} className="rounded-[28px] p-6 space-y-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <Skeleton className="h-5 w-40" />
-            {[...Array(6)].map((_, j) => <Skeleton key={j} className="h-6 w-full" />)}
+            {[...Array(6)].map((_, j) => (
+              <Skeleton key={j} className="h-6 w-full" />
+            ))}
           </div>
         ))}
       </div>

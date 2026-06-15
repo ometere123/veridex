@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { LeaderboardTable } from '@/components/LeaderboardTable';
 import type { LeaderboardEntry } from '@/types';
 
-const CATEGORIES = ['Overall','DeFi','AI','Infrastructure','Gaming','RWA','DePIN','Consumer'];
+const CATEGORIES = ['Overall', 'DeFi', 'AI', 'Infrastructure', 'Gaming', 'RWA', 'DePIN', 'Consumer'];
 
 export default function LeaderboardPage() {
   const [category, setCategory] = useState('Overall');
@@ -21,32 +21,32 @@ export default function LeaderboardPage() {
   }, [category]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-black mb-2" style={{ color: 'var(--foreground)' }}>Reputation Index</h1>
-        <p className="text-sm" style={{ color: 'var(--muted)' }}>
+        <p className="mb-3 text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>Index</p>
+        <h1 className="mb-3 text-4xl font-semibold" style={{ color: '#1a1612' }}>Reputation Index</h1>
+        <p className="text-base leading-8" style={{ color: '#6b6360' }}>
           Categorical standings verified through GenLayer consensus.
         </p>
       </div>
 
-      {/* Category tabs */}
-      <div className="flex gap-2 mb-6 flex-wrap">
+      <div className="mb-6 flex flex-wrap gap-2">
         {CATEGORIES.map((c) => (
           <button
             key={c}
             onClick={() => setCategory(c)}
-            className="px-4 py-2 rounded-sm text-sm font-medium transition-all"
+            className="rounded-2xl px-4 py-2 text-sm font-medium transition-all"
             style={
               category === c
                 ? {
                     background: '#6b8e7a',
-                    color: '#0a0f1a',
-                    boxShadow: '0 0 12px rgba(107,142,122,0.25)',
+                    color: '#ffffff',
+                    boxShadow: '0 12px 30px rgba(107,142,122,0.18)',
                   }
                 : {
-                    background: 'rgba(107,142,122,0.06)',
+                    background: 'rgba(107,142,122,0.05)',
                     border: '1px solid rgba(107,142,122,0.14)',
-                    color: 'var(--muted)',
+                    color: '#6b6360',
                   }
             }
           >
@@ -55,17 +55,11 @@ export default function LeaderboardPage() {
         ))}
       </div>
 
-      <div
-        className="rounded-sm p-6"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-      >
+      <div className="rounded-[32px] p-6" style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.12)' }}>
         {loading ? (
-          <div className="flex items-center justify-center py-20 gap-3" style={{ color: 'var(--muted-2)' }}>
-            <span
-              className="w-5 h-5 rounded-full border-2 animate-spin"
-              style={{ borderColor: 'rgba(107,142,122,0.2)', borderTopColor: '#6b8e7a' }}
-            />
-            Retrieving {category} reputation index…
+          <div className="flex items-center justify-center gap-3 py-20" style={{ color: '#6b6360' }}>
+            <span className="h-5 w-5 animate-spin rounded-full border-2" style={{ borderColor: 'rgba(107,142,122,0.2)', borderTopColor: '#6b8e7a' }} />
+            Retrieving {category} reputation index...
           </div>
         ) : (
           <LeaderboardTable entries={entries} />

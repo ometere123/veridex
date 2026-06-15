@@ -10,29 +10,33 @@ export default function SubmitPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-black mb-2" style={{ color: '#e2e8f0' }}>
+        <p className="mb-3 text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>
+          Registration
+        </p>
+        <h1 className="mb-3 text-4xl font-semibold" style={{ color: '#1a1612' }}>
           Register your Initiative
         </h1>
-        <p className="text-sm" style={{ color: '#94a3b8' }}>
-          Provide all evidence. Finalize it. GenLayer assesses. Validators verify.
-          Your verification score, tier, and evidence history are recorded on-chain.
+        <p className="text-base leading-8" style={{ color: '#6b6360' }}>
+          Provide all evidence. Finalize it. GenLayer assesses. Validators verify. Your verification score,
+          tier, and evidence history are recorded on-chain.
         </p>
       </div>
 
-      {/* How it works banner */}
       <div
-        className="rounded-3xl p-5 mb-8 text-sm flex items-start gap-3"
+        className="mb-8 flex items-start gap-3 rounded-3xl p-5 text-sm"
         style={{
           background: 'rgba(184, 99, 63, 0.08)',
           border: '1px solid rgba(184, 99, 63, 0.16)',
-          color: 'var(--foreground)',
+          color: '#1a1612',
         }}
       >
-        <span className="text-lg flex-shrink-0" style={{ color: 'var(--brand)' }}>⬡</span>
-        <div>
+        <span className="text-lg font-semibold" style={{ color: 'var(--brand)' }}>
+          +
+        </span>
+        <div className="leading-7">
           <strong style={{ color: 'var(--brand-deep)' }}>Verification flow:</strong>
-          Submit your project evidence → Publish supporting documents → Lock the submission →
-          GenLayer validates and scores → Your verification record becomes on-chain history.
+          {' '}Submit your project evidence -&gt; Publish supporting documents -&gt; Lock the submission -&gt;
+          {' '}GenLayer validates and scores -&gt; Your verification record becomes on-chain history.
         </div>
       </div>
 

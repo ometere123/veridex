@@ -83,11 +83,13 @@ function Footer() {
           <VeridexLogo withWordmark size={28} subtitle="Evidence-backed trust" />
           <span className="text-xs" style={{ color: 'var(--border-2)' }}>/ GenLayer</span>
         </div>
-        <div className="flex items-center gap-6 text-xs" style={{ color: 'var(--muted-2)' }}>
-          <a href="/tiers"       className="hover:text-[#6b8e7a] transition-colors tracking-wide">Rankings</a>
-          <a href="/index"       className="hover:text-[#6b8e7a] transition-colors tracking-wide">Leaderboard</a>
-          <a href="/analytics"   className="hover:text-[#6b8e7a] transition-colors tracking-wide">Analytics</a>
-          <a href="/treasury"    className="hover:text-[#6b8e7a] transition-colors tracking-wide">Treasury</a>
+        <div className="flex flex-wrap items-center justify-center gap-5 text-xs" style={{ color: 'var(--muted-2)' }}>
+          <a href="/tiers" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Tiers</a>
+          <a href="/index" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Index</a>
+          <a href="/register" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Register</a>
+          <a href="/compare" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Compare</a>
+          <a href="/analytics" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Analytics</a>
+          <a href="/hub" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Hub</a>
         </div>
       </div>
     </footer>

@@ -11,8 +11,8 @@ interface LeaderboardTableProps {
 export function LeaderboardTable({ entries, className }: LeaderboardTableProps) {
   if (entries.length === 0) {
     return (
-      <div className={cn('text-center py-16', className)} style={{ color: '#6b5490' }}>
-        No projects ranked yet.
+      <div className={cn('text-center py-16', className)} style={{ color: '#64748b' }}>
+        No submissions assessed yet.
       </div>
     );
   }
@@ -21,7 +21,7 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
     <div className={cn('overflow-x-auto', className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr style={{ borderBottom: '1px solid rgba(230,190,247,0.08)' }}>
+          <tr style={{ borderBottom: '1px solid rgba(0,217,255,0.08)' }}>
             {['#', 'Project', 'Category', 'Score', 'Tier', 'Architecture', 'Governance', 'Traction'].map((h, i) => (
               <th
                 key={h}
@@ -30,7 +30,7 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
                   i >= 5 && 'hidden lg:table-cell',
                   i === 2 && 'hidden sm:table-cell'
                 )}
-                style={{ color: '#6b5490' }}
+                style={{ color: '#64748b' }}
               >
                 {h}
               </th>
@@ -42,9 +42,9 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
             <tr
               key={entry.project_id}
               className="transition-colors"
-              style={{ borderBottom: '1px solid rgba(230,190,247,0.04)' }}
+              style={{ borderBottom: '1px solid rgba(0,217,255,0.04)' }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(230,190,247,0.03)';
+                (e.currentTarget as HTMLElement).style.background = 'rgba(0,217,255,0.03)';
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.background = 'transparent';
@@ -53,7 +53,7 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
               {/* Rank */}
               <td className="py-3 pr-4">
                 <span className="font-mono text-sm font-medium" style={{
-                  color: idx === 0 ? '#fbbf24' : idx === 1 ? '#e6bef7' : idx === 2 ? '#c084fc' : '#6b5490'
+                  color: idx === 0 ? '#fbbf24' : idx === 1 ? '#00d9ff' : idx === 2 ? '#06b6d4' : '#64748b'
                 }}>
                   {Math.round(safeNumber(entry.rank))}
                 </span>
@@ -64,9 +64,9 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
                 <Link
                   href={`/project/${entry.project_id}`}
                   className="font-medium transition-colors"
-                  style={{ color: '#f5eeff' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#e6bef7')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#f5eeff')}
+                  style={{ color: '#e2e8f0' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#00d9ff')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#e2e8f0')}
                 >
                   {entry.project_name}
                 </Link>
@@ -74,7 +74,7 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
 
               {/* Category */}
               <td className="py-3 pr-4 hidden sm:table-cell">
-                <span className="text-[10px] uppercase tracking-widest" style={{ color: '#6b5490' }}>
+                <span className="text-[10px] uppercase tracking-widest" style={{ color: '#64748b' }}>
                   {entry.category}
                 </span>
               </td>
