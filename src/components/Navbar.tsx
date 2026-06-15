@@ -5,15 +5,16 @@ import { Suspense, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { WalletConnectButton } from './WalletConnectButton';
 import { NotificationsPanel } from './NotificationsPanel';
+import { VeridexLogo } from './VeridexLogo';
 import { cn } from '@/utils';
 
 const NAV_LINKS = [
-  { href: '/rankings',    label: 'Tiers' },
-  { href: '/leaderboard', label: 'Index' },
-  { href: '/submit',      label: 'Register' },
+  { href: '/tiers',       label: 'Tiers' },
+  { href: '/index',       label: 'Index' },
+  { href: '/register',    label: 'Register' },
   { href: '/compare',     label: 'Compare' },
   { href: '/analytics',   label: 'Analytics' },
-  { href: '/dashboard',   label: 'Hub' },
+  { href: '/hub',         label: 'Hub' },
 ];
 
 function NavLinks({ onClose }: { onClose?: () => void }) {
@@ -56,22 +57,12 @@ export function Navbar() {
           {/* ── Logo ──────────────────────────────────────── */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-3 group">
-              <div
-                className="w-8 h-8 rounded flex items-center justify-center flex-shrink-0 font-black text-[10px] font-mono"
-                style={{
-                  background: 'linear-gradient(135deg, #6b8e7a, #8b7355)',
-                  color: '#ffffff',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                VDX
-              </div>
-              <span
-                className="text-sm font-bold tracking-[0.12em] uppercase group-hover:text-[#6b8e7a] transition-colors"
-                style={{ fontFamily: 'var(--font-jetbrains-mono)', color: '#1a1612' }}
-              >
-                Veridex
-              </span>
+              <VeridexLogo
+                withWordmark
+                subtitle="On-chain verification"
+                className="group-hover:opacity-95 transition-opacity"
+                size={34}
+              />
               <span
                 className="hidden sm:block text-[9px] font-medium px-1.5 py-0.5 rounded font-mono"
                 style={{
@@ -80,10 +71,10 @@ export function Navbar() {
                   background: 'rgba(107, 142, 122, 0.05)',
                   letterSpacing: '0.06em',
                 }}
-              >
-                GenLayer
-              </span>
-            </Link>
+                >
+                  GenLayer
+                </span>
+              </Link>
 
             {/* Desktop nav */}
             <div className="hidden md:flex items-center gap-0">

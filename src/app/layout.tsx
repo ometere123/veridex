@@ -3,13 +3,15 @@ import './globals.css';
 import { Providers } from '@/providers';
 import { Navbar } from '@/components/Navbar';
 import { NetworkChecker } from '@/components/NetworkChecker';
+import { VeridexLogo } from '@/components/VeridexLogo';
 
 export const viewport: Viewport = {
   themeColor: '#6b8e7a',
 };
 
 export const metadata: Metadata = {
-    title: {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://veridex.app'),
+  title: {
     default: 'Veridex - On-Chain Crypto Intelligence',
     template: '%s - Veridex',
   },
@@ -78,22 +80,14 @@ function Footer() {
     >
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div
-            className="w-6 h-6 rounded flex items-center justify-center text-[9px] font-black font-mono"
-            style={{ background: 'linear-gradient(135deg, #6b8e7a, #b8633f)', color: '#fff' }}
-          >
-            VDX
-          </div>
-          <span className="text-xs font-semibold tracking-wide" style={{ color: 'var(--muted-2)', fontFamily: 'var(--font-jetbrains-mono)' }}>
-            VERIDEX
-          </span>
+          <VeridexLogo withWordmark size={28} subtitle="Evidence-backed trust" />
           <span className="text-xs" style={{ color: 'var(--border-2)' }}>/ GenLayer</span>
         </div>
         <div className="flex items-center gap-6 text-xs" style={{ color: 'var(--muted-2)' }}>
-          <a href="/rankings"    className="hover:text-[#00d9ff] transition-colors tracking-wide">Rankings</a>
-          <a href="/leaderboard" className="hover:text-[#00d9ff] transition-colors tracking-wide">Leaderboard</a>
-          <a href="/analytics"   className="hover:text-[#00d9ff] transition-colors tracking-wide">Analytics</a>
-          <a href="/treasury"    className="hover:text-[#00d9ff] transition-colors tracking-wide">Treasury</a>
+          <a href="/tiers"       className="hover:text-[#6b8e7a] transition-colors tracking-wide">Rankings</a>
+          <a href="/index"       className="hover:text-[#6b8e7a] transition-colors tracking-wide">Leaderboard</a>
+          <a href="/analytics"   className="hover:text-[#6b8e7a] transition-colors tracking-wide">Analytics</a>
+          <a href="/treasury"    className="hover:text-[#6b8e7a] transition-colors tracking-wide">Treasury</a>
         </div>
       </div>
     </footer>

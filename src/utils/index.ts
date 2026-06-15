@@ -90,25 +90,25 @@ export function getRankChange(current: number, previous?: number): number {
 
 export function getScoreColor(score: number): string {
   score = safeNumber(score, 0);
-  if (score >= 95) return 'text-amber-300';
-  if (score >= 90) return 'text-[#e6bef7]';
-  if (score >= 80) return 'text-violet-400';
-  if (score >= 70) return 'text-emerald-400';
-  if (score >= 60) return 'text-cyan-400';
-  if (score >= 50) return 'text-orange-400';
-  return 'text-red-400';
+  if (score >= 95) return 'text-[#5f7f6d]';
+  if (score >= 90) return 'text-[#6b8e7a]';
+  if (score >= 80) return 'text-[#7a9b8e]';
+  if (score >= 70) return 'text-[#8b7355]';
+  if (score >= 60) return 'text-[#a89b7a]';
+  if (score >= 50) return 'text-[#b39b6b]';
+  return 'text-[#a85c4a]';
 }
 
 /** Return a hex colour for use in recharts/inline styles */
 export function getScoreHex(score: number): string {
   score = safeNumber(score, 0);
-  if (score >= 95) return '#fbbf24';
-  if (score >= 90) return '#e6bef7';
-  if (score >= 80) return '#a78bfa';
-  if (score >= 70) return '#34d399';
-  if (score >= 60) return '#22d3ee';
-  if (score >= 50) return '#fb923c';
-  return '#f87171';
+  if (score >= 95) return '#5f7f6d';
+  if (score >= 90) return '#6b8e7a';
+  if (score >= 80) return '#7a9b8e';
+  if (score >= 70) return '#8b7355';
+  if (score >= 60) return '#a89b7a';
+  if (score >= 50) return '#b39b6b';
+  return '#a85c4a';
 }
 
 export function categoryToLeaderboardKey(category: string): string {

@@ -152,7 +152,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
         router.push(`/project/${project_id}`);
       } else {
         // Shouldn't happen, but fallback to dashboard
-        router.push('/dashboard');
+        router.push('/hub');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed. Try again.');

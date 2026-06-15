@@ -87,7 +87,7 @@ function DashboardProjectInner() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
         <p className="mb-4" style={{ color: '#94a3b8' }}>No project selected.</p>
-        <Link href="/dashboard" style={{ color: '#00d9ff' }}>← Back to Dashboard</Link>
+        <Link href="/hub" style={{ color: '#00d9ff' }}>← Back to Hub</Link>
       </div>
     );
   }
@@ -112,7 +112,7 @@ function DashboardProjectInner() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
         <p style={{ color: '#94a3b8' }}>Project not found.</p>
-        <Link href="/dashboard" className="block mt-3" style={{ color: '#00d9ff' }}>← Back to Dashboard</Link>
+        <Link href="/hub" className="block mt-3" style={{ color: '#00d9ff' }}>← Back to Hub</Link>
       </div>
     );
   }
@@ -124,7 +124,7 @@ function DashboardProjectInner() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
       {/* Back */}
-      <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm mb-6 transition-colors"
+      <Link href="/hub" className="inline-flex items-center gap-1.5 text-sm mb-6 transition-colors"
         style={{ color: '#94a3b8' }}
         onMouseEnter={(e) => (e.currentTarget.style.color = '#00d9ff')}
         onMouseLeave={(e) => (e.currentTarget.style.color = '#94a3b8')}

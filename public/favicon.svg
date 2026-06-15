@@ -1,6 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
-  <rect width="128" height="128" rx="32" fill="#6b8e7a"/>
-  <path d="M40 44h48v40H40z" fill="#b8633f" rx="16"/>
-  <path d="M48 52h32v24H48z" fill="#f5f1ed"/>
-  <text x="64" y="86" text-anchor="middle" font-family="serif" font-size="48" font-weight="900" fill="#fff">V</text>
+  <defs>
+    <linearGradient id="bg" x1="20" y1="12" x2="106" y2="114" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F6F1E9"/>
+      <stop offset="1" stop-color="#E6F0E8"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="28" y1="26" x2="98" y2="98" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6B8E7A"/>
+      <stop offset="1" stop-color="#4F725F"/>
+    </linearGradient>
+  </defs>
+  <rect x="6" y="6" width="116" height="116" rx="34" fill="url(#bg)"/>
+  <rect x="6" y="6" width="116" height="116" rx="34" stroke="rgba(107,142,122,0.18)"/>
+  <path d="M64 24 92 40v32L64 102 36 72V40Z" stroke="url(#frame)" stroke-width="7" stroke-linejoin="round"/>
+  <path d="M43 73 56 60l9 8 19-18" stroke="#B8633F" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M36 40 64 57 92 40M36 72 64 57 92 72" stroke="#6B8E7A" stroke-opacity=".34" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="36" cy="40" r="6" fill="#6B8E7A"/>
+  <circle cx="92" cy="40" r="6" fill="#6B8E7A"/>
+  <circle cx="92" cy="72" r="6" fill="#B8633F"/>
+  <circle cx="64" cy="102" r="6" fill="#6B8E7A"/>
 </svg>

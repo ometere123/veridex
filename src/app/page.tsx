@@ -16,14 +16,14 @@ const PROBLEMS = [
   { label: 'Claim Without Trace', desc: 'Assertions lack a documented evidence trail to validate them.' },
 ];
 
-const DIMENSIONS: { code: string; icon: LucideIcon; label: string; weight: string }[] = [
-  { code: 'protocol_architecture', icon: Waypoints, label: 'Protocol Architecture', weight: '20%' },
-  { code: 'team_governance', icon: Users, label: 'Team & Governance', weight: '15%' },
-  { code: 'market_traction', icon: TrendingUp, label: 'Market Traction', weight: '15%' },
-  { code: 'security_risk', icon: ShieldCheck, label: 'Security & Risk', weight: '15%' },
-  { code: 'delivery_proof', icon: Rocket, label: 'Delivery Proof', weight: '15%' },
-  { code: 'token_design', icon: Coins, label: 'Token Design', weight: '10%' },
-  { code: 'evidence_integrity', icon: Waypoints, label: 'Evidence Integrity', weight: '10%' },
+const DIMENSIONS: { code: string; icon: LucideIcon; label: string }[] = [
+  { code: 'protocol_architecture', icon: Waypoints, label: 'Protocol Architecture' },
+  { code: 'team_governance', icon: Users, label: 'Team & Governance' },
+  { code: 'market_traction', icon: TrendingUp, label: 'Market Traction' },
+  { code: 'security_risk', icon: ShieldCheck, label: 'Security & Risk' },
+  { code: 'delivery_proof', icon: Rocket, label: 'Delivery Proof' },
+  { code: 'token_design', icon: Coins, label: 'Token Design' },
+  { code: 'evidence_integrity', icon: Waypoints, label: 'Evidence Integrity' },
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -75,7 +75,7 @@ export default function LandingPage() {
 
               <div className="flex flex-col gap-3 sm:flex-row items-start">
                 <Link
-                  href="/submit"
+                  href="/register"
                   className="inline-flex items-center justify-center rounded-full px-8 py-4 text-sm font-semibold transition-all"
                   style={{
                     background: '#6b8e7a',
@@ -85,7 +85,7 @@ export default function LandingPage() {
                   Submit a project
                 </Link>
                 <Link
-                  href="/rankings"
+                  href="/tiers"
                   className="inline-flex items-center justify-center rounded-full px-8 py-4 text-sm font-semibold transition-all border"
                   style={{
                     background: 'transparent',
@@ -222,7 +222,6 @@ export default function LandingPage() {
                   </span>
                   <span className="text-sm font-semibold" style={{ color: '#1a1612' }}>{dimension.label}</span>
                 </div>
-                <p className="text-sm" style={{ color: '#6b6360' }}>{dimension.weight} of the total evaluation.</p>
               </div>
             ))}
           </div>
@@ -244,13 +243,13 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                href="/submit"
+                href="/register"
                 className="inline-flex items-center justify-center rounded-full bg-[#6b8e7a] px-8 py-4 text-sm font-semibold text-white"
               >
                 Submit evidence
               </Link>
               <Link
-                href="/dashboard"
+                href="/hub"
                 className="inline-flex items-center justify-center rounded-full border border-[rgba(107,142,122,0.22)] px-8 py-4 text-sm font-semibold"
                 style={{ color: '#1a1612' }}
               >

@@ -1,5 +1,5 @@
 import { cn } from '@/utils';
-import { TIER_COLORS } from '@/constants';
+import { TIER_COLORS, TIER_STARS } from '@/constants';
 import type { RankTier } from '@/types';
 
 interface TierBadgeProps {
@@ -24,7 +24,7 @@ export function TierBadge({ tier, size = 'md', className }: TierBadgeProps) {
         className
       )}
     >
-      {tier}
+      {TIER_STARS[tier]}
     </span>
   );
 }

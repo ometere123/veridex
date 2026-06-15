@@ -39,13 +39,13 @@ export default function LeaderboardPage() {
             style={
               category === c
                 ? {
-                    background: '#00d9ff',
+                    background: '#6b8e7a',
                     color: '#0a0f1a',
-                    boxShadow: '0 0 12px rgba(0,217,255,0.3)',
+                    boxShadow: '0 0 12px rgba(107,142,122,0.25)',
                   }
                 : {
-                    background: 'rgba(0,217,255,0.05)',
-                    border: '1px solid rgba(0,217,255,0.1)',
+                    background: 'rgba(107,142,122,0.06)',
+                    border: '1px solid rgba(107,142,122,0.14)',
                     color: 'var(--muted)',
                   }
             }
@@ -63,7 +63,7 @@ export default function LeaderboardPage() {
           <div className="flex items-center justify-center py-20 gap-3" style={{ color: 'var(--muted-2)' }}>
             <span
               className="w-5 h-5 rounded-full border-2 animate-spin"
-              style={{ borderColor: 'rgba(0,217,255,0.2)', borderTopColor: '#00d9ff' }}
+              style={{ borderColor: 'rgba(107,142,122,0.2)', borderTopColor: '#6b8e7a' }}
             />
             Retrieving {category} reputation index…
           </div>

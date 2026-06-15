@@ -39,7 +39,7 @@ export default function NotFound() {
             Return Home
           </Link>
           <Link
-            href="/rankings"
+            href="/tiers"
             className="font-semibold px-6 py-3 rounded-sm text-sm transition-all"
             style={{
               background: 'rgba(0,217,255,0.06)',

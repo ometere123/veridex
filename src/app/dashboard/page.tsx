@@ -82,7 +82,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-black" style={{ color: 'var(--foreground)' }}>Reputation Hub</h1>
         <Link
-          href="/submit"
+          href="/register"
           className="font-semibold px-5 py-2.5 rounded-sm text-sm transition-all"
           style={{
             background: '#00d9ff',
@@ -152,12 +152,12 @@ export default function DashboardPage() {
             {totalProjects > 0 && (
               <p className="text-xs mb-4" style={{ color: 'var(--muted)' }}>
                 GenLayer reports {totalProjects} registration(s) on-chain.{' '}
-                <Link href="/submit/lookup" style={{ color: '#00d9ff' }}>
+                <Link href="/register" style={{ color: '#00d9ff' }}>
                   Retrieve by registration hash →
                 </Link>
               </p>
             )}
-            <Link href="/submit" className="text-sm" style={{ color: '#00d9ff' }}>
+            <Link href="/register" className="text-sm" style={{ color: '#00d9ff' }}>
               Register your first initiative →
             </Link>
           </div>
@@ -214,7 +214,7 @@ export default function DashboardPage() {
                     </span>
                   )}
                   <Link
-                    href={`/dashboard/project?id=${row.project_id}`}
+                    href={`/hub/project?id=${row.project_id}`}
                     className="text-xs px-3 py-1 rounded-sm transition-all"
                     style={{
                       background: 'rgba(0,217,255,0.07)',

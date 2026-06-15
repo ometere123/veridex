@@ -78,7 +78,7 @@ function ProjectSearchInput({
                 <p className="text-[10px] font-mono mt-0.5" style={{ color: 'var(--muted-2)' }}>{p.project_id}</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-xs font-mono" style={{ color: '#00d9ff' }}>{p.overall_score}</span>
+                <span className="text-xs font-mono" style={{ color: '#6b8e7a' }}>{p.overall_score}</span>
                 <span className="text-xs font-bold font-mono" style={{ color: 'var(--muted)' }}>{p.tier}</span>
               </div>
             </button>
@@ -147,7 +147,7 @@ export default function ComparePage() {
           disabled={loading || !idA || !idB}
           className="font-semibold px-6 py-2.5 rounded-sm text-sm transition-all disabled:opacity-50"
           style={{
-            background: '#00d9ff',
+            background: '#6b8e7a',
             color: '#0a0f1a',
             boxShadow: loading ? 'none' : '0 0 14px rgba(0,217,255,0.3)',
           }}

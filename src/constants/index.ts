@@ -8,13 +8,13 @@ export const CATEGORIES: ProjectCategory[] = [
 ];
 
 export const RANK_TIERS: { tier: RankTier; min: number; max: number; label: string }[] = [
-  { tier: 'S+', min: 95, max: 100, label: 'Elite' },
-  { tier: 'S',  min: 90, max: 94,  label: 'Exceptional' },
-  { tier: 'A',  min: 80, max: 89,  label: 'Strong' },
-  { tier: 'B',  min: 70, max: 79,  label: 'Good' },
-  { tier: 'C',  min: 60, max: 69,  label: 'Average' },
-  { tier: 'D',  min: 50, max: 59,  label: 'Below Average' },
-  { tier: 'F',  min: 0,  max: 49,  label: 'Poor' },
+  { tier: 'S+', min: 95, max: 100, label: '7 Stars' },
+  { tier: 'S',  min: 90, max: 94,  label: '6 Stars' },
+  { tier: 'A',  min: 80, max: 89,  label: '5 Stars' },
+  { tier: 'B',  min: 70, max: 79,  label: '4 Stars' },
+  { tier: 'C',  min: 60, max: 69,  label: '3 Stars' },
+  { tier: 'D',  min: 50, max: 59,  label: '2 Stars' },
+  { tier: 'F',  min: 0,  max: 49,  label: '1 Star' },
 ];
 
 export const SCORE_WEIGHTS = {
@@ -27,26 +27,34 @@ export const SCORE_WEIGHTS = {
   evidence_integrity:   0.10,
 };
 
-// Tier colours - built around #00d9ff brand palette
-export const TIER_COLORS: Record<RankTier, string> = {
-  'S+': 'text-amber-400  bg-amber-400/10  border-amber-400/30',
-  'S':  'text-[#00d9ff] bg-[#00d9ff]/10 border-[#00d9ff]/30',
-  'A':  'text-indigo-400 bg-indigo-400/10 border-indigo-400/30',
-  'B':  'text-emerald-400 bg-emerald-400/10 border-emerald-400/30',
-  'C':  'text-violet-400  bg-violet-400/10  border-violet-400/30',
-  'D':  'text-orange-400 bg-orange-400/10 border-orange-400/30',
-  'F':  'text-red-400    bg-red-400/10    border-red-400/30',
+export const TIER_STARS: Record<RankTier, string> = {
+  'S+': '7★',
+  'S': '6★',
+  'A': '5★',
+  'B': '4★',
+  'C': '3★',
+  'D': '2★',
+  'F': '1★',
 };
 
-// Raw hex values for inline styles / recharts
+export const TIER_COLORS: Record<RankTier, string> = {
+  'S+': 'text-[#5f7f6d] bg-[#5f7f6d]/10 border-[#5f7f6d]/30',
+  'S':  'text-[#6b8e7a] bg-[#6b8e7a]/10 border-[#6b8e7a]/30',
+  'A':  'text-[#7a9b8e] bg-[#7a9b8e]/10 border-[#7a9b8e]/30',
+  'B':  'text-[#8b7355] bg-[#8b7355]/10 border-[#8b7355]/30',
+  'C':  'text-[#a89b7a] bg-[#a89b7a]/10 border-[#a89b7a]/30',
+  'D':  'text-[#b39b6b] bg-[#b39b6b]/10 border-[#b39b6b]/30',
+  'F':  'text-[#a85c4a] bg-[#a85c4a]/10 border-[#a85c4a]/30',
+};
+
 export const TIER_HEX: Record<RankTier, string> = {
-  'S+': '#f59e0b',
-  'S':  '#00d9ff',
-  'A':  '#818cf8',
-  'B':  '#34d399',
-  'C':  '#a78bfa',
-  'D':  '#fb923c',
-  'F':  '#f87171',
+  'S+': '#5f7f6d',
+  'S':  '#6b8e7a',
+  'A':  '#7a9b8e',
+  'B':  '#8b7355',
+  'C':  '#a89b7a',
+  'D':  '#b39b6b',
+  'F':  '#a85c4a',
 };
 
 export const SCORE_LABELS: Record<string, string> = {

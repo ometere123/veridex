@@ -30,8 +30,8 @@ const MAX_POLLS     = 20;     // 20 × 15s = 5 minutes
 // ── Stage chip ────────────────────────────────────────────────────
 
 const STAGE_COLOR: Record<EvalStage, string> = {
-  signing:    '#00d9ff',
-  submitted:  '#06b6d4',
+  signing:    '#6b8e7a',
+  submitted:  '#7a9b8e',
   validating: '#fbbf24',
   finalising: '#34d399',
   completed:  '#4ade80',
@@ -224,7 +224,7 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
         {(isPolling || stage === 'stalled' || evaluation) && (
           <button onClick={handleRefresh}
             className="text-xs px-3 py-1.5 rounded-lg transition-all"
-            style={{ background: 'rgba(0,217,255,0.07)', border: '1px solid rgba(0,217,255,0.15)', color: '#00d9ff' }}>
+            style={{ background: 'rgba(107,142,122,0.08)', border: '1px solid rgba(107,142,122,0.18)', color: '#6b8e7a' }}>
             ↻ Refresh Status
           </button>
         )}
@@ -278,11 +278,11 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
 
           {evaluation.recommendations?.length > 0 && (
             <div>
-              <h4 className="text-xs font-semibold mb-2" style={{ color: '#00d9ff' }}>Recommendations</h4>
+              <h4 className="text-xs font-semibold mb-2" style={{ color: '#6b8e7a' }}>Recommendations</h4>
               <ul className="space-y-1">
                 {evaluation.recommendations.map((r, i) => (
                   <li key={i} className="text-xs flex gap-2" style={{ color: '#94a3b8' }}>
-                    <span style={{ color: '#00d9ff', flexShrink: 0 }}>→</span>{r}
+                    <span style={{ color: '#6b8e7a', flexShrink: 0 }}>→</span>{r}
                   </li>
                 ))}
               </ul>
@@ -297,7 +297,7 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
           {canReevaluate && (
             <button onClick={handleReevaluate} disabled={!!stage}
               className="w-full text-sm font-medium py-2 px-4 rounded-lg transition-all disabled:opacity-50"
-              style={{ background: 'rgba(0,217,255,0.07)', border: '1px solid rgba(0,217,255,0.16)', color: '#00d9ff' }}>
+              style={{ background: 'rgba(107,142,122,0.08)', border: '1px solid rgba(107,142,122,0.18)', color: '#6b8e7a' }}>
               {stage ? (STAGE_LABEL[stage] || 'Processing…') : 'Request Reassessment'}
             </button>
           )}
@@ -349,7 +349,7 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
           {canEvaluate && !stage && (
             <button onClick={() => handleEvaluate(false)}
               className="w-full font-semibold py-2.5 px-4 rounded-lg text-sm transition-all"
-              style={{ background: 'linear-gradient(135deg,#00d9ff,#06b6d4)', color: '#fff', boxShadow: '0 0 18px rgba(0,217,255,0.35)' }}>
+              style={{ background: 'linear-gradient(135deg,#6b8e7a,#7a9b8e)', color: '#fff', boxShadow: '0 0 18px rgba(107,142,122,0.28)' }}>
               ⬡ Run GenLayer Assessment
             </button>
           )}
@@ -363,7 +363,7 @@ export function EvaluationPanel({ project, evaluation: initialEvaluation, onEval
               </div>
               <button onClick={() => handleEvaluate(true)}
                 className="w-full font-semibold py-2.5 px-4 rounded-lg text-sm transition-all"
-                style={{ background: 'linear-gradient(135deg,#00d9ff,#06b6d4)', color: '#fff', boxShadow: '0 0 18px rgba(0,217,255,0.35)' }}>
+                style={{ background: 'linear-gradient(135deg,#6b8e7a,#7a9b8e)', color: '#fff', boxShadow: '0 0 18px rgba(107,142,122,0.28)' }}>
                 ⬡ Run Assessment
               </button>
             </div>
