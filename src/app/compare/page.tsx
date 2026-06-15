@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ProjectComparison } from '@/components/ProjectComparison';
@@ -19,13 +19,11 @@ async function fetchProjectAndEval(id: string) {
   }
 }
 
-function ProjectSearchInput({
-  label,
+function SearchInput({
   value,
   onSelect,
   allProjects,
 }: {
-  label: string;
   value: string;
   onSelect: (id: string, name: string) => void;
   allProjects: LeaderboardEntry[];
@@ -52,55 +50,45 @@ function ProjectSearchInput({
 
   return (
     <div className="relative" ref={ref}>
-      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider" style={{ color: '#6b6360' }}>
-        {label}
-      </label>
       <input
         value={query}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setOpen(true);
-        }}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder="Search by name or enter ID..."
-        className="w-full rounded-2xl px-4 py-3 text-sm"
+        className="w-full rounded-xl px-4 py-3 text-sm"
         style={{
           background: 'rgba(107,142,122,0.05)',
-          border: '1px solid rgba(107,142,122,0.12)',
+          border: '1px solid rgba(107,142,122,0.14)',
           color: '#1a1612',
           outline: 'none',
         }}
       />
-      {open && results.length > 0 ? (
+      {open && results.length > 0 && (
         <div
-          className="absolute z-20 mt-2 w-full overflow-hidden rounded-3xl shadow-2xl"
+          className="absolute z-20 mt-2 w-full overflow-hidden rounded-2xl shadow-xl"
           style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.14)' }}
         >
           {results.map((p) => (
             <button
               key={p.project_id}
-              onClick={() => {
-                onSelect(p.project_id, p.project_name);
-                setQuery(p.project_name);
-                setOpen(false);
-              }}
+              onClick={() => { onSelect(p.project_id, p.project_name); setQuery(p.project_name); setOpen(false); }}
               className="flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors"
               style={{ borderBottom: '1px solid rgba(107,142,122,0.08)' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(107,142,122,0.06)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(107,142,122,0.06)')}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
             >
               <div>
                 <p className="font-medium" style={{ color: '#1a1612' }}>{p.project_name}</p>
-                <p className="mt-0.5 text-[10px] font-mono" style={{ color: '#9b938a' }}>{p.project_id}</p>
+                <p className="mt-0.5 font-mono text-[10px]" style={{ color: '#9b938a' }}>{p.project_id}</p>
               </div>
-              <div className="flex flex-shrink-0 items-center gap-2">
-                <span className="text-xs font-mono" style={{ color: '#6b8e7a' }}>{p.overall_score}</span>
-                <span className="text-xs font-bold font-mono" style={{ color: '#6b6360' }}>{p.tier}</span>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="font-mono text-xs" style={{ color: '#6b8e7a' }}>{p.overall_score}</span>
+                <span className="font-mono text-xs font-bold" style={{ color: '#6b6360' }}>{p.tier}</span>
               </div>
             </button>
           ))}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -121,67 +109,86 @@ export default function ComparePage() {
   }, []);
 
   const handleCompare = useCallback(async () => {
-    if (!idA || !idB) {
-      setError('Select or enter both submissions');
-      return;
-    }
-
+    if (!idA || !idB) { setError('Select or enter both submissions'); return; }
     setLoading(true);
     setError('');
     const [a, b] = await Promise.all([fetchProjectAndEval(idA), fetchProjectAndEval(idB)]);
-    if (!a) {
-      setError('Submission A not located');
-      setLoading(false);
-      return;
-    }
-    if (!b) {
-      setError('Submission B not located');
-      setLoading(false);
-      return;
-    }
+    if (!a) { setError('Submission A not located'); setLoading(false); return; }
+    if (!b) { setError('Submission B not located'); setLoading(false); return; }
     setDataA(a);
     setDataB(b);
     setLoading(false);
   }, [idA, idB]);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
+    <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-8">
-        <p className="mb-3 text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>Compare</p>
-        <h1 className="mb-3 text-4xl font-semibold" style={{ color: '#1a1612' }}>Head-to-Head Analysis</h1>
-        <p className="text-base leading-8" style={{ color: '#6b6360' }}>
-          Parallel assessment comparison across all dimensions.
+        <p className="mb-2 text-[10px] uppercase tracking-[0.28em]" style={{ color: '#9b938a' }}>Compare</p>
+        <h1 className="text-3xl font-semibold" style={{ color: '#1a1612' }}>Head-to-Head Analysis</h1>
+        <p className="mt-2 text-sm" style={{ color: '#6b6360' }}>
+          Select two initiatives to compare across all assessment dimensions.
         </p>
       </div>
 
-      <div
-        className="mb-6 rounded-[32px] p-6"
-        style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.12)' }}
-      >
-        <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <ProjectSearchInput label="Submission A" value={idA} onSelect={(id) => setIdA(id)} allProjects={allProjects} />
-          <ProjectSearchInput label="Submission B" value={idB} onSelect={(id) => setIdB(id)} allProjects={allProjects} />
+      {/* Challenger selection */}
+      <div className="mb-4 grid grid-cols-1 items-center gap-4 sm:grid-cols-[1fr_52px_1fr]">
+        {/* Card A */}
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.14)' }}
+        >
+          <p
+            className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em]"
+            style={{ color: '#6b8e7a' }}
+          >
+            Challenger A
+          </p>
+          <SearchInput value={idA} onSelect={(id) => setIdA(id)} allProjects={allProjects} />
         </div>
 
-        {error ? <p className="mb-3 text-sm" style={{ color: '#a85c4a' }}>{error}</p> : null}
+        {/* VS marker */}
+        <div className="flex items-center justify-center">
+          <span
+            className="flex h-11 w-11 items-center justify-center rounded-xl font-mono text-sm font-black"
+            style={{ background: '#1a1612', color: '#ffffff' }}
+          >
+            VS
+          </span>
+        </div>
 
-        <button
-          onClick={handleCompare}
-          disabled={loading || !idA || !idB}
-          className="rounded-full px-6 py-3 text-sm font-semibold transition-all disabled:opacity-50"
-          style={{
-            background: '#6b8e7a',
-            color: '#ffffff',
-            boxShadow: loading ? 'none' : '0 18px 38px rgba(107,142,122,0.18)',
-          }}
+        {/* Card B */}
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.14)' }}
         >
-          {loading ? 'Processing...' : 'Analyze ->'}
-        </button>
+          <p
+            className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em]"
+            style={{ color: '#b8633f' }}
+          >
+            Challenger B
+          </p>
+          <SearchInput value={idB} onSelect={(id) => setIdB(id)} allProjects={allProjects} />
+        </div>
       </div>
 
-      {dataA && dataB ? (
+      {error && <p className="mb-4 text-sm" style={{ color: '#a85c4a' }}>{error}</p>}
+
+      <button
+        onClick={handleCompare}
+        disabled={loading || !idA || !idB}
+        className="mb-8 w-full rounded-xl py-3 text-sm font-semibold transition-all disabled:opacity-50"
+        style={{
+          background: '#6b8e7a',
+          color: '#ffffff',
+          boxShadow: loading ? 'none' : '0 12px 30px rgba(107,142,122,0.18)',
+        }}
+      >
+        {loading ? 'Analyzing...' : 'Compare Initiatives →'}
+      </button>
+
+      {dataA && dataB && (
         <div
-          className="rounded-[32px] p-6"
+          className="rounded-2xl p-6"
           style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.12)' }}
         >
           <ProjectComparison
@@ -191,7 +198,7 @@ export default function ComparePage() {
             evalB={dataB.evaluation}
           />
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

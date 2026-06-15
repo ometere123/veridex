@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
-import { LeaderboardTable } from '@/components/LeaderboardTable';
+import Link from 'next/link';
+import { CATEGORIES, TIER_HEX } from '@/constants';
 import type { LeaderboardEntry } from '@/types';
 
-const CATEGORIES = ['Overall', 'DeFi', 'AI', 'Infrastructure', 'Gaming', 'RWA', 'DePIN', 'Consumer'];
+const ALL_CATS = ['Overall', ...CATEGORIES];
 
 export default function LeaderboardPage() {
   const [category, setCategory] = useState('Overall');
@@ -21,49 +22,114 @@ export default function LeaderboardPage() {
   }, [category]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-12">
+    <div className="mx-auto max-w-7xl px-4 py-10">
       <div className="mb-8">
-        <p className="mb-3 text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>Index</p>
-        <h1 className="mb-3 text-4xl font-semibold" style={{ color: '#1a1612' }}>Reputation Index</h1>
-        <p className="text-base leading-8" style={{ color: '#6b6360' }}>
+        <p className="mb-2 text-[10px] uppercase tracking-[0.28em]" style={{ color: '#9b938a' }}>Index</p>
+        <h1 className="text-3xl font-semibold" style={{ color: '#1a1612' }}>Reputation Index</h1>
+        <p className="mt-2 text-sm" style={{ color: '#6b6360' }}>
           Categorical standings verified through GenLayer consensus.
         </p>
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        {CATEGORIES.map((c) => (
-          <button
-            key={c}
-            onClick={() => setCategory(c)}
-            className="rounded-2xl px-4 py-2 text-sm font-medium transition-all"
-            style={
-              category === c
-                ? {
-                    background: '#6b8e7a',
-                    color: '#ffffff',
-                    boxShadow: '0 12px 30px rgba(107,142,122,0.18)',
-                  }
-                : {
-                    background: 'rgba(107,142,122,0.05)',
-                    border: '1px solid rgba(107,142,122,0.14)',
-                    color: '#6b6360',
-                  }
-            }
-          >
-            {c}
-          </button>
-        ))}
-      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[180px_1fr]">
+        {/* LEFT: Category column */}
+        <div className="flex flex-row flex-wrap gap-1.5 lg:flex-col lg:gap-1">
+          {ALL_CATS.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCategory(c)}
+              className="rounded-xl px-3 py-2.5 text-left text-sm transition-all"
+              style={
+                category === c
+                  ? { background: '#6b8e7a', color: '#ffffff', fontWeight: 600 }
+                  : { color: '#6b6360' }
+              }
+              onMouseEnter={(e) => {
+                if (category !== c) (e.currentTarget as HTMLElement).style.background = 'rgba(107,142,122,0.06)';
+              }}
+              onMouseLeave={(e) => {
+                if (category !== c) (e.currentTarget as HTMLElement).style.background = 'transparent';
+              }}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
 
-      <div className="rounded-[32px] p-6" style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.12)' }}>
-        {loading ? (
-          <div className="flex items-center justify-center gap-3 py-20" style={{ color: '#6b6360' }}>
-            <span className="h-5 w-5 animate-spin rounded-full border-2" style={{ borderColor: 'rgba(107,142,122,0.2)', borderTopColor: '#6b8e7a' }} />
-            Retrieving {category} reputation index...
-          </div>
-        ) : (
-          <LeaderboardTable entries={entries} />
-        )}
+        {/* RIGHT: Signal board */}
+        <div>
+          {loading ? (
+            <div className="flex items-center justify-center gap-3 py-20" style={{ color: '#6b6360' }}>
+              <span
+                className="h-4 w-4 animate-spin rounded-full border-2"
+                style={{ borderColor: 'rgba(107,142,122,0.2)', borderTopColor: '#6b8e7a' }}
+              />
+              Retrieving {category} index...
+            </div>
+          ) : entries.length === 0 ? (
+            <p className="py-20 text-center text-sm" style={{ color: '#9b938a' }}>
+              No ranked entries in this segment yet.
+            </p>
+          ) : (
+            <div
+              className="overflow-hidden rounded-2xl"
+              style={{ background: '#ffffff', border: '1px solid rgba(107,142,122,0.12)' }}
+            >
+              {entries.map((e, i) => (
+                <Link
+                  key={e.project_id}
+                  href={`/project/${e.project_id}`}
+                  className="flex items-center gap-4 px-5 py-3.5 transition-colors"
+                  style={{
+                    borderBottom: i < entries.length - 1 ? '1px solid rgba(107,142,122,0.06)' : undefined,
+                  }}
+                  onMouseEnter={(el) => ((el.currentTarget as HTMLElement).style.background = 'rgba(107,142,122,0.03)')}
+                  onMouseLeave={(el) => ((el.currentTarget as HTMLElement).style.background = 'transparent')}
+                >
+                  {/* Rank */}
+                  <span
+                    className="w-8 shrink-0 text-right font-mono text-sm font-black"
+                    style={{
+                      color: i === 0 ? '#b8a46a' : i === 1 ? '#9b938a' : i === 2 ? '#8b7355' : '#c8c0b8',
+                    }}
+                  >
+                    {i + 1}
+                  </span>
+
+                  {/* Tier badge */}
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md font-mono text-xs font-black"
+                    style={{ background: `${TIER_HEX[e.tier]}15`, color: TIER_HEX[e.tier] }}
+                  >
+                    {e.tier}
+                  </span>
+
+                  {/* Name + category */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium" style={{ color: '#1a1612' }}>{e.project_name}</p>
+                    <p className="text-[10px] uppercase tracking-wider" style={{ color: '#9b938a' }}>{e.category}</p>
+                  </div>
+
+                  {/* Score bar + score */}
+                  <div className="hidden w-36 shrink-0 items-center gap-2 md:flex">
+                    <div
+                      className="h-1.5 flex-1 overflow-hidden rounded-full"
+                      style={{ background: 'rgba(107,142,122,0.10)' }}
+                    >
+                      <div
+                        className="h-full rounded-full"
+                        style={{ width: `${e.overall_score}%`, background: TIER_HEX[e.tier] }}
+                      />
+                    </div>
+                    <span className="w-8 shrink-0 text-right font-mono text-xs font-bold" style={{ color: '#1a1612' }}>
+                      {e.overall_score}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
