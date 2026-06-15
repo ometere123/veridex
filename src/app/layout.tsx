@@ -63,8 +63,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         <Providers>
           <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          {/* md:ml-52 offsets content past the 208px sidebar on desktop */}
+          <div className="flex flex-col min-h-screen md:ml-52">
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
           <NetworkChecker />
         </Providers>
       </body>
