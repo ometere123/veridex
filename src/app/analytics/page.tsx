@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { RANK_TIERS, CATEGORIES, TIER_HEX } from '@/constants';
+import { RANK_TIERS, CATEGORIES, TIER_HEX, TIER_STARS } from '@/constants';
 import { cn } from '@/utils';
+import type { RankTier } from '@/types';
 import Link from 'next/link';
 import type { LeaderboardEntry } from '@/types';
 
@@ -47,7 +48,7 @@ function TierBar({ tier, count, total, color }: { tier: string; count: number; t
   const pct = total > 0 ? (count / total) * 100 : 0;
   return (
     <div className="flex items-center gap-3">
-      <span className="w-7 text-right text-xs font-mono font-bold" style={{ color }}>{tier}</span>
+      <span className="w-8 text-right text-xs font-mono font-bold" style={{ color }}>{TIER_STARS[tier as RankTier] ?? tier}</span>
       <div className="flex-1 h-5 rounded-sm overflow-hidden" style={{ background: 'rgba(107,142,122,0.08)' }}>
         <div
           className="h-full rounded-sm flex items-center pl-2 transition-all duration-700"
@@ -210,7 +211,7 @@ export default function AnalyticsPage() {
                       </span>
                       <span className="text-[10px] font-bold px-2 py-0.5 rounded"
                         style={{ background: 'rgba(107,142,122,0.08)', color: '#6b8e7a' }}>
-                        {e.tier}
+                        {TIER_STARS[e.tier as RankTier] ?? e.tier}
                       </span>
                     </div>
                   </Link>

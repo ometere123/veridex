@@ -34,7 +34,7 @@ export function WalletConnectButton() {
 
   if (isConnected && address) {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-1">
         <div
           className="flex items-center gap-2 rounded-sm px-3 py-1.5"
           style={{
@@ -57,7 +57,7 @@ export function WalletConnectButton() {
         </div>
         <button
           onClick={() => disconnect()}
-          className="text-xs px-2 py-1.5 rounded-sm transition-colors"
+          className="text-xs px-3 py-1 rounded-sm transition-colors text-left"
           style={{ color: '#8b7355' }}
           onMouseEnter={(e) => (e.currentTarget.style.color = '#b8633f')}
           onMouseLeave={(e) => (e.currentTarget.style.color = '#8b7355')}

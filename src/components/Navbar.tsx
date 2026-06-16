@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { WalletConnectButton } from './WalletConnectButton';
-import { NotificationsPanel } from './NotificationsPanel';
 import { VeridexLogo } from './VeridexLogo';
 import { cn } from '@/utils';
 
@@ -78,13 +77,8 @@ export function Navbar() {
           </Suspense>
         </div>
 
-        {/* Bottom — notifications + wallet */}
-        <div className="px-3 pb-5 space-y-2" style={{ borderTop: '1px solid rgba(107,142,122,0.10)' }}>
-          <div className="pt-3 flex items-center gap-2">
-            <Suspense fallback={null}>
-              <NotificationsPanel />
-            </Suspense>
-          </div>
+        {/* Bottom — wallet */}
+        <div className="px-3 pt-3 pb-5" style={{ borderTop: '1px solid rgba(107,142,122,0.10)' }}>
           <Suspense fallback={<div className="h-9 rounded animate-pulse" style={{ background: 'rgba(107,142,122,0.08)' }} />}>
             <WalletConnectButton />
           </Suspense>
@@ -103,9 +97,6 @@ export function Navbar() {
           <VeridexLogo withWordmark size={28} />
         </Link>
         <div className="flex items-center gap-2">
-          <Suspense fallback={null}>
-            <NotificationsPanel />
-          </Suspense>
           <button
             onClick={() => setMobileOpen((o) => !o)}
             className="w-8 h-8 flex flex-col items-center justify-center gap-1.5 rounded"
