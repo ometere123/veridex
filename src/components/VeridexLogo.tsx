@@ -25,17 +25,17 @@ export function VeridexLogo({
       >
         <defs>
           <linearGradient id="veridex-logo-bg" x1="8" y1="6" x2="48" y2="50" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#F6F1E9" />
-            <stop offset="1" stopColor="#E6F0E8" />
+            <stop stopColor="#0D2418" />
+            <stop offset="1" stopColor="#05110C" />
           </linearGradient>
           <linearGradient id="veridex-logo-accent" x1="14" y1="14" x2="42" y2="42" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#6B8E7A" />
-            <stop offset="1" stopColor="#4F725F" />
+            <stop stopColor="#8EFFC3" />
+            <stop offset="1" stopColor="#4DDF98" />
           </linearGradient>
         </defs>
 
         <rect x="2" y="2" width="52" height="52" rx="18" fill="url(#veridex-logo-bg)" />
-        <rect x="2" y="2" width="52" height="52" rx="18" stroke="rgba(107,142,122,0.18)" />
+        <rect x="2" y="2" width="52" height="52" rx="18" stroke="rgba(142,255,195,0.34)" />
 
         <path
           d="M28 10 40.5 17v14L28 46 15.5 31V17Z"
@@ -47,7 +47,7 @@ export function VeridexLogo({
         <path
           d="M19 31.5 25 25.5 29 29.5 37 21.5"
           fill="none"
-          stroke="#B8633F"
+          stroke="#FFB874"
           strokeWidth="3.1"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -55,29 +55,33 @@ export function VeridexLogo({
         <path
           d="M15.5 17 28 24.5 40.5 17M15.5 31 28 24.5 40.5 31"
           fill="none"
-          stroke="#6B8E7A"
-          strokeOpacity="0.34"
+          stroke="#8EFFC3"
+          strokeOpacity="0.42"
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <circle cx="15.5" cy="17" r="3" fill="#6B8E7A" />
-        <circle cx="40.5" cy="17" r="3" fill="#6B8E7A" />
-        <circle cx="40.5" cy="31" r="3" fill="#B8633F" />
-        <circle cx="28" cy="46" r="3" fill="#6B8E7A" />
+        <circle cx="15.5" cy="17" r="3" fill="#8EFFC3" />
+        <circle cx="40.5" cy="17" r="3" fill="#8EFFC3" />
+        <circle cx="40.5" cy="31" r="3" fill="#FFB874" />
+        <circle cx="28" cy="46" r="3" fill="#8EFFC3" />
       </svg>
 
       {withWordmark ? (
         <div className="min-w-0">
           <div
             className="text-sm font-bold uppercase tracking-[0.16em]"
-            style={{ color: '#1a1612', fontFamily: 'var(--font-space-grotesk)' }}
+            style={{
+              color: '#f3fff7',
+              fontFamily: 'var(--font-space-grotesk)',
+              textShadow: '0 0 18px rgba(142,255,195,0.18)',
+            }}
           >
             Veridex
           </div>
           <div
             className="text-[10px] uppercase tracking-[0.22em]"
-            style={{ color: '#7c756d' }}
+            style={{ color: '#9fcbb5' }}
           >
             {subtitle}
           </div>
