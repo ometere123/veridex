@@ -371,6 +371,7 @@ export function parseRegistry(raw: unknown): RegistryEntry[] {
     last_verified_at: safeString(entry.last_verified_at || entry.last_evaluated),
     expires_at: safeString(entry.expires_at),
     registry_position: safeNumber(entry.registry_position || entry.rank),
+    proof_event_count: safeNumber(entry.proof_event_count),
   }));
 }
 

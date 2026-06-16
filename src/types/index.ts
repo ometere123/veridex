@@ -270,6 +270,7 @@ export interface RegistryEntry {
   last_verified_at: string;
   expires_at?: string;
   registry_position: number;
+  proof_event_count?: number;
 }
 
 export interface Profile {

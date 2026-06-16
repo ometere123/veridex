@@ -1,35 +1,31 @@
 @import "tailwindcss";
 
-/* ─── Veridex Design Tokens - Warm Professional Aesthetic ─────────────────────────────── */
 :root {
-  --background:    #f5f1ed;   /* warm cream */
-  --surface:       #ffffff;   /* pure white */
-  --surface-2:     #fafaf8;   /* off-white */
-  --border:        #e8e4dd;   /* subtle warm border */
-  --border-2:      #d9cfc4;   /* hover/active border */
-  --foreground:    #1a1612;   /* deep charcoal */
-  --muted:         #6b6360;   /* warm gray */
-  --muted-2:       #9b938a;   /* light warm gray */
+  --background: #07110d;
+  --surface: rgba(11, 23, 18, 0.84);
+  --surface-2: rgba(255, 255, 255, 0.06);
+  --border: rgba(142, 255, 195, 0.18);
+  --border-2: rgba(142, 255, 195, 0.34);
+  --foreground: #f5fff7;
+  --muted: #9bb4a6;
+  --muted-2: #6f8b7c;
 
-  /* Brand - Earthy sage green */
-  --brand:         #6b8e7a;
-  --brand-dim:     #567068;
-  --brand-deep:    #425859;
-  --brand-bg:      rgba(107, 142, 122, 0.06);
-  --brand-border:  rgba(107, 142, 122, 0.15);
+  --brand: #8effc3;
+  --brand-dim: #4f8f68;
+  --brand-deep: #193f2a;
+  --brand-bg: rgba(142, 255, 195, 0.10);
+  --brand-border: rgba(142, 255, 195, 0.24);
 
-  /* Accent - Warm burnt sienna */
-  --accent:        #b8633f;
-  --accent-dim:    #95513d;
+  --accent: #b8633f;
+  --accent-dim: #7d3f2d;
 
-  /* Score tier colours - warm palette */
-  --tier-sp:  #c9704a;   /* S+ burnt orange */
-  --tier-s:   #6b8e7a;   /* S  sage green (brand) */
-  --tier-a:   #8b7355;   /* A  warm brown */
-  --tier-b:   #7a9b8e;   /* B  muted teal */
-  --tier-c:   #a89b7a;   /* C  sage tan */
-  --tier-d:   #b39b6b;   /* D  warm gold */
-  --tier-f:   #a85c4a;   /* F  rust red */
+  --tier-sp: #8effc3;
+  --tier-s: #67d89a;
+  --tier-a: #b8d878;
+  --tier-b: #d4ad63;
+  --tier-c: #c9874f;
+  --tier-d: #b8633f;
+  --tier-f: #8f3d3d;
 }
 
 @theme inline {
@@ -39,72 +35,143 @@
   --font-mono: var(--font-jetbrains-mono);
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #07110d;
+}
+
 body {
-  background: var(--background);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 0%, rgba(142, 255, 195, 0.13), transparent 28%),
+    radial-gradient(circle at 82% 10%, rgba(184, 99, 63, 0.14), transparent 26%),
+    linear-gradient(135deg, #07110d 0%, #0b1712 48%, #11100c 100%);
   color: var(--foreground);
   font-family: var(--font-space-grotesk), system-ui, sans-serif;
 }
 
-* { box-sizing: border-box; }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgba(142, 255, 195, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(142, 255, 195, 0.08) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
 
 ::selection {
-  background-color: rgba(107, 142, 122, 0.18);
-  color: #1a1612;
+  background-color: rgba(142, 255, 195, 0.24);
+  color: #f5fff7;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: #f5f1ed; }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #07110d;
+}
+
 ::-webkit-scrollbar-thumb {
-  background: #6b8e7a;
+  background: #4f8f68;
   border-radius: 3px;
 }
-::-webkit-scrollbar-thumb:hover { background: #567068; }
 
-/* ─── Skeleton shimmer ────────────────────────────────────── */
+::-webkit-scrollbar-thumb:hover {
+  background: #8effc3;
+}
+
 @keyframes skeleton-shimmer {
-  0%   { background-position: 200% center; }
+  0% { background-position: 200% center; }
   100% { background-position: -200% center; }
 }
 
-/* ─── Utility classes ─────────────────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes pulse-brand {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); opacity: 0; }
+  18% { opacity: 0.75; }
+  100% { transform: translateY(420%); opacity: 0; }
+}
 
 .brand-text {
-  background: linear-gradient(135deg, #6b8e7a 0%, #b8633f 50%, #8b7355 100%);
+  background: linear-gradient(135deg, #8effc3 0%, #f5fff7 45%, #d4a28f 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .brand-glow {
-  box-shadow: 0 0 20px rgba(107, 142, 122, 0.12),
-              0 0 40px rgba(184, 99, 63, 0.08);
-}
-
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
+  box-shadow:
+    0 0 28px rgba(142, 255, 195, 0.16),
+    0 0 60px rgba(184, 99, 63, 0.12);
 }
 
 .score-bar-fill {
-  background: linear-gradient(90deg,
-    var(--brand-deep) 0%,
-    var(--brand) 50%,
-    var(--brand-deep) 100%);
+  background: linear-gradient(90deg, var(--brand-deep) 0%, var(--brand) 50%, var(--brand-deep) 100%);
   background-size: 200% auto;
   animation: shimmer 3s linear infinite;
 }
 
-@keyframes pulse-brand {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.4; }
+.pulse-brand {
+  animation: pulse-brand 2s ease-in-out infinite;
 }
-.pulse-brand { animation: pulse-brand 2s ease-in-out infinite; }
 
-/* Grid line texture */
 .grid-texture {
   background-image:
-    linear-gradient(rgba(107,142,122,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(107,142,122,0.04) 1px, transparent 1px);
+    linear-gradient(rgba(142, 255, 195, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(142, 255, 195, 0.08) 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+.vdx-panel {
+  background: rgba(11, 23, 18, 0.82);
+  border: 1px solid rgba(142, 255, 195, 0.18);
+  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+}
+
+.vdx-chip {
+  background: rgba(142, 255, 195, 0.10);
+  border: 1px solid rgba(142, 255, 195, 0.22);
+  color: #dfffee;
+}
+
+.proof-terminal {
+  background: rgba(3, 9, 7, 0.82);
+  border: 1px solid rgba(142, 255, 195, 0.18);
+  color: #dfffee;
+}
+
+.scan-surface {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-surface::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 34%;
+  background: linear-gradient(180deg, transparent, rgba(142, 255, 195, 0.12), transparent);
+  animation: scan-line 4.8s ease-in-out infinite;
+  pointer-events: none;
 }

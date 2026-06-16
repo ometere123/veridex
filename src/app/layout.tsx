@@ -6,7 +6,7 @@ import { NetworkChecker } from '@/components/NetworkChecker';
 import { VeridexLogo } from '@/components/VeridexLogo';
 
 export const viewport: Viewport = {
-  themeColor: '#6b8e7a',
+  themeColor: '#07110d',
 };
 
 export const metadata: Metadata = {
@@ -79,21 +79,28 @@ function Footer() {
   return (
     <footer
       className="mt-auto py-6 px-4"
-      style={{ borderTop: '1px solid rgba(107,142,122,0.15)' }}
+      style={{
+        borderTop: '1px solid rgba(142,255,195,0.16)',
+        background: 'linear-gradient(180deg, rgba(4,12,9,0.2), rgba(4,12,9,0.72))',
+        boxShadow: '0 -20px 60px rgba(0,0,0,0.18)',
+      }}
     >
       <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <VeridexLogo withWordmark size={28} subtitle="Evidence-backed trust" />
-          <span className="text-xs" style={{ color: 'var(--border-2)' }}>/ GenLayer</span>
+          <span className="text-xs font-mono uppercase tracking-[0.22em]" style={{ color: 'var(--muted-2)' }}>
+            / GenLayer source of truth
+          </span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-5 text-xs" style={{ color: 'var(--muted-2)' }}>
-          <a href="/registry" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Registry</a>
-          <a href="/submit" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Submit Evidence</a>
-          <a href="/verification-levels" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Levels</a>
-          <a href="/proof-ledger" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Proof Ledger</a>
-          <a href="/compare" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Compare</a>
-          <a href="/signals" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Signals</a>
-          <a href="/issuer-hub" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Issuer Hub</a>
+          <a href="/registry" className="hover:text-[#8effc3] transition-colors tracking-wide">Registry</a>
+          <a href="/submit" className="hover:text-[#8effc3] transition-colors tracking-wide">Submit Evidence</a>
+          <a href="/verification-levels" className="hover:text-[#8effc3] transition-colors tracking-wide">Verification Levels</a>
+          <a href="/proof-ledger" className="hover:text-[#8effc3] transition-colors tracking-wide">Proof Ledger</a>
+          <a href="/signals" className="hover:text-[#8effc3] transition-colors tracking-wide">Signals</a>
+          <a href="/hub" className="hover:text-[#8effc3] transition-colors tracking-wide">Issuer Hub</a>
+          <a href="/treasury" className="hover:text-[#8effc3] transition-colors tracking-wide">Treasury</a>
+          <a href="/admin" className="hover:text-[#8effc3] transition-colors tracking-wide">Admin</a>
         </div>
       </div>
     </footer>

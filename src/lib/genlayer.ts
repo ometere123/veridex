@@ -209,6 +209,45 @@ export async function getTotalEvaluations(): Promise<number> {
   return Number(result);
 }
 
+export async function getVerificationModel(): Promise<{
+  version: string;
+  verification_levels: string[];
+  risk_bands: string[];
+  dimensions: Record<string, number>;
+  verification_window_days?: number;
+} | null> {
+  try {
+    const result = await glReadContractFallback('get_verification_model', 'get_score_model', []);
+    const parsed = typeof result === 'string' ? JSON.parse(result) : result;
+    if (!parsed || typeof parsed !== 'object') return null;
+
+    const model = parsed as {
+      version?: unknown;
+      verification_levels?: unknown;
+      risk_bands?: unknown;
+      dimensions?: unknown;
+      factors?: unknown;
+      verification_window_days?: unknown;
+    };
+
+    return {
+      version: typeof model.version === 'string' ? model.version : 'VERIDEX_DOSSIER_V1',
+      verification_levels: Array.isArray(model.verification_levels)
+        ? model.verification_levels.map(String)
+        : ['VERIFIED_PLUS', 'VERIFIED', 'SUBSTANTIATED', 'DEVELOPING', 'LIMITED_EVIDENCE', 'HIGH_RISK', 'UNVERIFIABLE'],
+      risk_bands: Array.isArray(model.risk_bands)
+        ? model.risk_bands.map(String)
+        : ['LOW', 'MODERATE', 'ELEVATED', 'HIGH', 'CRITICAL', 'UNKNOWN'],
+      dimensions: model.dimensions && typeof model.dimensions === 'object' && !Array.isArray(model.dimensions)
+        ? model.dimensions as Record<string, number>
+        : {},
+      verification_window_days: Number(model.verification_window_days || 0) || undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getTreasuryState(): Promise<{
   create_project_fee: string;
   evaluation_fee: string;
