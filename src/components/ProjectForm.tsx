@@ -203,7 +203,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Project Name" required>
             <input className={inputCls} style={INPUT_STYLE} value={form.name}
-              onChange={set('name')} placeholder="Your initiative name" required />
+              onChange={set('name')} placeholder="e.g. Uniswap V3" required />
           </Field>
           <Field label="Category" required>
             <select className={inputCls} style={{ ...INPUT_STYLE, cursor: 'pointer' }}
@@ -213,12 +213,12 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
           </Field>
           <Field label="Website" required>
             <input className={inputCls} style={INPUT_STYLE} value={form.website}
-              onChange={set('website')} placeholder="https://" required />
+              onChange={set('website')} placeholder="https://uniswap.org" required />
           </Field>
           <Field label="Description" required>
             <textarea className={cn(inputCls, 'resize-none h-20')} style={INPUT_STYLE}
               value={form.description} onChange={set('description')}
-              placeholder="What problem does this solve?" required />
+              placeholder="e.g. Decentralised exchange protocol with concentrated liquidity, enabling capital-efficient on-chain token swaps on Ethereum." required />
           </Field>
         </div>
       </section>
@@ -229,11 +229,11 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
         <div className="space-y-4">
           <Field label="Whitepaper URL">
             <input className={inputCls} style={INPUT_STYLE} value={form.whitepaper_url}
-              onChange={set('whitepaper_url')} placeholder="https://genlayer.example.com/whitepaper" />
+              onChange={set('whitepaper_url')} placeholder="https://uniswap.org/whitepaper-v3.pdf" />
           </Field>
           <Field label="Verification Document URL" hint="Link to PDF or hosted proof document">
             <input className={inputCls} style={INPUT_STYLE} value={form.verification_doc_url}
-              onChange={set('verification_doc_url')} placeholder="https://genlayer.example.com/verification.pdf" />
+              onChange={set('verification_doc_url')} placeholder="https://uniswap.org/whitepaper-v3.pdf" />
           </Field>
           {uploadedFiles.length > 0 && (
             <div className="rounded-2xl px-4 py-3 text-xs" style={{ background: 'rgba(107, 142, 122, 0.06)', color: 'var(--brand-deep)' }}>
@@ -242,12 +242,12 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
           )}
           <Field label="Documentation URL">
             <input className={inputCls} style={INPUT_STYLE} value={form.docs_url}
-              onChange={set('docs_url')} placeholder="https://genlayer.example.com/docs" />
+              onChange={set('docs_url')} placeholder="https://docs.uniswap.org" />
           </Field>
           <Field label="GitHub Repositories" hint="One URL per line">
             <textarea className={cn(inputCls, 'resize-none h-24 font-mono text-xs')}
               style={INPUT_STYLE} value={form.github_repos} onChange={set('github_repos')}
-              placeholder="https://github.com/genlayer/project" />
+              placeholder="https://github.com/Uniswap/v3-core" />
           </Field>
         </div>
       </section>
@@ -259,21 +259,21 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
           <Field label="Roadmap" required>
             <textarea className={cn(inputCls, 'resize-none h-28')} style={INPUT_STYLE}
               value={form.roadmap} onChange={set('roadmap')}
-              placeholder="Release milestones, audit cycles, launch phases..." required />
+              placeholder="e.g. Q1 2024: V4 hooks testnet. Q2 2024: Unichain mainnet launch. Q3 2024: cross-chain liquidity bridging. Q4 2024: mobile SDK." required />
           </Field>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Investors" hint="Comma separated">
               <input className={inputCls} style={INPUT_STYLE} value={form.investors}
-                onChange={set('investors')} placeholder="Gen Ventures, Chain Capital" />
+                onChange={set('investors')} placeholder="e.g. a16z, Paradigm, USV" />
             </Field>
             <Field label="Partnerships" hint="Comma separated">
               <input className={inputCls} style={INPUT_STYLE} value={form.partnerships}
-                onChange={set('partnerships')} placeholder="Oracle providers, validator partners" />
+                onChange={set('partnerships')} placeholder="e.g. Chainlink, Alchemy, Infura" />
             </Field>
           </div>
           <Field label="Ecosystem Integrations" hint="Comma separated">
             <input className={inputCls} style={INPUT_STYLE} value={form.ecosystem_integrations}
-              onChange={set('ecosystem_integrations')} placeholder="Ethereum, Polygon, Infura..." />
+              onChange={set('ecosystem_integrations')} placeholder="e.g. Ethereum, Arbitrum, Optimism, Base" />
           </Field>
         </div>
       </section>
@@ -284,21 +284,21 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Token Symbol">
             <input className={inputCls} style={INPUT_STYLE} value={form.token_symbol}
-              onChange={set('token_symbol')} placeholder="GEN" />
+              onChange={set('token_symbol')} placeholder="e.g. UNI" />
           </Field>
           <Field label="Total Supply">
             <input className={inputCls} style={INPUT_STYLE} value={form.token_supply}
-              onChange={set('token_supply')} placeholder="1,000,000,000" />
+              onChange={set('token_supply')} placeholder="e.g. 1,000,000,000" />
           </Field>
           <Field label="Token Utility">
             <textarea className={cn(inputCls, 'resize-none h-20')} style={INPUT_STYLE}
               value={form.token_utility} onChange={set('token_utility')}
-              placeholder="Governance, staking, fee capture..." />
+              placeholder="e.g. Governance voting over protocol fee parameters and treasury allocation." />
           </Field>
           <Field label="Emission Schedule">
             <textarea className={cn(inputCls, 'resize-none h-20')} style={INPUT_STYLE}
               value={form.token_emissions} onChange={set('token_emissions')}
-              placeholder="50% launch, 50% vesting over 3 years..." />
+              placeholder="e.g. 60% community treasury, 21.5% team (4-yr vest), 18.5% investors (4-yr vest)." />
           </Field>
         </div>
       </section>
@@ -309,11 +309,11 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Audit Firm">
             <input className={inputCls} style={INPUT_STYLE} value={form.audit_auditor}
-              onChange={set('audit_auditor')} placeholder="GenAudit, Certik, Trail of Bits" />
+              onChange={set('audit_auditor')} placeholder="e.g. Trail of Bits" />
           </Field>
           <Field label="Audit Report URL">
             <input className={inputCls} style={INPUT_STYLE} value={form.audit_url}
-              onChange={set('audit_url')} placeholder="https://genlayer.example.com/audit-report" />
+              onChange={set('audit_url')} placeholder="https://github.com/Uniswap/v3-core/blob/main/audits/tob/audit.pdf" />
           </Field>
           <Field label="Audit Date">
             <input type="date" className={inputCls} style={INPUT_STYLE}
@@ -321,7 +321,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
           </Field>
           <Field label="Bug Bounty URL">
             <input className={inputCls} style={INPUT_STYLE} value={form.bug_bounty_url}
-              onChange={set('bug_bounty_url')} placeholder="https://immunefi.com/bounty/genlayer" />
+              onChange={set('bug_bounty_url')} placeholder="https://uniswap.org/bug-bounty" />
           </Field>
         </div>
       </section>
@@ -332,19 +332,19 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Field label="Name">
             <input className={inputCls} style={INPUT_STYLE} value={form.team_name}
-              onChange={set('team_name')} placeholder="Jane Smith" />
+              onChange={set('team_name')} placeholder="e.g. Hayden Adams" />
           </Field>
           <Field label="Role">
             <input className={inputCls} style={INPUT_STYLE} value={form.team_role}
-              onChange={set('team_role')} placeholder="CEO, CTO..." />
+              onChange={set('team_role')} placeholder="e.g. Founder & CEO" />
           </Field>
           <Field label="LinkedIn">
             <input className={inputCls} style={INPUT_STYLE} value={form.team_linkedin}
-              onChange={set('team_linkedin')} placeholder="https://linkedin.com/in/..." />
+              onChange={set('team_linkedin')} placeholder="https://linkedin.com/in/haydenzadams" />
           </Field>
           <Field label="X / Twitter">
             <input className={inputCls} style={INPUT_STYLE} value={form.team_x}
-              onChange={set('team_x')} placeholder="https://x.com/... or @genlayer" />
+              onChange={set('team_x')} placeholder="https://x.com/haydenzadams" />
           </Field>
         </div>
       </section>
