@@ -264,11 +264,11 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Investors" hint="Comma separated">
               <input className={inputCls} style={INPUT_STYLE} value={form.investors}
-                onChange={set('investors')} placeholder="e.g. a16z, Paradigm, USV" />
+                onChange={set('investors')} placeholder="e.g. a16z, Paradigm, USV, Framework Ventures, Blockchain Capital" />
             </Field>
             <Field label="Partnerships" hint="Comma separated">
               <input className={inputCls} style={INPUT_STYLE} value={form.partnerships}
-                onChange={set('partnerships')} placeholder="e.g. Chainlink, Alchemy, Infura" />
+                onChange={set('partnerships')} placeholder="e.g. Chainlink, Balancer, Aave, Hop Protocol, Alchemy" />
             </Field>
           </div>
           <Field label="Ecosystem Integrations" hint="Comma separated">
