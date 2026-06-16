@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react';
 import { cn } from '@/utils';
-import { supabase } from '@/lib/supabase';
 
 interface UploadedFile {
   name: string;
@@ -38,8 +37,6 @@ export function EvidenceUploadPanel({ onFilesChange, disabled, className }: Evid
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const bucket = process.env.NEXT_PUBLIC_SUPABASE_EVIDENCE_BUCKET || 'veridex-evidence';
-
   async function addFiles(incoming: File[]) {
     setUploading(true);
     setError('');
@@ -47,25 +44,12 @@ export function EvidenceUploadPanel({ onFilesChange, disabled, className }: Evid
 
     try {
       for (const file of incoming) {
-        const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
-        const path = `submissions/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
-
-        if (uploadError) {
-          throw uploadError;
-        }
-
-        const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-        uploaded.push({
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          url: data.publicUrl,
-          path,
-        });
+        const body = new FormData();
+        body.append('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Upload failed');
+        uploaded.push({ name: file.name, size: file.size, type: file.type, url: json.url, path: json.path });
       }
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : 'Evidence upload failed');
