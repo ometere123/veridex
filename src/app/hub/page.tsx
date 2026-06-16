@@ -177,7 +177,7 @@ export default function HubPage() {
             <p className="mb-3 text-sm" style={{ color: '#9b938a' }}>No registered initiatives yet.</p>
             {(profile?.total_projects ?? 0) > 0 && (
               <p className="mb-4 text-xs" style={{ color: '#6b6360' }}>
-                {profile!.total_projects} registration(s) on-chain — enter a hash above to retrieve.
+                {profile!.total_projects} registration(s) on-chain. Enter a hash above to retrieve.
               </p>
             )}
             <Link href="/register" className="text-sm" style={{ color: '#6b8e7a' }}>

@@ -77,7 +77,7 @@ export function Navbar() {
           </Suspense>
         </div>
 
-        {/* Bottom — wallet */}
+        {/* Bottom - wallet */}
         <div className="px-3 pt-3 pb-5" style={{ borderTop: '1px solid rgba(107,142,122,0.10)' }}>
           <Suspense fallback={<div className="h-9 rounded animate-pulse" style={{ background: 'rgba(107,142,122,0.08)' }} />}>
             <WalletConnectButton />

@@ -41,7 +41,7 @@ export default function HistoryPage() {
         <p className="mb-2 text-[10px] uppercase tracking-[0.28em]" style={{ color: '#9b938a' }}>Assessment Archive</p>
         <h1 className="text-3xl font-semibold" style={{ color: '#1a1612' }}>Scoring Timeline</h1>
         <p className="mt-2 text-sm" style={{ color: '#6b6360' }}>
-          Chronological record of all assessment events — append-only and permanently anchored on-chain.
+          Chronological record of all assessment events, append-only and permanently anchored on-chain.
         </p>
       </div>
 
@@ -101,7 +101,7 @@ export default function HistoryPage() {
               <>
                 {selectedProject && (
                   <h2 className="font-semibold text-sm mb-4" style={{ color: '#1a1612' }}>
-                    {selectedProject.project_name} — Assessment Timeline
+                    {selectedProject.project_name}: Assessment Timeline
                   </h2>
                 )}
                 <HistoricalChart history={history} />

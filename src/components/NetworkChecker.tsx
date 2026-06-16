@@ -60,7 +60,7 @@ export function NetworkChecker() {
     >
       <span style={{ color: '#fbbf24' }}>⚠</span>
       <span style={{ color: '#cbd5e1' }}>
-        Incorrect chain — connect to{' '}
+        Incorrect chain, connect to{' '}
         <strong style={{ color: '#6b8e7a' }}>GenLayer Studionet</strong>
       </span>
       <button

@@ -84,7 +84,7 @@ export function EvidenceLockPanel({ project, onLock, className }: EvidenceLockPa
             className="flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-xl"
             style={{ background: 'rgba(107,142,122,0.08)', color: '#6b8e7a' }}
           >
-            🔒 Locked — immutable on-chain
+            🔒 Locked: immutable on-chain
           </div>
           {project.locked_at && (
             <div className="text-xs" style={{ color: '#9b938a' }}>
@@ -120,7 +120,7 @@ export function EvidenceLockPanel({ project, onLock, className }: EvidenceLockPa
             className="rounded-xl p-3 text-xs"
             style={{ background: 'rgba(184,99,63,0.06)', border: '1px solid rgba(184,99,63,0.15)', color: '#8b5a3c' }}
           >
-            ⚠ Locking is permanent — no edits after this action.
+            ⚠ Locking is permanent. No edits after this action.
           </div>
           {error && <p className="text-sm" style={{ color: '#b8633f' }}>{error}</p>}
           {canLock && (
@@ -130,7 +130,7 @@ export function EvidenceLockPanel({ project, onLock, className }: EvidenceLockPa
               className="w-full font-semibold py-2.5 px-4 rounded-xl text-sm transition-all disabled:opacity-50"
               style={{ background: '#b8633f', color: '#fff' }}
             >
-              {locking ? 'Locking — approve in wallet…' : '🔒 Lock Source Data'}
+              {locking ? 'Locking, approve in wallet…' : '🔒 Lock Source Data'}
             </button>
           )}
           {!isOwner && address && (

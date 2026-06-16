@@ -2,7 +2,7 @@
 import { ProjectFormWithUpload } from '@/components/ProjectFormWithUpload';
 
 export const metadata: Metadata = {
-  title: 'Register Initiative — Veridex',
+  title: 'Register Initiative - Veridex',
   description: 'Register your crypto initiative for AI-powered assessment by GenLayer Intelligent Contracts.',
 };
 

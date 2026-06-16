@@ -14,7 +14,7 @@ interface Props { params: Promise<{ wallet: string }>; }
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { wallet } = await params;
   return {
-    title: `${formatAddress(wallet)} — Veridex Profile`,
+    title: `${formatAddress(wallet)} - Veridex Profile`,
     description: `On-chain verification history for wallet ${formatAddress(wallet)} on Veridex.`,
   };
 }

@@ -58,7 +58,7 @@ function TierBar({ tier, count, total, color }: { tier: string; count: number; t
         </div>
       </div>
       <span className="w-8 text-right text-[10px] font-mono" style={{ color: '#9b938a' }}>
-        {pct > 0 ? `${Math.round(pct)}%` : '—'}
+        {pct > 0 ? `${Math.round(pct)}%` : '-'}
       </span>
     </div>
   );
@@ -126,7 +126,7 @@ export default function AnalyticsPage() {
                 <span className="text-sm" style={{ color: '#6b6360' }}>{s.label}</span>
               </div>
               <span className="text-2xl font-black font-mono" style={{ color: '#1a1612' }}>
-                {loading ? '—' : s.value}
+                {loading ? '-' : s.value}
               </span>
             </div>
           ))}

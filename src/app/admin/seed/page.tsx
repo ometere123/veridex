@@ -181,7 +181,7 @@ export default function AdminSeedPage() {
       // ── create_project ──────────────────────────────────────────
       update(i, { step: 'creating', error: '', log: [] });
       addLog(i, `Starting ${project.name}...`);
-      addLog(i, 'Calling create_project — approve in wallet...');
+      addLog(i, 'Calling create_project, approve in wallet...');
 
       const projectId = await contractCreateProject(address, project);
       update(i, { projectId });
@@ -189,26 +189,26 @@ export default function AdminSeedPage() {
 
       // ── lock_project_data ───────────────────────────────────────
       update(i, { step: 'locking' });
-      addLog(i, 'Calling lock_project_data — approve in wallet...');
+      addLog(i, 'Calling lock_project_data, approve in wallet...');
       await contractLockProject(address, projectId);
       addLog(i, '✓ Project locked');
 
       // ── submit_evaluation ───────────────────────────────────────
       update(i, { step: 'submitting' });
-      addLog(i, 'Calling submit_evaluation — approve in wallet...');
+      addLog(i, 'Calling submit_evaluation, approve in wallet...');
       await contractSubmitEvaluation(address, projectId);
       addLog(i, '✓ Evaluation submitted');
 
       // ── run_evaluation (NON-DET) ────────────────────────────────
       update(i, { step: 'evaluating' });
-      addLog(i, 'Calling run_evaluation — this triggers:');
-      addLog(i, '  • gl.nondet.web.get() — fetching live URLs');
-      addLog(i, '  • gl.nondet.exec_prompt() — AI 7-factor scoring');
-      addLog(i, '  • gl.vm.run_nondet_unsafe() — validator agreement');
+      addLog(i, 'Calling run_evaluation, this triggers:');
+      addLog(i, '  • gl.nondet.web.get(): fetching live URLs');
+      addLog(i, '  • gl.nondet.exec_prompt(): AI 7-factor scoring');
+      addLog(i, '  • gl.vm.run_nondet_unsafe(): validator agreement');
       addLog(i, 'Approve in wallet, then wait 2-5 min for consensus...');
       const evalTx = await contractRunEvaluation(address, projectId);
       addLog(i, `✓ run_evaluation tx: ${evalTx}`);
-      addLog(i, 'Validators are processing — monitor GenLayer Studio or check back in 5 min.');
+      addLog(i, 'Validators are processing. Monitor GenLayer Studio or check back in 5 min.');
 
       // ── Sync to Supabase after a short delay ───────────────────
       addLog(i, 'Syncing to Supabase cache...');
@@ -251,7 +251,7 @@ export default function AdminSeedPage() {
         <p className="mt-2 text-sm leading-7" style={{ color: '#6b6360' }}>
           Registers 3 real crypto projects and runs the full on-chain evaluation flow. <br />
           <strong>run_evaluation</strong> triggers <code>gl.nondet.web.get()</code>, <code>gl.nondet.exec_prompt()</code>,
-          and <code>gl.vm.run_nondet_unsafe()</code> — the core GenLayer non-det capabilities.
+          and <code>gl.vm.run_nondet_unsafe()</code>: the core GenLayer non-det capabilities.
         </p>
       </div>
 

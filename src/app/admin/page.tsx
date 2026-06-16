@@ -201,7 +201,7 @@ export default function AdminPage() {
             <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>GenLayer Non-Det Testing</p>
             <h2 className="mt-1 text-xl font-semibold" style={{ color: '#1a1612' }}>Seed Real Projects</h2>
             <p className="mt-1 text-sm" style={{ color: '#6b6360' }}>
-              Register Uniswap V3, Aave V3, and Arbitrum One with full on-chain evaluation — exercises <code>gl.nondet.web.get()</code> and <code>gl.nondet.exec_prompt()</code>.
+              Register Uniswap V3, Aave V3, and Arbitrum One with full on-chain evaluation. Exercises <code>gl.nondet.web.get()</code> and <code>gl.nondet.exec_prompt()</code>.
             </p>
           </div>
           <Link
