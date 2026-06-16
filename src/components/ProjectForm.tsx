@@ -5,7 +5,7 @@ import { useAccount } from 'wagmi';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/utils';
 import { CATEGORIES } from '@/constants';
-import { contractCreateProject } from '@/lib/genlayer-write';
+import { contractCreateDossier } from '@/lib/genlayer-write';
 import { saveProjectLocally } from '@/lib/local-projects';
 import type { ProjectCategory } from '@/types';
 
@@ -53,7 +53,7 @@ function Field({ label, required, children, hint }: {
   );
 }
 
-const inputCls = 'w-full px-3 py-2.5 placeholder-[#3d2a6b]';
+const inputCls = 'w-full px-3 py-2.5 placeholder-[#6b8e7a]';
 
 interface ProjectFormProps {
   uploadedFiles?: Array<{ name: string; size: number; type: string; url: string }>;
@@ -93,9 +93,9 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
     setStep('');
 
     try {
-      setStep('Sending to GenLayer - approve in your wallet…');
+      setStep('Sending dossier to GenLayer - approve in your wallet...');
 
-      const project_id = await contractCreateProject(address!, {
+      const dossier_id = await contractCreateDossier(address!, {
         name:        form.name.trim(),
         category:    form.category,
         website:     form.website.trim(),
@@ -121,11 +121,17 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
         bug_bounty_url: form.bug_bounty_url.trim(),
         ecosystem_integrations: form.ecosystem_integrations.split(',').map((s) => s.trim()).filter(Boolean),
         verification_document_url: form.verification_doc_url.trim() || uploadedFiles[0]?.url || '',
+        evidence_files: uploadedFiles.map((file) => ({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: file.url,
+        })),
       });
 
       // ── Save to localStorage immediately (works even without Supabase) ──
       saveProjectLocally({
-        project_id,
+        project_id: dossier_id,
         name: form.name,
         category: form.category,
         website: form.website,
@@ -136,23 +142,22 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
       });
 
       // Sync to Supabase cache (non-blocking, fails silently if tables missing)
-      setStep('Syncing to index…');
+      setStep('Syncing dossier cache...');
       fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          project_id, owner: address,
+          project_id: dossier_id, owner: address,
           name: form.name, category: form.category,
           website: form.website, description: form.description,
         }),
       }).catch(() => {});
 
-      // project_id is the actual contract-returned ID, not the tx hash
-      if (project_id && !project_id.startsWith('0x')) {
-        router.push(`/project/${project_id}`);
+      // dossier_id is the actual contract-returned ID, not the tx hash.
+      if (dossier_id && !dossier_id.startsWith('0x')) {
+        router.push(`/dossier/${dossier_id}`);
       } else {
-        // Shouldn't happen, but fallback to dashboard
-        router.push('/hub');
+        router.push('/issuer-hub');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Submission failed. Try again.');
@@ -164,12 +169,12 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
   // ── Stable label & style (based on mounted state only - no flash) ──
   const btnLabel = !mounted
-    ? '⬡ Register on Veridex'
+    ? 'Create verification dossier'
     : submitting
-      ? (step || '⬡ Submitting to GenLayer…')
+      ? (step || 'Submitting dossier to GenLayer...')
       : !isConnected
         ? 'Connect wallet to continue'
-        : '⬡ Register on Veridex';
+        : 'Create dossier on GenLayer';
 
   const btnDisabled = submitting || !mounted || !isConnected;
 
@@ -199,9 +204,9 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Basic Info ─────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>◎</span> Initiative Identity</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>01</span> Dossier Basics</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Project Name" required>
+          <Field label="Dossier Name" required>
             <input className={inputCls} style={INPUT_STYLE} value={form.name}
               onChange={set('name')} placeholder="e.g. Uniswap V3" required />
           </Field>
@@ -225,7 +230,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Technical ──────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>▣</span> Source Documentation</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>02</span> Public Evidence Links</h2>
         <div className="space-y-4">
           <Field label="Whitepaper URL">
             <input className={inputCls} style={INPUT_STYLE} value={form.whitepaper_url}
@@ -254,7 +259,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Business ───────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>▶</span> Traction & Trajectory</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>03</span> Delivery Proof</h2>
         <div className="space-y-4">
           <Field label="Roadmap" required>
             <textarea className={cn(inputCls, 'resize-none h-28')} style={INPUT_STYLE}
@@ -280,7 +285,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Tokenomics ─────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>◈</span> Tokenomics</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>04</span> Token and Governance Evidence</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Token Symbol">
             <input className={inputCls} style={INPUT_STYLE} value={form.token_symbol}
@@ -305,7 +310,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Security ───────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>⬡</span> Security Posture</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>05</span> Security & Audits</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Audit Firm">
             <input className={inputCls} style={INPUT_STYLE} value={form.audit_auditor}
@@ -328,7 +333,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Team ───────────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>◉</span> Core Contributors</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>06</span> Team & Governance Evidence</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Field label="Name">
             <input className={inputCls} style={INPUT_STYLE} value={form.team_name}
@@ -360,7 +365,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
       {mounted && !isConnected && (
         <div className="rounded-xl p-4 text-sm"
           style={{ background: 'rgba(107,142,122,0.08)', border: '1px solid rgba(107,142,122,0.15)', color: 'var(--brand-deep)' }}>
-          Connect your wallet to submit a project.
+          Connect your wallet to create a public verification dossier.
         </div>
       )}
 

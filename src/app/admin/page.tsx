@@ -18,6 +18,9 @@ export default function AdminPage() {
     create_project_fee: '0',
     evaluation_fee: '0',
     reevaluation_fee: '0',
+    create_dossier_fee: '0',
+    verification_fee: '0',
+    refresh_fee: '0',
     fees_enabled: false,
     total_fees_collected: '0',
     contract_balance: '0',
@@ -35,7 +38,12 @@ export default function AdminPage() {
       const state = await getTreasuryState();
       if (state) {
         setOwner(state.owner);
-        setTreasury(state);
+        setTreasury({
+          ...state,
+          create_dossier_fee: state.create_dossier_fee ?? state.create_project_fee,
+          verification_fee: state.verification_fee ?? state.evaluation_fee,
+          refresh_fee: state.refresh_fee ?? state.reevaluation_fee,
+        });
         setForm({
           create_project_fee: state.create_project_fee,
           evaluation_fee: state.evaluation_fee,
@@ -58,7 +66,12 @@ export default function AdminPage() {
     const state = await getTreasuryState();
     if (!state) return;
     setOwner(state.owner);
-    setTreasury(state);
+    setTreasury({
+      ...state,
+      create_dossier_fee: state.create_dossier_fee ?? state.create_project_fee,
+      verification_fee: state.verification_fee ?? state.evaluation_fee,
+      refresh_fee: state.refresh_fee ?? state.reevaluation_fee,
+    });
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -127,16 +140,16 @@ export default function AdminPage() {
           <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>Admin</p>
           <h1 className="mt-3 text-4xl font-semibold" style={{ color: '#1a1612' }}>Protocol Fee Controls</h1>
           <p className="mt-3 text-sm leading-7" style={{ color: '#6b6360' }}>
-            Manage `create_project_fee`, `evaluation_fee`, `reevaluation_fee`, `fees_enabled`, and treasury withdrawals for the deployed Veridex contract.
+            Manage dossier creation, verification, refresh fees, fee collection, and treasury withdrawals for the deployed Veridex contract.
           </p>
         </div>
         <div className="rounded-[28px] p-6" style={{ background: '#ffffff', border: '1px solid rgba(107, 142, 122, 0.12)' }}>
           <p className="text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>Treasury State</p>
           <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
             {[
-              { label: 'Create Project Fee', value: treasury.create_project_fee },
-              { label: 'Evaluation Fee', value: treasury.evaluation_fee },
-              { label: 'Reevaluation Fee', value: treasury.reevaluation_fee },
+              { label: 'Create Dossier Fee', value: treasury.create_dossier_fee ?? treasury.create_project_fee },
+              { label: 'Verification Fee', value: treasury.verification_fee ?? treasury.evaluation_fee },
+              { label: 'Refresh Fee', value: treasury.refresh_fee ?? treasury.reevaluation_fee },
               { label: 'Fees Enabled', value: treasury.fees_enabled ? 'true' : 'false' },
               { label: 'Contract Balance', value: treasury.contract_balance },
               { label: 'Total Fees Collected', value: treasury.total_fees_collected },
@@ -161,9 +174,9 @@ export default function AdminPage() {
 
         <div className="grid gap-4 md:grid-cols-2">
           {[
-            { key: 'create_project_fee', label: 'Create Project Fee' },
-            { key: 'evaluation_fee', label: 'Evaluation Fee' },
-            { key: 'reevaluation_fee', label: 'Reevaluation Fee' },
+            { key: 'create_project_fee', label: 'Create Dossier Fee' },
+            { key: 'evaluation_fee', label: 'Verification Fee' },
+            { key: 'reevaluation_fee', label: 'Refresh Fee' },
           ].map((field) => (
             <label key={field.key} className="block">
               <span className="text-sm font-semibold" style={{ color: '#1a1612' }}>{field.label}</span>

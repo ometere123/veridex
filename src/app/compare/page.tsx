@@ -125,9 +125,9 @@ export default function ComparePage() {
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="mb-8">
         <p className="mb-2 text-[10px] uppercase tracking-[0.28em]" style={{ color: '#9b938a' }}>Compare</p>
-        <h1 className="text-3xl font-semibold" style={{ color: '#1a1612' }}>Head-to-Head Analysis</h1>
+        <h1 className="text-3xl font-semibold" style={{ color: '#1a1612' }}>Compare verification dossiers</h1>
         <p className="mt-2 text-sm" style={{ color: '#6b6360' }}>
-          Select two initiatives to compare across all assessment dimensions.
+          Select two dossiers to compare evidence confidence, verification dimensions, source coverage, and risk signals.
         </p>
       </div>
 
@@ -142,7 +142,7 @@ export default function ComparePage() {
             className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em]"
             style={{ color: '#6b8e7a' }}
           >
-            Challenger A
+            Dossier A
           </p>
           <SearchInput value={idA} onSelect={(id) => setIdA(id)} allProjects={allProjects} />
         </div>
@@ -153,7 +153,7 @@ export default function ComparePage() {
             className="flex h-11 w-11 items-center justify-center rounded-xl font-mono text-sm font-black"
             style={{ background: '#1a1612', color: '#ffffff' }}
           >
-            VS
+            +
           </span>
         </div>
 
@@ -166,7 +166,7 @@ export default function ComparePage() {
             className="mb-3 text-[10px] font-semibold uppercase tracking-[0.24em]"
             style={{ color: '#b8633f' }}
           >
-            Challenger B
+            Dossier B
           </p>
           <SearchInput value={idB} onSelect={(id) => setIdB(id)} allProjects={allProjects} />
         </div>
@@ -184,7 +184,7 @@ export default function ComparePage() {
           boxShadow: loading ? 'none' : '0 12px 30px rgba(107,142,122,0.18)',
         }}
       >
-        {loading ? 'Analyzing...' : 'Compare Initiatives →'}
+        {loading ? 'Reading dossiers...' : 'Compare Dossiers ->'}
       </button>
 
       {dataA && dataB && (

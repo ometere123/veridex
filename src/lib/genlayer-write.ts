@@ -175,13 +175,14 @@ async function glWriteAndGetResult(method: string, args: ContractArg[], account:
 
 // ── Typed contract calls ─────────────────────────────────────────
 
-export async function contractCreateProject(account: string, params: {
+export async function contractCreateDossier(account: string, params: {
   name: string; category: string; website: string; description: string;
   whitepaper_url: string; docs_url: string; github_repos: Array<{ url: string }>;
   roadmap: string; tokenomics: object; audits: object[]; team: object[];
   investors: string[]; partnerships: string[]; bug_bounty_url: string;
   ecosystem_integrations: string[];
   verification_document_url: string;
+  evidence_files?: object[];
 }): Promise<string> {
   const args = [
     params.name, params.category, params.website, params.description,
@@ -192,6 +193,7 @@ export async function contractCreateProject(account: string, params: {
     JSON.stringify(params.partnerships), params.bug_bounty_url || '',
     JSON.stringify(params.ecosystem_integrations),
     params.verification_document_url || '',
+    JSON.stringify(params.evidence_files || []),
   ];
   
   let feeValue = BigInt(0);
@@ -199,55 +201,71 @@ export async function contractCreateProject(account: string, params: {
     const { getProtocolFees } = await import('./genlayer');
     const fees = await getProtocolFees();
     if (fees.fees_enabled) {
-      feeValue = BigInt(fees.create_project_fee || '0');
+      feeValue = BigInt(fees.create_dossier_fee || fees.create_project_fee || '0');
     }
   } catch (e) {
     console.warn('Failed to fetch fees:', e);
   }
   
-  const result = await glWriteAndGetResult('create_project', args, account, feeValue);
+  const result = await glWriteAndGetResult('create_dossier', args, account, feeValue);
   if (typeof result === 'string' && result.length > 0 && !result.startsWith('0x')) return result;
   throw new Error(
-    `Project created on-chain (tx: ${result}), but could not decode project ID. ` +
-    `Check your Dashboard to find the project.`
+    `Dossier created on-chain (tx: ${result}), but could not decode dossier ID. ` +
+    `Check your issuer hub to find the dossier.`
   );
 }
 
-export async function contractLockProject(account: string, projectId: string): Promise<string> {
-  return glSubmitAndWait('lock_project_data', [projectId], account, 180_000);
+export async function contractCreateProject(account: string, params: Parameters<typeof contractCreateDossier>[1]): Promise<string> {
+  return contractCreateDossier(account, params);
 }
 
-/** Step 3: changes status to "evaluating". Waits for confirmation. */
-export async function contractSubmitEvaluation(account: string, projectId: string): Promise<string> {
+export async function contractLockEvidence(account: string, dossierId: string): Promise<string> {
+  return glSubmitAndWait('lock_evidence', [dossierId], account, 180_000);
+}
+
+export async function contractLockProject(account: string, projectId: string): Promise<string> {
+  return contractLockEvidence(account, projectId);
+}
+
+/** Step 3: changes status to VERIFYING. Waits for confirmation. */
+export async function contractSubmitVerification(account: string, dossierId: string): Promise<string> {
   let feeValue = BigInt(0);
   try {
-    const { getProject, getProtocolFees } = await import('./genlayer');
-    const [project, fees] = await Promise.all([getProject(projectId), getProtocolFees()]);
+    const { getDossier, getProtocolFees } = await import('./genlayer');
+    const [dossier, fees] = await Promise.all([getDossier(dossierId), getProtocolFees()]);
     if (fees.fees_enabled) {
       feeValue = BigInt(
-        project?.status === 'reevaluation_pending'
-          ? fees.reevaluation_fee || '0'
-          : fees.evaluation_fee || '0',
+        dossier?.status === 'REFRESH_PENDING' || dossier?.status === 'STALE'
+          ? fees.refresh_fee || fees.reevaluation_fee || '0'
+          : fees.verification_fee || fees.evaluation_fee || '0',
       );
     }
   } catch (e) {
     console.warn('Failed to fetch fees:', e);
   }
   
-  return glSubmitAndWait('submit_evaluation', [projectId], account, 120_000, feeValue);
+  return glSubmitAndWait('submit_verification', [dossierId], account, 120_000, feeValue);
 }
 
-/**
- * Step 4: run_evaluation - submits the AI evaluation tx.
- * Returns tx hash immediately - does NOT wait 5 min.
- * Callers MUST poll get_project/get_evaluation for real completion.
- */
+export async function contractSubmitEvaluation(account: string, projectId: string): Promise<string> {
+  return contractSubmitVerification(account, projectId);
+}
+
+/** Step 4: run_verification. Callers poll get_dossier/get_verification_report. */
+export async function contractRunVerification(account: string, dossierId: string): Promise<string> {
+  return glSubmit('run_verification', [dossierId], account);
+}
+
 export async function contractRunEvaluation(account: string, projectId: string): Promise<string> {
-  return glSubmit('run_evaluation', [projectId], account);
+  return contractRunVerification(account, projectId);
+}
+
+export async function contractRequestVerificationRefresh(account: string, dossierId: string): Promise<string> {
+  return glSubmitAndWait('request_verification_refresh', [dossierId], account);
 }
 
 export async function contractRequestReevaluation(account: string, projectId: string): Promise<string> {
-  return glSubmitAndWait('request_reevaluation', [projectId], account);
+  return contractRequestVerificationRefresh(account, projectId);
 }
 
 export async function contractSetProtocolFees(

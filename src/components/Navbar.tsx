@@ -8,12 +8,15 @@ import { VeridexLogo } from './VeridexLogo';
 import { cn } from '@/utils';
 
 const NAV_LINKS = [
-  { href: '/tiers',       label: 'Tiers' },
-  { href: '/leaderboard', label: 'Index' },
-  { href: '/register',    label: 'Register' },
-  { href: '/compare',     label: 'Compare' },
-  { href: '/analytics',   label: 'Analytics' },
-  { href: '/hub',         label: 'Hub' },
+  { href: '/registry',            label: 'Registry' },
+  { href: '/dossiers',            label: 'Dossiers' },
+  { href: '/submit',              label: 'Submit Evidence' },
+  { href: '/verification-levels', label: 'Levels' },
+  { href: '/proof-ledger',        label: 'Proof Ledger' },
+  { href: '/signals',             label: 'Signals' },
+  { href: '/compare',             label: 'Compare' },
+  { href: '/issuer-hub',          label: 'Issuer Hub' },
+  { href: '/treasury',            label: 'Treasury' },
 ];
 
 function NavLinks({ onClose }: { onClose?: () => void }) {

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { ProjectFormWithUpload } from '@/components/ProjectFormWithUpload';
 
 export const metadata: Metadata = {
-  title: 'Register Initiative - Veridex',
-  description: 'Register your crypto initiative for AI-powered assessment by GenLayer Intelligent Contracts.',
+  title: 'Submit Evidence - Veridex',
+  description: 'Create a public verification dossier and evidence manifest on GenLayer.',
 };
 
 export default function SubmitPage() {
@@ -11,14 +11,14 @@ export default function SubmitPage() {
     <div className="max-w-3xl mx-auto px-4 py-12">
       <div className="mb-8">
         <p className="mb-3 text-[11px] uppercase tracking-[0.24em]" style={{ color: '#9b938a' }}>
-          Registration
+          Submit Evidence
         </p>
         <h1 className="mb-3 text-4xl font-semibold" style={{ color: '#1a1612' }}>
-          Register your Initiative
+          Create a verification dossier
         </h1>
         <p className="text-base leading-8" style={{ color: '#6b6360' }}>
-          Provide all evidence. Finalize it. GenLayer assesses. Validators verify. Your verification score,
-          tier, and evidence history are recorded on-chain.
+          Provide public evidence, publish supporting documents, and create the dossier that will become
+          the basis for a GenLayer verification cycle.
         </p>
       </div>
 
@@ -34,9 +34,9 @@ export default function SubmitPage() {
           +
         </span>
         <div className="leading-7">
-          <strong style={{ color: 'var(--brand-deep)' }}>Verification flow:</strong>
-          {' '}Submit your project evidence -&gt; Publish supporting documents -&gt; Lock the submission -&gt;
-          {' '}GenLayer validates and scores -&gt; Your verification record becomes on-chain history.
+          <strong style={{ color: 'var(--brand-deep)' }}>Evidence flow:</strong>
+          {' '}Submit public evidence -&gt; Lock the evidence set -&gt; GenLayer fact-checks sources -&gt;
+          {' '}A verification report, risk band, and proof ledger are stored on-chain.
         </div>
       </div>
 

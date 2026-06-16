@@ -12,12 +12,12 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'https://veridex.app'),
   title: {
-    default: 'Veridex - On-Chain Crypto Intelligence',
+    default: 'Veridex - Evidence-First Verification Registry',
     template: '%s - Veridex',
   },
   description:
-    'On-chain crypto verification powered by GenLayer Intelligent Contracts. Submit evidence, lock it immutably, let AI evaluate, build a verifiable on-chain profile.',
-  keywords: ['crypto', 'rankings', 'GenLayer', 'blockchain', 'AI', 'DeFi', 'evaluation', 'research'],
+    'Evidence-first crypto project verification on GenLayer. Submit evidence, lock it, and receive verification dossiers, risk signals, and proof history.',
+  keywords: ['crypto', 'verification', 'GenLayer', 'blockchain', 'evidence', 'dossier', 'risk signals', 'research'],
   authors: [{ name: 'Veridex' }],
   icons: {
     icon: '/favicon.svg',
@@ -29,21 +29,21 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://veridex.app',
     siteName: 'Veridex',
-    title: 'Veridex - On-Chain Crypto Intelligence',
-    description: 'On-chain crypto verification powered by GenLayer Intelligent Contracts.',
+    title: 'Veridex - Evidence-First Verification Registry',
+    description: 'Crypto project evidence, verification reports, risk signals, and proof history on GenLayer.',
     images: [
       {
         url: '/og-image.svg',
         width: 1200,
         height: 630,
-        alt: 'Veridex - On-Chain Crypto Intelligence',
+        alt: 'Veridex - Evidence-First Verification Registry',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Veridex - On-Chain Crypto Intelligence',
-    description: 'On-chain crypto verification powered by GenLayer Intelligent Contracts.',
+    title: 'Veridex - Evidence-First Verification Registry',
+    description: 'Crypto project evidence, verification reports, risk signals, and proof history on GenLayer.',
     images: ['/og-image.svg'],
   },
   robots: { index: true, follow: true },
@@ -87,12 +87,13 @@ function Footer() {
           <span className="text-xs" style={{ color: 'var(--border-2)' }}>/ GenLayer</span>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-5 text-xs" style={{ color: 'var(--muted-2)' }}>
-          <a href="/tiers" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Tiers</a>
-          <a href="/leaderboard" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Index</a>
-          <a href="/register" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Register</a>
+          <a href="/registry" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Registry</a>
+          <a href="/submit" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Submit Evidence</a>
+          <a href="/verification-levels" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Levels</a>
+          <a href="/proof-ledger" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Proof Ledger</a>
           <a href="/compare" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Compare</a>
-          <a href="/analytics" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Analytics</a>
-          <a href="/hub" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Hub</a>
+          <a href="/signals" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Signals</a>
+          <a href="/issuer-hub" className="hover:text-[#6b8e7a] transition-colors tracking-wide">Issuer Hub</a>
         </div>
       </div>
     </footer>

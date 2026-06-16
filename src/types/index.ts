@@ -15,9 +15,31 @@ export type ProjectStatus =
   | 'evaluating'
   | 'ranked'
   | 'reevaluation_pending'
-  | 'archived';
+  | 'archived'
+  | 'DRAFT'
+  | 'EVIDENCE_LOCKED'
+  | 'VERIFYING'
+  | 'VERIFIED'
+  | 'PARTIAL'
+  | 'WEAK'
+  | 'UNVERIFIABLE'
+  | 'REFRESH_PENDING'
+  | 'STALE'
+  | 'ARCHIVED';
 
 export type RankTier = 'S+' | 'S' | 'A' | 'B' | 'C' | 'D' | 'F';
+
+export type VerificationLevel =
+  | 'UNVERIFIED'
+  | 'VERIFIED_PLUS'
+  | 'VERIFIED'
+  | 'SUBSTANTIATED'
+  | 'DEVELOPING'
+  | 'LIMITED_EVIDENCE'
+  | 'HIGH_RISK'
+  | 'UNVERIFIABLE';
+
+export type RiskBand = 'LOW' | 'MODERATE' | 'ELEVATED' | 'HIGH' | 'CRITICAL' | 'UNKNOWN';
 
 export interface Tokenomics {
   symbol: string;
@@ -68,6 +90,50 @@ export interface Project {
   status: ProjectStatus;
   created_at: string;
   updated_at: string;
+}
+
+export interface Dossier {
+  dossier_id: string;
+  issuer: string;
+  name: string;
+  category: ProjectCategory;
+  website: string;
+  description: string;
+  status: ProjectStatus;
+  evidence_hash?: string;
+  current_verification_hash?: string;
+  current_verification_level: VerificationLevel;
+  evidence_confidence: number;
+  risk_band: RiskBand;
+  verified_source_count: number;
+  proof_event_count: number;
+  verification_count: number;
+  created_at: string;
+  updated_at: string;
+  locked_at?: string;
+  last_verified_at?: string;
+  expires_at?: string;
+}
+
+export interface EvidenceManifest {
+  dossier_id: string;
+  website: string;
+  whitepaper_url?: string;
+  docs_url?: string;
+  github_repos: string[];
+  roadmap: string;
+  tokenomics: Tokenomics;
+  audits: AuditReport[];
+  team: TeamMember[];
+  investors: string[];
+  partnerships: string[];
+  bug_bounty_url?: string;
+  ecosystem_integrations: string[];
+  verification_document_url?: string;
+  evidence_files: Array<{ name?: string; url: string; path?: string; size?: number; type?: string }>;
+  submitted_at: string;
+  locked_at?: string;
+  evidence_hash?: string;
 }
 
 export interface EvaluationScores {
@@ -121,6 +187,36 @@ export interface Evaluation extends EvaluationScores {
   evaluated_at: string;
 }
 
+export interface VerificationReport {
+  verification_id: string;
+  dossier_id: string;
+  verification_level: VerificationLevel;
+  evidence_confidence: number;
+  risk_band: RiskBand;
+  proof_completeness: number;
+  source_integrity: number;
+  verified_source_count: number;
+  critical_warnings: string[];
+  verification_dimensions: {
+    protocol_architecture: number;
+    team_governance: number;
+    market_traction: number;
+    security_risk: number;
+    delivery_proof: number;
+    token_design: number;
+    evidence_integrity: number;
+  };
+  fact_check_hash: string;
+  verification_hash?: string;
+  verified_at: string;
+  expires_at?: string;
+  summary: string;
+  strengths: string[];
+  risks: string[];
+  recommended_evidence: string[];
+  confidence: number;
+}
+
 export interface HistoricalScore {
   project_id: string;
   old_score: number;
@@ -161,6 +257,21 @@ export interface LeaderboardEntry {
   last_evaluated: string;
 }
 
+export interface RegistryEntry {
+  dossier_id: string;
+  name: string;
+  category: ProjectCategory;
+  website: string;
+  verification_level: VerificationLevel;
+  evidence_confidence: number;
+  risk_band: RiskBand;
+  proof_completeness: number;
+  verified_source_count: number;
+  last_verified_at: string;
+  expires_at?: string;
+  registry_position: number;
+}
+
 export interface Profile {
   wallet_address: string;
   display_name?: string;
@@ -177,6 +288,39 @@ export interface Profile {
   execution_rating: number;
   evidence_rating: number;
   created_at: string;
+}
+
+export interface IssuerProfile {
+  issuer: string;
+  submitted_dossiers: number;
+  verified_dossiers: number;
+  average_evidence_confidence: number;
+  high_risk_dossiers: number;
+  stale_dossiers: number;
+  latest_activity_at: string;
+}
+
+export interface ProofEvent {
+  event_id: string;
+  dossier_id: string;
+  actor: string;
+  event_type:
+    | 'DOSSIER_CREATED'
+    | 'DOSSIER_UPDATED'
+    | 'EVIDENCE_LOCKED'
+    | 'VERIFICATION_SUBMITTED'
+    | 'FACT_CHECK_COMPLETED'
+    | 'VERIFICATION_COMPLETED'
+    | 'VERIFICATION_REFRESH_REQUESTED'
+    | 'REGISTRY_UPDATED'
+    | 'DOSSIER_ARCHIVED'
+    | 'FEE_PAID'
+    | 'FEE_WITHDRAWN'
+    | string;
+  event_hash: string;
+  related_hash?: string;
+  summary: string;
+  timestamp: string;
 }
 
 export interface GenLayerProofStep {
@@ -223,6 +367,9 @@ export interface TreasuryState {
   create_project_fee: string;
   evaluation_fee: string;
   reevaluation_fee: string;
+  create_dossier_fee?: string;
+  verification_fee?: string;
+  refresh_fee?: string;
   fees_enabled: boolean;
   owner: string;
 }

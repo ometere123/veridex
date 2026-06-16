@@ -1,25 +1,28 @@
 # Veridex
 
-Decentralized crypto project verification platform powered by [GenLayer](https://genlayer.com) intelligent contracts. Veridex performs autonomous, web-verified assessments of blockchain projects - fetching live data, cross-referencing claims, and producing tamper-proof reputation scores anchored on-chain through validator consensus.
+Veridex is an evidence-first verification registry for crypto projects. Projects submit public evidence, lock their evidence set on GenLayer, and receive a source-grounded verification dossier with fact-check results, verification levels, risk signals, and proof history.
 
----
+Short version:
+
+Evidence first. Verified on GenLayer. Rankings only after proof.
 
 ## Features
 
-- **Web-verified claim validation** - intelligent contracts fetch live data from project websites, GitHub repos, and documentation to cross-reference submitted assertions
-- **Multi-dimensional assessment** - seven evaluation dimensions scored independently with weighted aggregation and on-chain consensus
-- **Admin-settable protocol fees** - contract owner can adjust registration, assessment, and reassessment fees in real-time on-chain
-- **Validator consensus** - leader/validator architecture ensures score consistency within tolerance bounds
-- **On-chain permanence** - finalized scores, reputation tiers, fact-check reports, and verification metadata are stored immutably in contract state
-- **Injected wallet support** - direct contract interaction via GenLayer-compatible wallets through genlayer-js
+- **Verification dossiers** - each project creates a public dossier with issuer, evidence hash, verification level, evidence confidence, risk band, and status.
+- **Evidence manifests** - websites, docs, whitepapers, GitHub repos, audits, team/governance data, tokenomics, bug bounty links, and uploaded evidence files are captured as the verification basis.
+- **Source-grounded fact checks** - submitted claims are treated as untrusted until public sources support them.
+- **Verification reports** - GenLayer stores verification dimensions, source integrity, proof completeness, missing evidence, recommendations, and critical warnings.
+- **Proof ledger** - dossier creation, updates, evidence locks, verification submissions, fact checks, reports, fee events, and archives append auditable proof events.
+- **Registry, not leaderboard-first** - users browse dossiers by verification level, evidence confidence, risk band, source count, and registry position.
+- **Protocol fee transparency** - create-dossier, verification, and refresh fees are managed on-chain by the contract owner.
 
 ## Tech Stack
 
-- **Frontend:** Next.js 16, TypeScript, Tailwind CSS v4
-- **Blockchain:** GenLayer Intelligent Contracts (Python)
-- **Database:** Supabase
-- **Wallet:** genlayer-js + wagmi (injected provider)
-- **Chain:** GenLayer Studionet (chain ID 61999)
+- **Frontend:** Next.js 15.5.19, React 19, TypeScript, Tailwind CSS v4
+- **Contract:** GenLayer Intelligent Contract in Python
+- **Wallet:** genlayer-js + wagmi
+- **Storage helper:** Supabase for public evidence upload/cache only
+- **Source of truth:** GenLayer contract state
 
 ## Getting Started
 
@@ -28,72 +31,55 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
 ## Environment Variables
 
-Create a `.env.local` with:
+Create `.env.local` from `.env.example`.
 
-```
+```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_GENLAYER_RPC_URL=https://studio.genlayer.com/api
 NEXT_PUBLIC_CHAIN_ID=61999
 NEXT_PUBLIC_GENLAYER_EXPLORER_URL=https://explorer-studio.genlayer.com
-NEXT_PUBLIC_VERIDEX_CONTRACT_ADDRESS=0xd0aC5201aB874954933B09f497cAaFC618B596C6
+NEXT_PUBLIC_VERIDEX_CONTRACT_ADDRESS=
 NEXT_PUBLIC_SUPABASE_EVIDENCE_BUCKET=veridex-evidence
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-## Intelligent Contract
+Do not add a hardcoded fallback contract address. The frontend reads `NEXT_PUBLIC_VERIDEX_CONTRACT_ADDRESS`.
 
-The Veridex contract (`contracts/Veridex.py`) uses GenLayer's web access and LLM execution capabilities:
+## Contract
 
-- `gl.nondet.web.get(url)` - fetches live web data for source verification
-- `gl.nondet.exec_prompt(prompt)` - runs LLM-based assessment and fact-check analysis
-- `gl.vm.run_nondet_unsafe(leader_fn, validator_fn)` - ensures consensus between leader and validator nodes
+The active contract source is [contracts/Veridex.py](contracts/Veridex.py). Primary methods are dossier-first:
 
-### Admin Functions
+- Writes: `create_dossier`, `update_dossier_before_lock`, `lock_evidence`, `submit_verification`, `run_verification`, `request_verification_refresh`, `archive_dossier`, `update_registry`, `set_protocol_fees`, `withdraw_protocol_fees`
+- Reads: `get_dossier`, `get_evidence_manifest`, `get_fact_check`, `get_verification_report`, `get_verification_history`, `get_proof_ledger`, `get_registry`, `get_issuer_profile`, `get_treasury_state`, `get_protocol_fees`, `get_verification_model`
 
-**Set Protocol Fees** (admin only)
-- `set_protocol_fees(create_project_fee, evaluation_fee, reevaluation_fee, fees_enabled)` - configure all protocol fees in wei and toggle fee collection
+Compatibility wrappers such as `create_project`, `get_project`, `get_evaluation`, and `get_leaderboard` remain in the contract for older clients, but the frontend uses the new dossier/registry naming.
 
-**Withdraw Protocol Fees** (admin only)
-- `withdraw_protocol_fees()` - withdraw accumulated GEN from collected protocol fees
+## Routes
 
-### Admin Dashboard
+- `/` - evidence-first landing page
+- `/submit` - create an evidence manifest and dossier
+- `/registry` - public verification registry
+- `/dossier/[dossierId]` - public dossier, report, manifest, and proof ledger
+- `/issuer-hub` - issuer dashboard and dossier lookup
+- `/verification-levels` - verification model explanation
+- `/proof-ledger` - proof event lookup
+- `/signals` - evidence, risk, category, and level signals
+- `/compare` - compare verification dossiers
+- `/treasury` - protocol fee transparency
+- `/admin` - owner controls
 
-Access `/admin` (requires admin wallet: `0xb29Ead15B1E8A2420faE84de974088f67a15ccC2`) to:
-- View current protocol fee configuration
-- Update registration, assessment, and reassessment fees
-- Toggle fee collection on/off in real-time
-- Monitor treasury state
+Legacy routes redirect to the new surfaces.
 
-## Fee Structure
+## Verification
 
-When fees are enabled by admin, users pay:
-- **Registration Fee** - charged when creating a new project submission
-- **Assessment Fee** - charged when submitting a project for initial evaluation
-- **Reassessment Fee** - charged when requesting a reevaluation cycle
-
-All fees are denominated in GEN (wei) and must be sent with the transaction. The contract validates exact fee amounts at submission time.
-
-## Application Routes
-
-**Public Routes**
-- `/` - landing page
-- `/leaderboard` (reputation index) - sortable project leaderboard
-- `/rankings` (reputation tiers) - projects grouped by assessment tier
-- `/compare` - side-by-side project comparison
-- `/analytics` - historical trends and analytics
-- `/profile/[wallet]` - public reputation profile
-
-**Authenticated Routes** (require wallet connection)
-- `/dashboard` (reputation hub) - user's submissions and assessment history
-- `/submit` (register) - create new project
-- `/history` - assessment timeline and past evaluations
-- `/treasury` - protocol fee information
-
-**Admin Routes** (admin wallet only)
-- `/admin` - fee management interface
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```

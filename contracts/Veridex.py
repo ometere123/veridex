@@ -1,4 +1,4 @@
-# v0.2.18
+# v0.3.0
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
 from genlayer import *
@@ -17,37 +17,457 @@ class _FeeRecipient:
 
 class Veridex(gl.Contract):
     owner: str
-    project_count: u256
-    evaluation_count: u256
+    dossier_count: u256
+    verification_count: u256
+    proof_event_count: u256
 
-    projects: TreeMap[str, str]
-    evaluations: TreeMap[str, str]
-    evaluation_history: TreeMap[str, str]
-    rankings: TreeMap[str, str]
-    historical_scores: TreeMap[str, str]
-    leaderboard: TreeMap[str, str]
-    profiles: TreeMap[str, str]
+    dossiers: TreeMap[str, str]
+    evidence_manifests: TreeMap[str, str]
     fact_checks: TreeMap[str, str]
+    verification_reports: TreeMap[str, str]
+    verification_history: TreeMap[str, str]
+    proof_ledger: TreeMap[str, str]
+    proof_events: TreeMap[str, str]
+    registry: TreeMap[str, str]
+    issuer_profiles: TreeMap[str, str]
 
     treasury: u256
-    create_project_fee: u256
-    evaluation_fee: u256
-    reevaluation_fee: u256
+    create_dossier_fee: u256
+    verification_fee: u256
+    refresh_fee: u256
     fees_enabled: bool
+    verification_window_days: u256
 
     def __init__(self) -> None:
         self.owner = str(gl.message.sender_address)
-        self.project_count = u256(0)
-        self.evaluation_count = u256(0)
+        self.dossier_count = u256(0)
+        self.verification_count = u256(0)
+        self.proof_event_count = u256(0)
         self.treasury = u256(0)
-        self.create_project_fee = u256(0)
-        self.evaluation_fee = u256(0)
-        self.reevaluation_fee = u256(0)
+        self.create_dossier_fee = u256(0)
+        self.verification_fee = u256(0)
+        self.refresh_fee = u256(0)
         self.fees_enabled = False
+        self.verification_window_days = u256(90)
 
-    # ──────────────────────────────────────────
-    # Write Functions
-   
+    @gl.public.write.payable
+    def create_dossier(
+        self,
+        name: str,
+        category: str,
+        website: str,
+        description: str,
+        whitepaper_url: str,
+        docs_url: str,
+        github_repos: str,
+        roadmap: str,
+        tokenomics: str,
+        audits: str,
+        team: str,
+        investors: str,
+        partnerships: str,
+        bug_bounty_url: str,
+        ecosystem_integrations: str,
+        verification_document_url: str = "",
+        evidence_files: str = "[]",
+    ) -> str:
+        sender = str(gl.message.sender_address)
+        self._collect_exact_fee(self.create_dossier_fee, "create_dossier")
+
+        dossier_id = self._generate_dossier_id(sender, name)
+        now = str(self._now())
+        category_clean = self._clean_text(category, 80)
+
+        manifest = {
+            "dossier_id": dossier_id,
+            "website": self._clean_text(website, 300),
+            "whitepaper_url": self._clean_text(whitepaper_url, 300),
+            "docs_url": self._clean_text(docs_url, 300),
+            "github_repos": self._safe_json_array(github_repos),
+            "roadmap": self._clean_text(roadmap, 2000),
+            "tokenomics": self._safe_json_object(tokenomics),
+            "audits": self._safe_json_array(audits),
+            "team": self._safe_json_array(team),
+            "investors": self._safe_json_array(investors),
+            "partnerships": self._safe_json_array(partnerships),
+            "bug_bounty_url": self._clean_text(bug_bounty_url, 300),
+            "ecosystem_integrations": self._safe_json_array(ecosystem_integrations),
+            "verification_document_url": self._clean_text(verification_document_url, 500),
+            "evidence_files": self._safe_json_array(evidence_files),
+            "submitted_at": now,
+            "locked_at": "",
+            "evidence_hash": "",
+        }
+
+        dossier = {
+            "dossier_id": dossier_id,
+            "issuer": sender,
+            "name": self._clean_text(name, 120),
+            "category": category_clean,
+            "website": self._clean_text(website, 300),
+            "description": self._clean_text(description, 1500),
+            "status": "DRAFT",
+            "evidence_hash": "",
+            "current_verification_hash": "",
+            "current_verification_level": "UNVERIFIED",
+            "evidence_confidence": 0,
+            "risk_band": "UNKNOWN",
+            "verified_source_count": 0,
+            "proof_event_count": 0,
+            "verification_count": 0,
+            "created_at": now,
+            "updated_at": now,
+            "locked_at": "",
+            "last_verified_at": "",
+            "expires_at": "",
+        }
+
+        self.dossiers[dossier_id] = json.dumps(dossier)
+        self.evidence_manifests[dossier_id] = json.dumps(manifest)
+        self.dossier_count = u256(int(self.dossier_count) + 1)
+
+        self._init_issuer_profile(sender)
+        self._bump_issuer_profile(sender, "submitted_dossiers", 1)
+        self._append_proof_event(
+            dossier_id,
+            sender,
+            "DOSSIER_CREATED",
+            "",
+            "Public verification dossier created.",
+        )
+
+        return dossier_id
+
+    @gl.public.write
+    def update_dossier_before_lock(
+        self,
+        dossier_id: str,
+        name: str,
+        category: str,
+        website: str,
+        description: str,
+        whitepaper_url: str,
+        docs_url: str,
+        github_repos: str,
+        roadmap: str,
+        tokenomics: str,
+        audits: str,
+        team: str,
+        investors: str,
+        partnerships: str,
+        bug_bounty_url: str,
+        ecosystem_integrations: str,
+        verification_document_url: str = "",
+        evidence_files: str = "[]",
+    ) -> None:
+        sender = str(gl.message.sender_address)
+        dossier = self._load_dossier(dossier_id)
+        manifest = self._load_manifest(dossier_id)
+
+        assert dossier["issuer"] == sender, "Not dossier issuer"
+        assert dossier["status"] == "DRAFT", "Evidence already locked"
+
+        now = str(self._now())
+        dossier["name"] = self._clean_text(name, 120)
+        dossier["category"] = self._clean_text(category, 80)
+        dossier["website"] = self._clean_text(website, 300)
+        dossier["description"] = self._clean_text(description, 1500)
+        dossier["updated_at"] = now
+
+        manifest["website"] = self._clean_text(website, 300)
+        manifest["whitepaper_url"] = self._clean_text(whitepaper_url, 300)
+        manifest["docs_url"] = self._clean_text(docs_url, 300)
+        manifest["github_repos"] = self._safe_json_array(github_repos)
+        manifest["roadmap"] = self._clean_text(roadmap, 2000)
+        manifest["tokenomics"] = self._safe_json_object(tokenomics)
+        manifest["audits"] = self._safe_json_array(audits)
+        manifest["team"] = self._safe_json_array(team)
+        manifest["investors"] = self._safe_json_array(investors)
+        manifest["partnerships"] = self._safe_json_array(partnerships)
+        manifest["bug_bounty_url"] = self._clean_text(bug_bounty_url, 300)
+        manifest["ecosystem_integrations"] = self._safe_json_array(ecosystem_integrations)
+        manifest["verification_document_url"] = self._clean_text(verification_document_url, 500)
+        manifest["evidence_files"] = self._safe_json_array(evidence_files)
+
+        self.dossiers[dossier_id] = json.dumps(dossier)
+        self.evidence_manifests[dossier_id] = json.dumps(manifest)
+        self._append_proof_event(dossier_id, sender, "DOSSIER_UPDATED", "", "Draft evidence manifest updated.")
+
+    @gl.public.write
+    def lock_evidence(self, dossier_id: str) -> str:
+        sender = str(gl.message.sender_address)
+        dossier = self._load_dossier(dossier_id)
+        manifest = self._load_manifest(dossier_id)
+
+        assert dossier["issuer"] == sender, "Not dossier issuer"
+        assert dossier["status"] == "DRAFT", "Evidence already locked"
+
+        now = str(self._now())
+        evidence_hash = self._hash({
+            "dossier_id": dossier_id,
+            "manifest": manifest,
+            "locked_at": now,
+        })
+
+        manifest["locked_at"] = now
+        manifest["evidence_hash"] = evidence_hash
+        dossier["status"] = "EVIDENCE_LOCKED"
+        dossier["evidence_hash"] = evidence_hash
+        dossier["locked_at"] = now
+        dossier["updated_at"] = now
+
+        self.evidence_manifests[dossier_id] = json.dumps(manifest)
+        self.dossiers[dossier_id] = json.dumps(dossier)
+        self._append_proof_event(dossier_id, sender, "EVIDENCE_LOCKED", evidence_hash, "Evidence manifest locked.")
+
+        return evidence_hash
+
+    @gl.public.write.payable
+    def submit_verification(self, dossier_id: str) -> None:
+        sender = str(gl.message.sender_address)
+        dossier = self._load_dossier(dossier_id)
+
+        assert dossier["issuer"] == sender, "Not dossier issuer"
+        assert dossier["status"] in ["EVIDENCE_LOCKED", "REFRESH_PENDING", "STALE"], "Lock evidence first"
+
+        fee = self.refresh_fee if dossier["status"] in ["REFRESH_PENDING", "STALE"] else self.verification_fee
+        self._collect_exact_fee(fee, "submit_verification")
+
+        dossier["status"] = "VERIFYING"
+        dossier["updated_at"] = str(self._now())
+        self.dossiers[dossier_id] = json.dumps(dossier)
+        self._append_proof_event(dossier_id, sender, "VERIFICATION_SUBMITTED", dossier.get("evidence_hash", ""), "Verification cycle submitted.")
+
+    @gl.public.write
+    def run_verification(self, dossier_id: str) -> str:
+        dossier = self._load_dossier(dossier_id)
+        manifest = self._load_manifest(dossier_id)
+
+        assert dossier["status"] == "VERIFYING", "Dossier not ready for verification"
+
+        fact_check = self._run_fact_check(dossier, manifest)
+        fact_check_hash = self._hash(fact_check)
+        fact_check["dossier_id"] = dossier_id
+        fact_check["fact_check_hash"] = fact_check_hash
+        fact_check["checked_at"] = str(self._now())
+        self.fact_checks[dossier_id] = json.dumps(fact_check)
+        self._append_proof_event(dossier_id, self.owner, "FACT_CHECK_COMPLETED", fact_check_hash, "Source-grounded fact check completed.")
+
+        report = self._run_verification_report(dossier, manifest, fact_check)
+        verification_hash = self._hash(report)
+        now = str(self._now())
+        verification_id = self._generate_verification_id(dossier_id, now)
+        expires_at = str(self._now() + int(self.verification_window_days) * 86400)
+
+        report["verification_id"] = verification_id
+        report["dossier_id"] = dossier_id
+        report["fact_check_hash"] = fact_check_hash
+        report["verification_hash"] = verification_hash
+        report["verified_at"] = now
+        report["expires_at"] = expires_at
+
+        self.verification_reports[dossier_id] = json.dumps(report)
+        self.verification_count = u256(int(self.verification_count) + 1)
+        self._append_verification_history(dossier_id, report)
+
+        dossier["status"] = self._status_from_report(report)
+        dossier["current_verification_hash"] = verification_hash
+        dossier["current_verification_level"] = report.get("verification_level", "UNVERIFIABLE")
+        dossier["evidence_confidence"] = self._bounded_score(report.get("evidence_confidence", 0))
+        dossier["risk_band"] = self._clean_text(str(report.get("risk_band", "UNKNOWN")), 40)
+        dossier["verified_source_count"] = int(report.get("verified_source_count", 0))
+        dossier["verification_count"] = int(dossier.get("verification_count", 0)) + 1
+        dossier["last_verified_at"] = now
+        dossier["expires_at"] = expires_at
+        dossier["updated_at"] = now
+        self.dossiers[dossier_id] = json.dumps(dossier)
+
+        self._update_registry_entry(dossier, report)
+        self._update_issuer_after_verification(dossier["issuer"], dossier, report)
+        self._append_proof_event(dossier_id, self.owner, "VERIFICATION_COMPLETED", verification_hash, "Verification report stored on-chain.")
+
+        return verification_id
+
+    @gl.public.write.payable
+    def request_verification_refresh(self, dossier_id: str) -> None:
+        sender = str(gl.message.sender_address)
+        dossier = self._load_dossier(dossier_id)
+
+        assert dossier["issuer"] == sender, "Not dossier issuer"
+        assert dossier["status"] not in ["DRAFT", "VERIFYING", "ARCHIVED"], "Cannot refresh now"
+
+        self._collect_exact_fee(self.refresh_fee, "refresh_verification")
+        dossier["status"] = "REFRESH_PENDING"
+        dossier["updated_at"] = str(self._now())
+        self.dossiers[dossier_id] = json.dumps(dossier)
+        self._append_proof_event(dossier_id, sender, "VERIFICATION_REFRESH_REQUESTED", dossier.get("current_verification_hash", ""), "Verification refresh requested.")
+
+    @gl.public.write
+    def archive_dossier(self, dossier_id: str) -> None:
+        sender = str(gl.message.sender_address)
+        dossier = self._load_dossier(dossier_id)
+
+        assert dossier["issuer"] == sender or sender == self.owner, "Not authorized"
+        assert dossier["status"] != "VERIFYING", "Cannot archive while verifying"
+
+        dossier["status"] = "ARCHIVED"
+        dossier["updated_at"] = str(self._now())
+        self.dossiers[dossier_id] = json.dumps(dossier)
+        self._append_proof_event(dossier_id, sender, "DOSSIER_ARCHIVED", dossier.get("current_verification_hash", ""), "Dossier archived.")
+
+    @gl.public.write
+    def update_registry(self, category: str) -> None:
+        key = self._registry_key(category)
+        raw = self.registry.get(key)
+        entries = json.loads(raw) if raw else []
+        entries.sort(key=lambda x: (
+            self._risk_sort_value(str(x.get("risk_band", "UNKNOWN"))),
+            -self._bounded_score(x.get("evidence_confidence", 0)),
+        ))
+        for i, entry in enumerate(entries):
+            entry["registry_position"] = i + 1
+        self.registry[key] = json.dumps(entries)
+
+    @gl.public.write
+    def set_protocol_fees(
+        self,
+        create_dossier_fee: u256,
+        verification_fee: u256,
+        refresh_fee: u256,
+        fees_enabled: bool,
+    ) -> None:
+        sender = str(gl.message.sender_address)
+        assert sender == self.owner, "Only owner can set fees"
+
+        self.create_dossier_fee = create_dossier_fee
+        self.verification_fee = verification_fee
+        self.refresh_fee = refresh_fee
+        self.fees_enabled = fees_enabled
+
+    @gl.public.write
+    def withdraw_protocol_fees(self) -> None:
+        sender = str(gl.message.sender_address)
+        assert sender == self.owner, "Only owner can withdraw"
+        assert int(self.treasury) > 0, "No fees to withdraw"
+
+        amount = self.treasury
+        self.treasury = u256(0)
+        self._append_proof_event("treasury", sender, "FEE_WITHDRAWN", str(amount), "Protocol fees withdrawn.")
+        _FeeRecipient(Address(self.owner)).emit_transfer(value=amount)
+
+    @gl.public.view
+    def get_dossier(self, dossier_id: str) -> str:
+        data = self.dossiers.get(dossier_id)
+        return data if data is not None else "{}"
+
+    @gl.public.view
+    def get_evidence_manifest(self, dossier_id: str) -> str:
+        data = self.evidence_manifests.get(dossier_id)
+        return data if data is not None else "{}"
+
+    @gl.public.view
+    def get_fact_check(self, dossier_id: str) -> str:
+        data = self.fact_checks.get(dossier_id)
+        return data if data is not None else "{}"
+
+    @gl.public.view
+    def get_verification_report(self, dossier_id: str) -> str:
+        data = self.verification_reports.get(dossier_id)
+        return data if data is not None else "{}"
+
+    @gl.public.view
+    def get_verification_history(self, dossier_id: str) -> str:
+        data = self.verification_history.get(dossier_id)
+        return data if data is not None else "[]"
+
+    @gl.public.view
+    def get_proof_ledger(self, dossier_id: str) -> str:
+        data = self.proof_ledger.get(dossier_id)
+        return data if data is not None else "[]"
+
+    @gl.public.view
+    def get_proof_event(self, event_id: str) -> str:
+        data = self.proof_events.get(event_id)
+        return data if data is not None else "{}"
+
+    @gl.public.view
+    def get_registry(self, category: str = "overall") -> str:
+        data = self.registry.get(self._registry_key(category))
+        return data if data is not None else "[]"
+
+    @gl.public.view
+    def get_issuer_profile(self, issuer: str) -> str:
+        data = self.issuer_profiles.get(issuer)
+        return data if data is not None else "{}"
+
+    @gl.public.view
+    def get_treasury_state(self) -> str:
+        return json.dumps({
+            "total_fees_collected": str(int(self.treasury)),
+            "contract_balance": str(int(self.balance)),
+            "owner": self.owner,
+            "fees_enabled": self.fees_enabled,
+            "create_dossier_fee": str(int(self.create_dossier_fee)),
+            "verification_fee": str(int(self.verification_fee)),
+            "refresh_fee": str(int(self.refresh_fee)),
+            "create_project_fee": str(int(self.create_dossier_fee)),
+            "evaluation_fee": str(int(self.verification_fee)),
+            "reevaluation_fee": str(int(self.refresh_fee)),
+        })
+
+    @gl.public.view
+    def get_protocol_fees(self) -> str:
+        return json.dumps({
+            "fees_enabled": self.fees_enabled,
+            "create_dossier_fee": str(int(self.create_dossier_fee)),
+            "verification_fee": str(int(self.verification_fee)),
+            "refresh_fee": str(int(self.refresh_fee)),
+            "create_project_fee": str(int(self.create_dossier_fee)),
+            "evaluation_fee": str(int(self.verification_fee)),
+            "reevaluation_fee": str(int(self.refresh_fee)),
+        })
+
+    @gl.public.view
+    def get_verification_model(self) -> str:
+        return json.dumps({
+            "version": "VERIDEX_DOSSIER_V1",
+            "verification_levels": [
+                "VERIFIED_PLUS",
+                "VERIFIED",
+                "SUBSTANTIATED",
+                "DEVELOPING",
+                "LIMITED_EVIDENCE",
+                "HIGH_RISK",
+                "UNVERIFIABLE",
+            ],
+            "risk_bands": ["LOW", "MODERATE", "ELEVATED", "HIGH", "CRITICAL", "UNKNOWN"],
+            "dimensions": {
+                "protocol_architecture": 20,
+                "team_governance": 15,
+                "market_traction": 15,
+                "security_risk": 15,
+                "delivery_proof": 15,
+                "token_design": 10,
+                "evidence_integrity": 10,
+            },
+            "verification_window_days": int(self.verification_window_days),
+        })
+
+    @gl.public.view
+    def get_total_dossiers(self) -> u256:
+        return self.dossier_count
+
+    @gl.public.view
+    def get_total_verifications(self) -> u256:
+        return self.verification_count
+
+    @gl.public.view
+    def is_verification_stale(self, dossier_id: str) -> bool:
+        dossier = self._load_dossier(dossier_id)
+        expires_at = self._safe_int(dossier.get("expires_at", "0"))
+        if expires_at == 0:
+            return False
+        return self._now() > expires_at
 
     @gl.public.write.payable
     def create_project(
@@ -69,51 +489,25 @@ class Veridex(gl.Contract):
         ecosystem_integrations: str,
         verification_document_url: str = "",
     ) -> str:
-        sender = str(gl.message.sender_address)
-        self._collect_exact_fee(self.create_project_fee, "project_creation")
-        project_id = self._generate_project_id(sender, name)
-        now = str(self._now())
-
-        project = {
-            "project_id": project_id,
-            "owner": sender,
-            "name": self._clean_text(name, 120),
-            "category": self._clean_text(category, 80),
-            "website": self._clean_text(website, 300),
-            "description": self._clean_text(description, 1500),
-            "whitepaper_url": self._clean_text(whitepaper_url, 300),
-            "docs_url": self._clean_text(docs_url, 300),
-            "verification_document_url": self._clean_text(verification_document_url, 500),
-            "github_repos": self._safe_json_array(github_repos),
-            "roadmap": self._clean_text(roadmap, 2000),
-            "tokenomics": self._safe_json_object(tokenomics),
-            "audits": self._safe_json_array(audits),
-            "team": self._safe_json_array(team),
-            "investors": self._safe_json_array(investors),
-            "partnerships": self._safe_json_array(partnerships),
-            "bug_bounty_url": self._clean_text(bug_bounty_url, 300),
-            "ecosystem_integrations": self._safe_json_array(ecosystem_integrations),
-            "evidence_hash": "",
-            "fact_check_hash": "",
-            "fact_checked_at": "",
-            "verification_score": 0,
-            "verification_status": "unverified",
-            "verified_source_count": 0,
-            "evidence_integrity_score": 0,
-            "score_model_version": "VERIDEX_7_FACTOR_V1",
-            "locked_at": "",
-            "status": "draft",
-            "created_at": now,
-            "updated_at": now,
-        }
-
-        self.projects[project_id] = json.dumps(project)
-        self.project_count = u256(int(self.project_count) + 1)
-
-        self._init_profile(sender)
-        self._increment_profile_project_count(sender)
-
-        return project_id
+        return self.create_dossier(
+            name,
+            category,
+            website,
+            description,
+            whitepaper_url,
+            docs_url,
+            github_repos,
+            roadmap,
+            tokenomics,
+            audits,
+            team,
+            investors,
+            partnerships,
+            bug_bounty_url,
+            ecosystem_integrations,
+            verification_document_url,
+            "[]",
+        )
 
     @gl.public.write
     def update_project_before_lock(
@@ -135,1397 +529,324 @@ class Veridex(gl.Contract):
         bug_bounty_url: str,
         ecosystem_integrations: str,
     ) -> None:
-        sender = str(gl.message.sender_address)
-        project = self._load_project(project_id)
-
-        assert project["owner"] == sender, "Not project owner"
-        assert project["status"] == "draft", "Project is locked"
-
-        project["name"] = self._clean_text(name, 120)
-        project["category"] = self._clean_text(category, 80)
-        project["website"] = self._clean_text(website, 300)
-        project["description"] = self._clean_text(description, 1500)
-        project["whitepaper_url"] = self._clean_text(whitepaper_url, 300)
-        project["docs_url"] = self._clean_text(docs_url, 300)
-        project["github_repos"] = self._safe_json_array(github_repos)
-        project["roadmap"] = self._clean_text(roadmap, 2000)
-        project["tokenomics"] = self._safe_json_object(tokenomics)
-        project["audits"] = self._safe_json_array(audits)
-        project["team"] = self._safe_json_array(team)
-        project["investors"] = self._safe_json_array(investors)
-        project["partnerships"] = self._safe_json_array(partnerships)
-        project["bug_bounty_url"] = self._clean_text(bug_bounty_url, 300)
-        project["ecosystem_integrations"] = self._safe_json_array(ecosystem_integrations)
-        project["fact_check_hash"] = ""
-        project["fact_checked_at"] = ""
-        project["verification_score"] = 0
-        project["verification_status"] = "unverified"
-        project["verified_source_count"] = 0
-        project["evidence_integrity_score"] = 0
-        project["score_model_version"] = "VERIDEX_7_FACTOR_V1"
-        project["updated_at"] = str(self._now())
-
-        self.projects[project_id] = json.dumps(project)
+        self.update_dossier_before_lock(
+            project_id,
+            name,
+            category,
+            website,
+            description,
+            whitepaper_url,
+            docs_url,
+            github_repos,
+            roadmap,
+            tokenomics,
+            audits,
+            team,
+            investors,
+            partnerships,
+            bug_bounty_url,
+            ecosystem_integrations,
+            "",
+            "[]",
+        )
 
     @gl.public.write
     def lock_project_data(self, project_id: str) -> str:
-        sender = str(gl.message.sender_address)
-        project = self._load_project(project_id)
-
-        assert project["owner"] == sender, "Not project owner"
-        assert project["status"] == "draft", "Project already locked"
-
-        evidence_hash = self._generate_evidence_hash(project)
-        now = str(self._now())
-
-        project["evidence_hash"] = evidence_hash
-        project["locked_at"] = now
-        project["status"] = "evaluation_locked"
-        project["updated_at"] = now
-
-        self.projects[project_id] = json.dumps(project)
-
-        return evidence_hash
+        return self.lock_evidence(project_id)
 
     @gl.public.write.payable
     def submit_evaluation(self, project_id: str) -> None:
-        sender = str(gl.message.sender_address)
-        project = self._load_project(project_id)
-
-        assert project["owner"] == sender, "Not project owner"
-        assert project["status"] in ["evaluation_locked", "reevaluation_pending"], "Project must be locked first"
-
-        if project["status"] == "reevaluation_pending":
-            self._collect_exact_fee(self.reevaluation_fee, "reevaluation")
-        else:
-            self._collect_exact_fee(self.evaluation_fee, "evaluation")
-
-        project["status"] = "evaluating"
-        project["updated_at"] = str(self._now())
-
-        self.projects[project_id] = json.dumps(project)
+        self.submit_verification(project_id)
 
     @gl.public.write
     def run_evaluation(self, project_id: str) -> str:
-        project = self._load_project(project_id)
+        return self.run_verification(project_id)
 
-        assert project["status"] == "evaluating", "Project not in evaluating state"
-
-        fact_check = self._run_fact_check(project)
-        fact_check_hash = self._generate_evidence_hash(fact_check)
-        fact_check["fact_check_hash"] = fact_check_hash
-        fact_check["project_id"] = project_id
-        fact_check["checked_at"] = str(self._now())
-
-        scores = self._evaluate_all_scores(project, fact_check)
-
-        protocol_architecture_score = self._bounded_score(scores.get("protocol_architecture_score", 50))
-        team_governance_score = self._bounded_score(scores.get("team_governance_score", 50))
-        market_traction_score = self._bounded_score(scores.get("market_traction_score", 50))
-        security_risk_score = self._bounded_score(scores.get("security_risk_score", 50))
-        delivery_proof_score = self._bounded_score(scores.get("delivery_proof_score", 50))
-        token_design_score = self._bounded_score(scores.get("token_design_score", 50))
-        evidence_integrity_score = self._bounded_score(scores.get(
-            "evidence_integrity_score",
-            fact_check.get("verification_score", 50),
-        ))
-
-        overall_score = self._calculate_final_score(
-            protocol_architecture_score,
-            team_governance_score,
-            market_traction_score,
-            security_risk_score,
-            delivery_proof_score,
-            token_design_score,
-            evidence_integrity_score,
-        )
-
-        tier = self._assign_rank_tier(overall_score)
-        now = str(self._now())
-        evaluation_id = self._generate_evaluation_id(project_id, now)
-
-        evaluation = {
-            "evaluation_id": evaluation_id,
-            "project_id": project_id,
-            "protocol_architecture_score": protocol_architecture_score,
-            "team_governance_score": team_governance_score,
-            "market_traction_score": market_traction_score,
-            "security_risk_score": security_risk_score,
-            "delivery_proof_score": delivery_proof_score,
-            "token_design_score": token_design_score,
-            "evidence_integrity_score": evidence_integrity_score,
-            "overall_score": overall_score,
-            "score_model_version": "VERIDEX_7_FACTOR_V1",
-            "tier": tier,
-            "verification_score": self._bounded_score(fact_check.get("verification_score", 0)),
-            "verification_status": self._clean_text(str(fact_check.get("verification_status", "unverified")), 40),
-            "verified_source_count": int(fact_check.get("verified_source_count", 0)),
-            "fact_check_hash": fact_check_hash,
-            "fact_check_summary": self._clean_text(str(fact_check.get("summary", "")), 500),
-            "confidence": self._bounded_score(scores.get("confidence", 85)),
-            "strengths": self._safe_list(scores.get("strengths", []), self._extract_strengths(
-                project,
-                protocol_architecture_score,
-                team_governance_score,
-                market_traction_score,
-                security_risk_score,
-                evidence_integrity_score,
-            )),
-            "weaknesses": self._safe_list(scores.get("weaknesses", []), self._extract_weaknesses(
-                project,
-                protocol_architecture_score,
-                team_governance_score,
-                market_traction_score,
-                security_risk_score,
-                evidence_integrity_score,
-            )),
-            "recommendations": self._safe_list(scores.get("recommendations", []), self._generate_recommendations(project, overall_score)),
-            "evaluation_hash": self._generate_evidence_hash({
-                "project_id": project_id,
-                "overall_score": overall_score,
-                "tier": tier,
-                "fact_check_hash": fact_check_hash,
-                "timestamp": now,
-            }),
-            "evaluated_at": now,
-        }
-
-        self.fact_checks[project_id] = json.dumps(fact_check)
-        self.evaluations[project_id] = json.dumps(evaluation)
-        self.evaluation_count = u256(int(self.evaluation_count) + 1)
-
-        self._append_evaluation_history(project_id, evaluation)
-        self._update_historical_scores(project_id, overall_score, tier, evaluation_id)
-        self._update_project_reputation(
-            project["owner"],
-            overall_score,
-            security_risk_score,
-            delivery_proof_score,
-            evidence_integrity_score,
-        )
-
-        project["status"] = "ranked"
-        project["fact_check_hash"] = fact_check_hash
-        project["fact_checked_at"] = fact_check.get("checked_at", now)
-        project["verification_score"] = self._bounded_score(fact_check.get("verification_score", 0))
-        project["verification_status"] = self._clean_text(str(fact_check.get("verification_status", "unverified")), 40)
-        project["verified_source_count"] = int(fact_check.get("verified_source_count", 0))
-        project["evidence_integrity_score"] = evidence_integrity_score
-        project["score_model_version"] = "VERIDEX_7_FACTOR_V1"
-        project["updated_at"] = now
-        self.projects[project_id] = json.dumps(project)
-
-        self._update_leaderboard_internal(project, evaluation)
-
-        return evaluation_id
-
-    @gl.public.write
-    def finalize_score(self, project_id: str) -> None:
-        project = self._load_project(project_id)
-
-        evaluation_raw = self.evaluations.get(project_id)
-        assert evaluation_raw is not None, "No evaluation found"
-
-        evaluation = json.loads(evaluation_raw)
-
-        project["status"] = "ranked"
-        project["updated_at"] = str(self._now())
-
-        self.projects[project_id] = json.dumps(project)
-
-        self._update_leaderboard_internal(project, evaluation)
-
-    @gl.public.write
+    @gl.public.write.payable
     def request_reevaluation(self, project_id: str) -> None:
-        sender = str(gl.message.sender_address)
-        project = self._load_project(project_id)
-
-        assert project["owner"] == sender, "Not project owner"
-        assert project["status"] == "ranked", "Project must be ranked first"
-
-        project["status"] = "reevaluation_pending"
-        project["updated_at"] = str(self._now())
-
-        self.projects[project_id] = json.dumps(project)
-
-    @gl.public.write
-    def update_leaderboard(self, category: str) -> None:
-        board_key = category.lower()
-        board_raw = self.leaderboard.get(board_key)
-
-        if board_raw is None:
-            self.leaderboard[board_key] = "[]"
-            return
-
-        board = json.loads(board_raw)
-        board.sort(key=lambda x: x.get("overall_score", 0), reverse=True)
-
-        for i, entry in enumerate(board):
-            entry["rank"] = i + 1
-
-        self.leaderboard[board_key] = json.dumps(board)
+        self.request_verification_refresh(project_id)
 
     @gl.public.write
     def archive_project(self, project_id: str) -> None:
-        sender = str(gl.message.sender_address)
-        project = self._load_project(project_id)
-
-        assert project["owner"] == sender or sender == self.owner, "Not authorized"
-        assert project["status"] != "evaluating", "Cannot archive during evaluation"
-
-        project["status"] = "archived"
-        project["updated_at"] = str(self._now())
-
-        self.projects[project_id] = json.dumps(project)
+        self.archive_dossier(project_id)
 
     @gl.public.write
-    def set_protocol_fees(
-        self,
-        create_project_fee: u256,
-        evaluation_fee: u256,
-        reevaluation_fee: u256,
-        fees_enabled: bool,
-    ) -> None:
-        sender = str(gl.message.sender_address)
-
-        assert sender == self.owner, "Only owner can set fees"
-
-        self.create_project_fee = create_project_fee
-        self.evaluation_fee = evaluation_fee
-        self.reevaluation_fee = reevaluation_fee
-        self.fees_enabled = fees_enabled
-
-    @gl.public.write
-    def withdraw_protocol_fees(self) -> None:
-        sender = str(gl.message.sender_address)
-
-        assert sender == self.owner, "Only owner can withdraw"
-        assert int(self.treasury) > 0, "No fees to withdraw"
-
-        amount = self.treasury
-        self.treasury = u256(0)
-
-        _FeeRecipient(Address(self.owner)).emit_transfer(value=amount)
-
-    # ──────────────────────────────────────────
-    # View Functions
-    # ──────────────────────────────────────────
+    def update_leaderboard(self, category: str) -> None:
+        self.update_registry(category)
 
     @gl.public.view
     def get_project(self, project_id: str) -> str:
-        data = self.projects.get(project_id)
-        if data is None:
-            return "{}"
-        return data
+        return self.get_dossier(project_id)
 
     @gl.public.view
     def get_evaluation(self, project_id: str) -> str:
-        data = self.evaluations.get(project_id)
-        if data is None:
-            return "{}"
-        return data
-
-    @gl.public.view
-    def get_fact_check(self, project_id: str) -> str:
-        data = self.fact_checks.get(project_id)
-        if data is None:
-            return "{}"
-        return data
+        return self.get_verification_report(project_id)
 
     @gl.public.view
     def get_evaluation_history(self, project_id: str) -> str:
-        data = self.evaluation_history.get(project_id)
-        if data is None:
-            return "[]"
-        return data
-
-    @gl.public.view
-    def get_ranking(self, project_id: str) -> str:
-        data = self.rankings.get(project_id)
-        if data is None:
-            return "{}"
-        return data
-
-    @gl.public.view
-    def get_leaderboard(self, category: str) -> str:
-        key = category.lower()
-        data = self.leaderboard.get(key)
-        if data is None:
-            return "[]"
-        return data
-
-    @gl.public.view
-    def get_profile(self, wallet: str) -> str:
-        data = self.profiles.get(wallet)
-        if data is None:
-            return "{}"
-        return data
+        return self.get_verification_history(project_id)
 
     @gl.public.view
     def get_historical_scores(self, project_id: str) -> str:
-        data = self.historical_scores.get(project_id)
-        if data is None:
-            return "[]"
-        return data
+        return self.get_verification_history(project_id)
 
     @gl.public.view
-    def get_total_projects(self) -> u256:
-        return self.project_count
-
-    @gl.public.view
-    def get_total_evaluations(self) -> u256:
-        return self.evaluation_count
-
-    @gl.public.view
-    def get_treasury_state(self) -> str:
+    def get_ranking(self, project_id: str) -> str:
+        dossier = self._load_dossier(project_id)
         return json.dumps({
-            "total_fees_collected": int(self.treasury),
-            "contract_balance": int(self.balance),
-            "owner": self.owner,
-            "fees_enabled": self.fees_enabled,
-            "create_project_fee": int(self.create_project_fee),
-            "evaluation_fee": int(self.evaluation_fee),
-            "reevaluation_fee": int(self.reevaluation_fee),
+            "project_id": project_id,
+            "project_name": dossier.get("name", ""),
+            "category": dossier.get("category", "Other"),
+            "overall_score": dossier.get("evidence_confidence", 0),
+            "tier": self._legacy_tier(str(dossier.get("current_verification_level", "UNVERIFIABLE"))),
+            "overall_rank": 0,
+            "category_rank": 0,
+            "updated_at": dossier.get("updated_at", ""),
         })
 
     @gl.public.view
-    def get_protocol_fees(self) -> str:
-        return json.dumps({
-            "fees_enabled": self.fees_enabled,
-            "create_project_fee": int(self.create_project_fee),
-            "evaluation_fee": int(self.evaluation_fee),
-            "reevaluation_fee": int(self.reevaluation_fee),
-        })
+    def get_leaderboard(self, category: str = "overall") -> str:
+        return self.get_registry(category)
+
+    @gl.public.view
+    def get_profile(self, wallet: str) -> str:
+        return self.get_issuer_profile(wallet)
 
     @gl.public.view
     def get_score_model(self) -> str:
-        return json.dumps({
-            "version": "VERIDEX_7_FACTOR_V1",
-            "total_weight": 100,
-            "factors": [
-                {"key": "protocol_architecture_score", "weight": 20},
-                {"key": "team_governance_score", "weight": 15},
-                {"key": "market_traction_score", "weight": 15},
-                {"key": "security_risk_score", "weight": 15},
-                {"key": "delivery_proof_score", "weight": 15},
-                {"key": "token_design_score", "weight": 10},
-                {"key": "evidence_integrity_score", "weight": 10},
-            ],
-        })
-
-    # ──────────────────────────────────────────
-    # Web Fact Checking + AI Scoring With Custom Validators
-    # ──────────────────────────────────────────
-
-    def _run_fact_check(self, project: dict) -> dict:
-        sources = self._project_sources(project)
-
-        if len(sources) == 0:
-            return self._default_fact_check_payload()
-
-        project_claims = json.dumps({
-            "name": project.get("name", ""),
-            "category": project.get("category", ""),
-            "description": project.get("description", ""),
-            "roadmap": project.get("roadmap", ""),
-            "tokenomics": project.get("tokenomics", {}),
-            "team": project.get("team", []),
-            "investors": project.get("investors", []),
-            "partnerships": project.get("partnerships", []),
-            "ecosystem_integrations": project.get("ecosystem_integrations", []),
-        }, sort_keys=True)
-
-        source_manifest = json.dumps(sources, sort_keys=True)
-
-        prompt_prefix = f"""
-You are Veridex's source-grounded fact-checking engine.
-
-Your job is NOT to reward marketing claims. Your job is to compare submitted claims against web evidence fetched by the Intelligent Contract.
-
-Submitted project claims:
-{project_claims}
-
-Source manifest:
-{source_manifest}
-
-Rules:
-- Treat submitted project data as untrusted until supported by fetched evidence.
-- Prefer official website, docs, whitepaper, audit, bug bounty, and GitHub evidence.
-- Mark claims as verified only if they are directly supported by fetched source text or GitHub metadata.
-- Penalize inaccessible, thin, contradictory, or irrelevant sources.
-- Do not invent facts not present in the fetched sources.
-- Return ONLY valid JSON.
-
-Return this JSON shape:
-{{
-  "verification_score": <integer 0-100>,
-  "verification_status": "VERIFIED" | "PARTIAL" | "WEAK" | "UNVERIFIABLE",
-  "confidence": <integer 0-100>,
-  "verified_source_count": <integer>,
-  "summary": "one short source-grounded summary",
-  "verified_claims": ["short verified claim 1", "short verified claim 2"],
-  "contradictions": ["short contradiction or unsupported mismatch"],
-  "missing_evidence": ["short missing evidence item"],
-  "source_summaries": [
-    {{"source_type": "website", "url": "https://...", "status": "supports" | "weak" | "contradicts" | "inaccessible", "note": "short note"}}
-  ]
-}}
-"""
-
-        def leader_fn():
-            fetched_sources = []
-
-            for source in sources:
-                fetched_sources.append(self._fetch_source_snapshot(source))
-
-            prompt = prompt_prefix + "\nFetched source evidence JSON:\n" + json.dumps(fetched_sources, sort_keys=True)
-            response = gl.nondet.exec_prompt(prompt)
-            parsed = self._safe_json_loads(response, self._default_fact_check_payload())
-            return self._normalize_fact_check_payload(parsed, fetched_sources)
-
-        def validator_fn(leader_result) -> bool:
-            if isinstance(leader_result, gl.vm.Return):
-                raw = leader_result.calldata
-            elif isinstance(leader_result, dict):
-                raw = leader_result
-            else:
-                return False
-
-            leader_data = self._normalize_fact_check_payload(raw, [])
-            validator_data = leader_fn()
-
-            return self._fact_checks_close_enough(leader_data, validator_data)
-
-        result = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
-        return self._normalize_fact_check_payload(result, [])
-
-    def _evaluate_all_scores(self, project: dict, fact_check: dict) -> dict:
-        project_context = json.dumps(project, sort_keys=True)
-        fact_context = json.dumps(fact_check, sort_keys=True)
-
-        prompt = f"""
-You are Veridex, an AI crypto project evaluation engine.
-
-Evaluate the project below and return ONLY valid JSON.
-
-Important scoring rule:
-The source-grounded fact check is the ground truth layer. Do not give high scores for claims that are not supported by the web evidence. Penalize contradictions, inaccessible evidence, missing audits, missing GitHub transparency, unverifiable team claims, and vague token utility.
-
-Project JSON:
-{project_context}
-
-Source-grounded fact check JSON:
-{fact_context}
-
-Score each category from 0 to 100 using this 7-factor Veridex score model:
-
-1. protocol_architecture_score (20%):
-   - architecture clarity
-   - technical innovation
-   - documentation completeness
-   - repository transparency
-   - feasibility
-
-2. team_governance_score (15%):
-   - team completeness
-   - verifiable credentials
-   - relevant experience
-   - transparency
-   - governance and backer credibility
-
-3. market_traction_score (15%):
-   - problem clarity
-   - market need
-   - differentiation
-   - traction signals
-   - go-to-market credibility
-
-4. security_risk_score (15%):
-   - audit coverage
-   - audit credibility
-   - bug bounty
-   - open-source transparency
-   - vulnerability handling and protocol risk controls
-
-5. delivery_proof_score (15%):
-   - roadmap specificity
-   - shipped product evidence
-   - repository activity
-   - website/app completeness
-   - delivery credibility
-
-6. token_design_score (10%):
-   - token utility clarity
-   - token necessity
-   - supply/emission logic
-   - value capture
-   - alignment with protocol usage
-
-7. evidence_integrity_score (10%):
-   - accessible official sources
-   - consistency between submitted claims and fetched web evidence
-   - GitHub/docs/audit/bug-bounty verification strength
-   - contradiction and missing-evidence risk
-
-Return ONLY this JSON shape:
-{{
-  "protocol_architecture_score": <integer 0-100>,
-  "team_governance_score": <integer 0-100>,
-  "market_traction_score": <integer 0-100>,
-  "security_risk_score": <integer 0-100>,
-  "delivery_proof_score": <integer 0-100>,
-  "token_design_score": <integer 0-100>,
-  "evidence_integrity_score": <integer 0-100>,
-  "confidence": <integer 0-100>,
-  "strengths": ["short strength 1", "short strength 2"],
-  "weaknesses": ["short weakness 1", "short weakness 2"],
-  "recommendations": ["short recommendation 1", "short recommendation 2"]
-}}
-"""
-
-        def leader_fn():
-            response = gl.nondet.exec_prompt(prompt)
-            parsed = self._safe_json_loads(response, self._default_score_payload())
-            normalized = self._normalize_score_payload(parsed)
-            return self._apply_fact_check_weighting(normalized, fact_check)
-
-        def validator_fn(leader_result) -> bool:
-            if isinstance(leader_result, gl.vm.Return):
-                raw = leader_result.calldata
-            elif isinstance(leader_result, dict):
-                raw = leader_result
-            else:
-                return False
-
-            leader_data = self._normalize_score_payload(raw)
-            validator_data = leader_fn()
-
-            return self._scores_close_enough(leader_data, validator_data)
-
-        result = gl.vm.run_nondet_unsafe(leader_fn, validator_fn)
-        return self._normalize_score_payload(result)
-
-    def _default_score_payload(self) -> dict:
-        return {
-            "protocol_architecture_score": 50,
-            "team_governance_score": 50,
-            "market_traction_score": 50,
-            "security_risk_score": 50,
-            "delivery_proof_score": 50,
-            "token_design_score": 50,
-            "evidence_integrity_score": 50,
-            "confidence": 70,
-            "strengths": [],
-            "weaknesses": [],
-            "recommendations": [],
-        }
-
-    def _normalize_score_payload(self, data) -> dict:
-        parsed = data if isinstance(data, dict) else self._default_score_payload()
-
-        return {
-            "protocol_architecture_score": self._bounded_score(parsed.get("protocol_architecture_score", 50)),
-            "team_governance_score": self._bounded_score(parsed.get("team_governance_score", 50)),
-            "market_traction_score": self._bounded_score(parsed.get("market_traction_score", 50)),
-            "security_risk_score": self._bounded_score(parsed.get("security_risk_score", 50)),
-            "delivery_proof_score": self._bounded_score(parsed.get("delivery_proof_score", 50)),
-            "token_design_score": self._bounded_score(parsed.get("token_design_score", 50)),
-            "evidence_integrity_score": self._bounded_score(parsed.get("evidence_integrity_score", 50)),
-            "confidence": self._bounded_score(parsed.get("confidence", 70)),
-            "strengths": self._safe_list(parsed.get("strengths", []), []),
-            "weaknesses": self._safe_list(parsed.get("weaknesses", []), []),
-            "recommendations": self._safe_list(parsed.get("recommendations", []), []),
-        }
-
-    def _scores_close_enough(self, leader_data: dict, validator_data: dict) -> bool:
-        keys = [
-            "protocol_architecture_score",
-            "team_governance_score",
-            "market_traction_score",
-            "security_risk_score",
-            "delivery_proof_score",
-            "token_design_score",
-            "evidence_integrity_score",
-        ]
-
-        tolerance = 15
-
-        for key in keys:
-            leader_score = self._bounded_score(leader_data.get(key, 50))
-            validator_score = self._bounded_score(validator_data.get(key, 50))
-
-            if leader_score <= 10 or validator_score <= 10:
-                if abs(leader_score - validator_score) > 5:
-                    return False
-            else:
-                if abs(leader_score - validator_score) > tolerance:
-                    return False
-
-        return True
-
-    def _fetch_source_snapshot(self, source: dict) -> dict:
-        source_type = str(source.get("source_type", "unknown"))
-        url = str(source.get("url", ""))
-
-        if not self._is_safe_https_url(url):
-            return {
-                "source_type": source_type,
-                "url": self._clean_text(url, 300),
-                "accessible": False,
-                "status_code": 0,
-                "kind": "invalid_url",
-                "excerpt": "",
-            }
-
-        try:
-            if source_type == "github":
-                api_url = self._github_api_url(url)
-                if api_url != "":
-                    response = gl.nondet.web.request(api_url, method="GET")
-                    status_code = int(getattr(response, "status_code", 200))
-
-                    if status_code >= 400:
-                        return {
-                            "source_type": source_type,
-                            "url": url,
-                            "accessible": False,
-                            "status_code": status_code,
-                            "kind": "github_api",
-                            "excerpt": "",
-                        }
-
-                    data = json.loads(response.body.decode("utf-8"))
-                    stable = {
-                        "id": data.get("id", 0),
-                        "full_name": data.get("full_name", ""),
-                        "description": data.get("description", ""),
-                        "homepage": data.get("homepage", ""),
-                        "archived": data.get("archived", False),
-                        "disabled": data.get("disabled", False),
-                        "default_branch": data.get("default_branch", ""),
-                        "license": data.get("license", {}).get("spdx_id", "") if isinstance(data.get("license", {}), dict) else "",
-                    }
-                    return {
-                        "source_type": source_type,
-                        "url": url,
-                        "accessible": True,
-                        "status_code": status_code,
-                        "kind": "github_api",
-                        "stable_fields": stable,
-                        "excerpt": self._clean_text(json.dumps(stable, sort_keys=True), 1600),
-                    }
-
-            response = gl.nondet.web.request(url, method="GET")
-            status_code = int(getattr(response, "status_code", 200))
-
-            if status_code >= 400:
-                return {
-                    "source_type": source_type,
-                    "url": url,
-                    "accessible": False,
-                    "status_code": status_code,
-                    "kind": "http",
-                    "excerpt": "",
-                }
-
-            body = response.body.decode("utf-8")
-            excerpt = self._clip_for_prompt(self._normalize_whitespace(body), 2600)
-
-            return {
-                "source_type": source_type,
-                "url": url,
-                "accessible": True,
-                "status_code": status_code,
-                "kind": "http",
-                "excerpt": excerpt,
-            }
-        except Exception:
-            return {
-                "source_type": source_type,
-                "url": self._clean_text(url, 300),
-                "accessible": False,
-                "status_code": 0,
-                "kind": "fetch_failed",
-                "excerpt": "",
-            }
-
-    def _project_sources(self, project: dict) -> list:
-        sources = []
-
-        self._add_source(sources, "website", project.get("website", ""))
-        self._add_source(sources, "whitepaper", project.get("whitepaper_url", ""))
-        self._add_source(sources, "docs", project.get("docs_url", ""))
-        self._add_source(sources, "verification_document", project.get("verification_document_url", ""))
-        self._add_source(sources, "bug_bounty", project.get("bug_bounty_url", ""))
-
-        github_repos = project.get("github_repos", [])
-        if isinstance(github_repos, list):
-            for repo in github_repos:
-                self._add_source(sources, "github", self._extract_url(repo))
-
-        audits = project.get("audits", [])
-        if isinstance(audits, list):
-            for audit in audits:
-                self._add_source(sources, "audit", self._extract_url(audit))
-
-        return sources[:8]
-
-    def _add_source(self, sources: list, source_type: str, url: str) -> None:
-        cleaned_url = self._clean_text(str(url), 300)
-
-        if not self._is_safe_https_url(cleaned_url):
-            return
-
-        for source in sources:
-            if source.get("url", "") == cleaned_url:
-                return
-
-        sources.append({
-            "source_type": source_type,
-            "url": cleaned_url,
-        })
-
-    def _extract_url(self, value) -> str:
-        if isinstance(value, str):
-            return value
-
-        if isinstance(value, dict):
-            for key in ["url", "link", "repo", "repository", "website"]:
-                raw = value.get(key, "")
-                if isinstance(raw, str) and raw != "":
-                    return raw
-
-        return ""
-
-    def _is_safe_https_url(self, url: str) -> bool:
-        text = str(url).strip()
-
-        if len(text) < 12 or len(text) > 300:
-            return False
-        if not text.startswith("https://"):
-            return False
-        if " " in text or "\n" in text or "\t" in text:
-            return False
-
-        lowered = text.lower()
-        blocked_hosts = [
-            "https://localhost",
-            "https://127.",
-            "https://10.",
-            "https://172.16.",
-            "https://172.17.",
-            "https://172.18.",
-            "https://172.19.",
-            "https://172.20.",
-            "https://172.21.",
-            "https://172.22.",
-            "https://172.23.",
-            "https://172.24.",
-            "https://172.25.",
-            "https://172.26.",
-            "https://172.27.",
-            "https://172.28.",
-            "https://172.29.",
-            "https://172.30.",
-            "https://172.31.",
-            "https://192.168.",
-        ]
-
-        for blocked in blocked_hosts:
-            if lowered.startswith(blocked):
-                return False
-
-        return True
-
-    def _github_api_url(self, url: str) -> str:
-        marker = "https://github.com/"
-
-        if not url.startswith(marker):
-            return ""
-
-        path = url[len(marker):]
-        parts = path.split("/")
-
-        if len(parts) < 2:
-            return ""
-
-        owner = parts[0]
-        repo = parts[1]
-
-        if owner == "" or repo == "":
-            return ""
-
-        repo = repo.replace(".git", "")
-        return "https://api.github.com/repos/" + owner + "/" + repo
-
-    def _normalize_whitespace(self, text: str) -> str:
-        output = ""
-        last_space = False
-
-        for char in str(text):
-            if char in [" ", "\n", "\r", "\t"]:
-                if not last_space:
-                    output += " "
-                    last_space = True
-            else:
-                output += char
-                last_space = False
-
-        return output.strip()
-
-    def _clip_for_prompt(self, text: str, max_len: int) -> str:
-        cleaned = self._clean_text(text, max_len)
-        return cleaned
-
-    def _default_fact_check_payload(self) -> dict:
-        return {
-            "verification_score": 0,
-            "verification_status": "UNVERIFIABLE",
-            "confidence": 50,
-            "verified_source_count": 0,
-            "summary": "No verifiable web evidence was available.",
-            "verified_claims": [],
-            "contradictions": [],
-            "missing_evidence": ["No accessible official sources were verified"],
-            "source_summaries": [],
-        }
-
-    def _normalize_fact_check_payload(self, data, fetched_sources: list) -> dict:
-        parsed = data if isinstance(data, dict) else self._default_fact_check_payload()
-
-        status = str(parsed.get("verification_status", "UNVERIFIABLE")).upper()
-        allowed_statuses = ["VERIFIED", "PARTIAL", "WEAK", "UNVERIFIABLE"]
-
-        if status not in allowed_statuses:
-            status = self._verification_status_from_score(self._bounded_score(parsed.get("verification_score", 0)))
-
-        accessible_count = 0
-        for source in fetched_sources:
-            if isinstance(source, dict) and source.get("accessible", False):
-                accessible_count += 1
-
-        verified_source_count = int(parsed.get("verified_source_count", accessible_count))
-        if verified_source_count < 0:
-            verified_source_count = 0
-        if verified_source_count > 8:
-            verified_source_count = 8
-
-        source_summaries = parsed.get("source_summaries", [])
-        if not isinstance(source_summaries, list):
-            source_summaries = []
-
-        cleaned_summaries = []
-        for item in source_summaries[:8]:
-            if isinstance(item, dict):
-                cleaned_summaries.append({
-                    "source_type": self._clean_text(str(item.get("source_type", "unknown")), 40),
-                    "url": self._clean_text(str(item.get("url", "")), 300),
-                    "status": self._clean_text(str(item.get("status", "weak")), 40),
-                    "note": self._clean_text(str(item.get("note", "")), 180),
-                })
-
-        return {
-            "verification_score": self._bounded_score(parsed.get("verification_score", 0)),
-            "verification_status": status,
-            "confidence": self._bounded_score(parsed.get("confidence", 50)),
-            "verified_source_count": verified_source_count,
-            "summary": self._clean_text(str(parsed.get("summary", "")), 500),
-            "verified_claims": self._safe_list(parsed.get("verified_claims", []), []),
-            "contradictions": self._safe_list(parsed.get("contradictions", []), []),
-            "missing_evidence": self._safe_list(parsed.get("missing_evidence", []), []),
-            "source_summaries": cleaned_summaries,
-        }
-
-    def _verification_status_from_score(self, score: int) -> str:
-        bounded = self._bounded_score(score)
-
-        if bounded >= 80:
-            return "VERIFIED"
-        if bounded >= 55:
-            return "PARTIAL"
-        if bounded >= 30:
-            return "WEAK"
-        return "UNVERIFIABLE"
-
-    def _verification_bucket(self, score: int) -> int:
-        bounded = self._bounded_score(score)
-
-        if bounded >= 80:
-            return 3
-        if bounded >= 55:
-            return 2
-        if bounded >= 30:
-            return 1
-        return 0
-
-    def _fact_checks_close_enough(self, leader_data: dict, validator_data: dict) -> bool:
-        leader_score = self._bounded_score(leader_data.get("verification_score", 0))
-        validator_score = self._bounded_score(validator_data.get("verification_score", 0))
-
-        if abs(leader_score - validator_score) > 15:
-            return False
-
-        if self._verification_bucket(leader_score) != self._verification_bucket(validator_score):
-            return False
-
-        leader_sources = int(leader_data.get("verified_source_count", 0))
-        validator_sources = int(validator_data.get("verified_source_count", 0))
-
-        if abs(leader_sources - validator_sources) > 2:
-            return False
-
-        leader_contradictions = len(leader_data.get("contradictions", []))
-        validator_contradictions = len(validator_data.get("contradictions", []))
-
-        if leader_contradictions == 0 and validator_contradictions > 1:
-            return False
-        if validator_contradictions == 0 and leader_contradictions > 1:
-            return False
-
-        return True
-
-    def _apply_fact_check_weighting(self, scores: dict, fact_check: dict) -> dict:
-        adjusted = self._normalize_score_payload(scores)
-        verification_score = self._bounded_score(fact_check.get("verification_score", 0))
-        status = str(fact_check.get("verification_status", "UNVERIFIABLE")).upper()
-        contradiction_count = len(fact_check.get("contradictions", [])) if isinstance(fact_check.get("contradictions", []), list) else 0
-        verified_source_count = int(fact_check.get("verified_source_count", 0))
-
-        # Evidence Integrity should be tied directly to the fact-check layer.
-        # The AI can explain it, but it should not inflate it above the verified evidence score.
-        adjusted["evidence_integrity_score"] = min(
-            self._bounded_score(adjusted.get("evidence_integrity_score", verification_score)),
-            verification_score,
-        )
-
-        penalty = 0
-
-        if status == "PARTIAL":
-            penalty += 5
-        elif status == "WEAK":
-            penalty += 12
-        elif status == "UNVERIFIABLE":
-            penalty += 20
-
-        if verification_score < 50:
-            penalty += int((50 - verification_score) / 2)
+        return self.get_verification_model()
+
+    @gl.public.view
+    def get_total_projects(self) -> u256:
+        return self.get_total_dossiers()
+
+    @gl.public.view
+    def get_total_evaluations(self) -> u256:
+        return self.get_total_verifications()
+
+    def _run_fact_check(self, dossier: dict, manifest: dict) -> dict:
+        sources = self._manifest_sources(manifest)
+        verified_source_count = len(sources)
+        missing = self._missing_evidence(manifest)
+        contradictions = []
+        score = max(0, min(100, 20 + verified_source_count * 10 - len(missing) * 6))
 
         if verified_source_count == 0:
-            penalty += 10
+            status = "UNVERIFIABLE"
+        elif score >= 80:
+            status = "VERIFIED"
+        elif score >= 55:
+            status = "PARTIAL"
+        elif score >= 30:
+            status = "WEAK"
+        else:
+            status = "UNVERIFIABLE"
 
-        if contradiction_count > 0:
-            penalty += min(20, contradiction_count * 8)
+        return {
+            "dossier_id": dossier.get("dossier_id", ""),
+            "fact_check_hash": "",
+            "verification_score": score,
+            "verification_status": status,
+            "confidence": min(95, max(20, score + 5)),
+            "verified_source_count": verified_source_count,
+            "summary": self._fact_summary(status, verified_source_count, missing),
+            "verified_claims": self._verified_claims(dossier, manifest, verified_source_count),
+            "contradictions": contradictions,
+            "missing_evidence": missing,
+            "source_summaries": sources,
+            "checked_at": "",
+        }
 
-        sensitive_keys = [
-            "team_governance_score",
-            "security_risk_score",
-            "delivery_proof_score",
-            "token_design_score",
-        ]
+    def _run_verification_report(self, dossier: dict, manifest: dict, fact_check: dict) -> dict:
+        source_count = int(fact_check.get("verified_source_count", 0))
+        fact_score = self._bounded_score(fact_check.get("verification_score", 0))
+        missing = fact_check.get("missing_evidence", []) if isinstance(fact_check.get("missing_evidence", []), list) else []
+        risk_flags = self._risk_flags(manifest, source_count, missing)
 
-        all_keys = [
-            "protocol_architecture_score",
-            "team_governance_score",
-            "market_traction_score",
-            "security_risk_score",
-            "delivery_proof_score",
-            "token_design_score",
-        ]
+        protocol = self._bounded_score(50 + self._has_text(manifest.get("docs_url", "")) * 15 + self._has_text(manifest.get("whitepaper_url", "")) * 15 + min(20, len(manifest.get("github_repos", [])) * 8))
+        team = self._bounded_score(45 + min(35, len(manifest.get("team", [])) * 18) + min(20, len(manifest.get("investors", [])) * 5))
+        traction = self._bounded_score(45 + min(25, len(manifest.get("partnerships", [])) * 6) + min(20, len(manifest.get("ecosystem_integrations", [])) * 5) + self._has_text(manifest.get("roadmap", "")) * 10)
+        security = self._bounded_score(40 + min(35, len(manifest.get("audits", [])) * 22) + self._has_text(manifest.get("bug_bounty_url", "")) * 20)
+        delivery = self._bounded_score(45 + self._has_text(manifest.get("roadmap", "")) * 20 + min(25, len(manifest.get("github_repos", [])) * 8))
+        token = self._bounded_score(45 + min(35, len(manifest.get("tokenomics", {}).keys()) * 9))
+        integrity = min(fact_score, self._bounded_score(35 + source_count * 9 - len(missing) * 5))
 
-        for key in all_keys:
-            extra = 5 if key in sensitive_keys and penalty > 0 else 0
-            adjusted[key] = self._bounded_score(adjusted.get(key, 50) - penalty - extra)
-
-        if verification_score < 30:
-            for key in all_keys:
-                if adjusted[key] > 60:
-                    adjusted[key] = 60
-
-            if adjusted["evidence_integrity_score"] > 30:
-                adjusted["evidence_integrity_score"] = 30
-
-        adjusted["confidence"] = min(
-            self._bounded_score(adjusted.get("confidence", 70)),
-            max(35, verification_score + 20),
-        )
-
-        return adjusted
-
-    # ──────────────────────────────────────────
-    # Score / Ranking Helpers
-    # ──────────────────────────────────────────
-
-    def _calculate_final_score(
-        self,
-        technical: int,
-        team: int,
-        market: int,
-        security: int,
-        execution: int,
-        token: int,
-        source_integrity: int,
-    ) -> float:
-        return round(
-            technical * 0.20
+        weighted = round(
+            protocol * 0.20
             + team * 0.15
-            + market * 0.15
+            + traction * 0.15
             + security * 0.15
-            + execution * 0.15
+            + delivery * 0.15
             + token * 0.10
-            + source_integrity * 0.10,
+            + integrity * 0.10,
             1,
         )
+        if source_count < 3:
+            weighted = min(weighted, 64)
+        if "MISSING_AUDIT" in risk_flags:
+            weighted = min(weighted, 84)
+        if "LOW_SOURCE_COUNT" in risk_flags:
+            weighted = min(weighted, 74)
+
+        confidence = self._bounded_score(min(weighted, fact_score + 15))
+        level = self._verification_level(confidence, risk_flags)
+        risk_band = self._risk_band(confidence, risk_flags)
 
-    def _assign_rank_tier(self, score: float) -> str:
-        if score >= 95:
-            return "S+"
-        if score >= 90:
-            return "S"
-        if score >= 80:
-            return "A"
-        if score >= 70:
-            return "B"
-        if score >= 60:
-            return "C"
-        if score >= 50:
-            return "D"
-        return "F"
-
-    def _append_evaluation_history(self, project_id: str, evaluation: dict) -> None:
-        history_raw = self.evaluation_history.get(project_id)
-        history = json.loads(history_raw) if history_raw else []
-        history.append(evaluation)
-        self.evaluation_history[project_id] = json.dumps(history)
-
-    def _update_historical_scores(
-        self,
-        project_id: str,
-        new_score: float,
-        new_tier: str,
-        evaluation_id: str,
-    ) -> None:
-        history_raw = self.historical_scores.get(project_id)
-        history = json.loads(history_raw) if history_raw else []
-
-        old_score = history[-1]["new_score"] if history else 0
-        old_tier = history[-1]["new_tier"] if history else "F"
-
-        entry = {
-            "project_id": project_id,
-            "old_score": old_score,
-            "new_score": new_score,
-            "delta": round(new_score - old_score, 1),
-            "old_tier": old_tier,
-            "new_tier": new_tier,
-            "timestamp": str(self._now()),
-            "evaluation_id": evaluation_id,
-        }
-
-        history.append(entry)
-        self.historical_scores[project_id] = json.dumps(history)
-
-    def _update_project_reputation(
-        self,
-        wallet: str,
-        score: float,
-        security_risk_score: int,
-        delivery_proof_score: int,
-        evidence_integrity_score: int,
-    ) -> None:
-        profile_raw = self.profiles.get(wallet)
-        profile = json.loads(profile_raw) if profile_raw else self._default_profile(wallet)
-
-        total = int(profile.get("total_evaluations", 0))
-        avg = float(profile.get("average_score", 0))
-        best = float(profile.get("best_score", 0))
-
-        new_avg = round((avg * total + score) / (total + 1), 1)
-        new_best = max(best, score)
-
-        profile["total_evaluations"] = total + 1
-        profile["average_score"] = new_avg
-        profile["best_score"] = new_best
-        profile["credibility_score"] = min(100, round(new_avg * 0.7 + (total + 1) * 2, 1))
-        profile["consistency_score"] = self._compute_consistency(profile, score)
-        profile["security_rating"] = security_risk_score
-        profile["execution_rating"] = delivery_proof_score
-        profile["evidence_rating"] = evidence_integrity_score
-
-        self.profiles[wallet] = json.dumps(profile)
-
-    def _update_leaderboard_internal(self, project: dict, evaluation: dict) -> None:
-        category = project.get("category", "Other")
-        category_key = category.lower()
-        project_id = project["project_id"]
-
-        base_entry = {
-            "rank": 0,
-            "project_id": project_id,
-            "project_name": project.get("name", ""),
-            "category": category,
-            "website": project.get("website", ""),
-            "overall_score": evaluation.get("overall_score", 0),
-            "tier": evaluation.get("tier", "F"),
-            "protocol_architecture_score": evaluation.get("protocol_architecture_score", 0),
-            "team_governance_score": evaluation.get("team_governance_score", 0),
-            "market_traction_score": evaluation.get("market_traction_score", 0),
-            "security_risk_score": evaluation.get("security_risk_score", 0),
-            "delivery_proof_score": evaluation.get("delivery_proof_score", 0),
-            "token_design_score": evaluation.get("token_design_score", 0),
-            "evidence_integrity_score": evaluation.get("evidence_integrity_score", 0),
-            "score_model_version": evaluation.get("score_model_version", "VERIDEX_7_FACTOR_V1"),
-            "last_evaluated": str(self._now()),
-        }
-
-        overall_rank = self._upsert_board_entry("overall", base_entry)
-        category_rank = self._upsert_board_entry(category_key, base_entry)
-
-        ranking = {
-            "project_id": project_id,
-            "project_name": project.get("name", ""),
-            "category": category,
-            "overall_score": evaluation.get("overall_score", 0),
-            "tier": evaluation.get("tier", "F"),
-            "overall_rank": overall_rank,
-            "category_rank": category_rank,
-            "updated_at": str(self._now()),
-        }
-
-        self.rankings[project_id] = json.dumps(ranking)
-
-    def _upsert_board_entry(self, board_key: str, entry: dict) -> int:
-        board_raw = self.leaderboard.get(board_key)
-        board = json.loads(board_raw) if board_raw else []
-
-        project_id = entry.get("project_id", "")
-
-        board = [e for e in board if e.get("project_id") != project_id]
-        board.append(entry)
-        board.sort(key=lambda x: x.get("overall_score", 0), reverse=True)
-
-        rank = 0
-
-        for i, item in enumerate(board):
-            item["rank"] = i + 1
-            if item.get("project_id") == project_id:
-                rank = i + 1
-
-        self.leaderboard[board_key] = json.dumps(board)
-
-        return rank
-
-    # ──────────────────────────────────────────
-    # Output Helpers
-    # ──────────────────────────────────────────
-
-    def _extract_strengths(
-        self,
-        project: dict,
-        tech: int,
-        team: int,
-        market: int,
-        security: int,
-        source_integrity: int,
-    ) -> list:
-        strengths = []
-
-        if tech >= 75:
-            strengths.append("Strong protocol architecture and innovation")
-        if team >= 75:
-            strengths.append("Credible team and governance signals")
-        if market >= 75:
-            strengths.append("Clear traction and market positioning")
-        if security >= 75:
-            strengths.append("Robust security and risk posture")
-        if source_integrity >= 75:
-            strengths.append("Strong source-backed evidence integrity")
-        if project.get("github_repos"):
-            strengths.append("Open-source development transparency")
-        if project.get("audits"):
-            strengths.append("Security audit evidence provided")
-
-        return strengths[:5]
-
-    def _extract_weaknesses(
-        self,
-        project: dict,
-        tech: int,
-        team: int,
-        market: int,
-        security: int,
-        source_integrity: int,
-    ) -> list:
-        weaknesses = []
-
-        if tech < 50:
-            weaknesses.append("Protocol architecture or documentation needs improvement")
-        if team < 50:
-            weaknesses.append("Team or governance credentials are not fully verifiable")
-        if market < 50:
-            weaknesses.append("Traction or market differentiation is unclear")
-        if security < 50:
-            weaknesses.append("Limited security and risk evidence")
-        if source_integrity < 50:
-            weaknesses.append("Submitted claims need stronger source-backed verification")
-        if not project.get("audits"):
-            weaknesses.append("No security audits provided")
-        if not project.get("bug_bounty_url"):
-            weaknesses.append("No bug bounty program provided")
-
-        return weaknesses[:5]
-
-    def _generate_recommendations(self, project: dict, score: float) -> list:
-        recs = []
-
-        if score < 80:
-            recs.append("Publish a stronger technical whitepaper")
-        if not project.get("audits"):
-            recs.append("Commission a security audit from a reputable firm")
-        if not project.get("bug_bounty_url"):
-            recs.append("Launch a bug bounty program")
-        if not project.get("github_repos"):
-            recs.append("Open-source relevant protocol components")
-        if score < 70:
-            recs.append("Provide a clearer roadmap with verifiable milestones")
-
-        return recs[:5]
-
-    def _compute_consistency(self, profile: dict, new_score: float) -> float:
-        avg = float(profile.get("average_score", new_score))
-        deviation = abs(new_score - avg)
-        consistency = max(0, 100 - deviation * 2)
-
-        return round(consistency, 1)
-
-    # ──────────────────────────────────────────
-    # Fee Helpers
-    # ──────────────────────────────────────────
-
-    def _collect_exact_fee(self, configured_fee: u256, fee_type: str) -> None:
-        required = configured_fee if self.fees_enabled else u256(0)
-        paid = gl.message.value
-
-        assert int(paid) == int(required), "Incorrect protocol fee sent"
-
-        if int(paid) > 0:
-            self.treasury = u256(int(self.treasury) + int(paid))
-
-    # ──────────────────────────────────────────
-    # Data Helpers
-    # ──────────────────────────────────────────
-
-    def _load_project(self, project_id: str) -> dict:
-        data = self.projects.get(project_id)
-        assert data is not None, "Project not found"
-        return json.loads(data)
-
-    def _generate_project_id(self, owner: str, name: str) -> str:
-        raw = f"{owner}:{name}:{int(self.project_count)}:{self._now()}"
-        return hashlib.sha256(raw.encode()).hexdigest()[:32]
-
-    def _generate_evaluation_id(self, project_id: str, timestamp: str) -> str:
-        raw = f"{project_id}:{timestamp}:{int(self.evaluation_count)}"
-        return hashlib.sha256(raw.encode()).hexdigest()[:32]
-
-    def _generate_evidence_hash(self, data: dict) -> str:
-        serialized = json.dumps(data, sort_keys=True)
-        return "0x" + hashlib.sha256(serialized.encode()).hexdigest()
-
-    def _bounded_score(self, value) -> int:
-        try:
-            score = int(value)
-        except Exception:
-            score = 50
-
-        if score < 0:
-            return 0
-        if score > 100:
-            return 100
-
-        return score
-
-    def _safe_json_loads(self, raw, fallback):
-        try:
-            if isinstance(raw, dict):
-                return raw
-
-            text = str(raw).strip()
-
-            try:
-                return json.loads(text)
-            except Exception:
-                pass
-
-            start = text.find("{")
-            end = text.rfind("}")
-
-            if start != -1 and end != -1 and end > start:
-                possible_json = text[start:end + 1]
-                return json.loads(possible_json)
-
-            return fallback
-        except Exception:
-            return fallback
-
-    def _safe_json_array(self, raw: str) -> list:
-        if raw is None or raw == "":
-            return []
-
-        try:
-            parsed = json.loads(raw)
-            if isinstance(parsed, list):
-                return parsed
-            return []
-        except Exception:
-            return []
-
-    def _safe_json_object(self, raw: str) -> dict:
-        if raw is None or raw == "":
-            return {}
-
-        try:
-            parsed = json.loads(raw)
-            if isinstance(parsed, dict):
-                return parsed
-            return {}
-        except Exception:
-            return {}
-
-    def _safe_list(self, value, fallback: list) -> list:
-        if isinstance(value, list):
-            cleaned = []
-            for item in value:
-                cleaned.append(self._clean_text(str(item), 180))
-            return cleaned[:5]
-        return fallback[:5]
-
-    def _clean_text(self, value: str, max_len: int) -> str:
-        if value is None:
-            return ""
-
-        cleaned = str(value)
-
-        if len(cleaned) > max_len:
-            return cleaned[:max_len]
-
-        return cleaned
-
-    def _init_profile(self, wallet: str) -> None:
-        if self.profiles.get(wallet) is None:
-            profile = self._default_profile(wallet)
-            self.profiles[wallet] = json.dumps(profile)
-
-    def _increment_profile_project_count(self, wallet: str) -> None:
-        profile_raw = self.profiles.get(wallet)
-        profile = json.loads(profile_raw) if profile_raw else self._default_profile(wallet)
-
-        profile["total_projects"] = int(profile.get("total_projects", 0)) + 1
-
-        self.profiles[wallet] = json.dumps(profile)
-
-    def _default_profile(self, wallet: str) -> dict:
         return {
-            "wallet_address": wallet,
+            "verification_id": "",
+            "dossier_id": dossier.get("dossier_id", ""),
+            "verification_level": level,
+            "evidence_confidence": confidence,
+            "risk_band": risk_band,
+            "proof_completeness": self._bounded_score(weighted),
+            "source_integrity": integrity,
+            "verified_source_count": source_count,
+            "critical_warnings": risk_flags,
+            "verification_dimensions": {
+                "protocol_architecture": protocol,
+                "team_governance": team,
+                "market_traction": traction,
+                "security_risk": security,
+                "delivery_proof": delivery,
+                "token_design": token,
+                "evidence_integrity": integrity,
+            },
+            "fact_check_hash": "",
+            "verification_hash": "",
+            "verified_at": "",
+            "expires_at": "",
+            "summary": self._report_summary(level, risk_band, confidence),
+            "strengths": self._strengths(manifest, protocol, security, integrity),
+            "risks": risk_flags,
+            "recommended_evidence": self._recommendations(risk_flags),
+            "confidence": confidence,
+        }
+
+    def _append_verification_history(self, dossier_id: str, report: dict) -> None:
+        raw = self.verification_history.get(dossier_id)
+        history = json.loads(raw) if raw else []
+        history.append(report)
+        self.verification_history[dossier_id] = json.dumps(history)
+
+    def _append_proof_event(self, dossier_id: str, actor: str, event_type: str, related_hash: str, summary: str) -> None:
+        now = str(self._now())
+        event_id = self._hash({
+            "dossier_id": dossier_id,
+            "actor": actor,
+            "event_type": event_type,
+            "related_hash": related_hash,
+            "timestamp": now,
+            "index": int(self.proof_event_count),
+        })[:34]
+        event_hash = self._hash({
+            "event_id": event_id,
+            "dossier_id": dossier_id,
+            "actor": actor,
+            "event_type": event_type,
+            "related_hash": related_hash,
+            "summary": summary,
+            "timestamp": now,
+        })
+        event = {
+            "event_id": event_id,
+            "dossier_id": dossier_id,
+            "actor": actor,
+            "event_type": event_type,
+            "event_hash": event_hash,
+            "related_hash": related_hash,
+            "summary": summary,
+            "timestamp": now,
+        }
+
+        raw = self.proof_ledger.get(dossier_id)
+        ledger = json.loads(raw) if raw else []
+        ledger.append(event)
+        self.proof_ledger[dossier_id] = json.dumps(ledger)
+        self.proof_events[event_id] = json.dumps(event)
+        self.proof_event_count = u256(int(self.proof_event_count) + 1)
+
+        dossier_raw = self.dossiers.get(dossier_id)
+        if dossier_raw:
+            dossier = json.loads(dossier_raw)
+            dossier["proof_event_count"] = len(ledger)
+            self.dossiers[dossier_id] = json.dumps(dossier)
+
+    def _update_registry_entry(self, dossier: dict, report: dict) -> None:
+        entry = {
+            "dossier_id": dossier.get("dossier_id", ""),
+            "project_id": dossier.get("dossier_id", ""),
+            "name": dossier.get("name", ""),
+            "project_name": dossier.get("name", ""),
+            "category": dossier.get("category", "Other"),
+            "website": dossier.get("website", ""),
+            "verification_level": report.get("verification_level", "UNVERIFIABLE"),
+            "evidence_confidence": report.get("evidence_confidence", 0),
+            "risk_band": report.get("risk_band", "UNKNOWN"),
+            "proof_completeness": report.get("proof_completeness", 0),
+            "verified_source_count": report.get("verified_source_count", 0),
+            "last_verified_at": report.get("verified_at", ""),
+            "expires_at": report.get("expires_at", ""),
+            "registry_position": 0,
+            "overall_score": report.get("evidence_confidence", 0),
+            "tier": self._legacy_tier(str(report.get("verification_level", "UNVERIFIABLE"))),
+            "last_evaluated": report.get("verified_at", ""),
+        }
+        self._upsert_registry("overall", entry)
+        self._upsert_registry(str(dossier.get("category", "Other")), entry)
+
+    def _upsert_registry(self, category: str, entry: dict) -> None:
+        key = self._registry_key(category)
+        raw = self.registry.get(key)
+        entries = json.loads(raw) if raw else []
+        dossier_id = entry.get("dossier_id", "")
+        entries = [item for item in entries if item.get("dossier_id", item.get("project_id", "")) != dossier_id]
+        entries.append(entry)
+        entries.sort(key=lambda x: (
+            self._risk_sort_value(str(x.get("risk_band", "UNKNOWN"))),
+            -self._bounded_score(x.get("evidence_confidence", x.get("overall_score", 0))),
+        ))
+        for i, item in enumerate(entries):
+            item["registry_position"] = i + 1
+            item["rank"] = i + 1
+        self.registry[key] = json.dumps(entries)
+
+    def _update_issuer_after_verification(self, issuer: str, dossier: dict, report: dict) -> None:
+        profile = self._get_profile_dict(issuer)
+        total_verified = int(profile.get("verified_dossiers", 0))
+        avg = self._safe_int(profile.get("average_evidence_confidence", 0))
+        confidence = self._bounded_score(report.get("evidence_confidence", 0))
+
+        profile["verified_dossiers"] = total_verified + 1
+        profile["average_evidence_confidence"] = round((avg * total_verified + confidence) / (total_verified + 1), 1)
+        if str(report.get("risk_band", "UNKNOWN")) in ["HIGH", "CRITICAL"]:
+            profile["high_risk_dossiers"] = int(profile.get("high_risk_dossiers", 0)) + 1
+        profile["latest_activity_at"] = str(self._now())
+        self.issuer_profiles[issuer] = json.dumps(profile)
+
+    def _init_issuer_profile(self, issuer: str) -> None:
+        if self.issuer_profiles.get(issuer) is None:
+            self.issuer_profiles[issuer] = json.dumps(self._default_issuer_profile(issuer))
+
+    def _bump_issuer_profile(self, issuer: str, key: str, amount: int) -> None:
+        profile = self._get_profile_dict(issuer)
+        profile[key] = int(profile.get(key, 0)) + amount
+        profile["latest_activity_at"] = str(self._now())
+        self.issuer_profiles[issuer] = json.dumps(profile)
+
+    def _get_profile_dict(self, issuer: str) -> dict:
+        raw = self.issuer_profiles.get(issuer)
+        return json.loads(raw) if raw else self._default_issuer_profile(issuer)
+
+    def _default_issuer_profile(self, issuer: str) -> dict:
+        return {
+            "issuer": issuer,
+            "wallet_address": issuer,
+            "submitted_dossiers": 0,
+            "verified_dossiers": 0,
+            "average_evidence_confidence": 0,
+            "high_risk_dossiers": 0,
+            "stale_dossiers": 0,
+            "latest_activity_at": str(self._now()),
             "total_projects": 0,
             "total_evaluations": 0,
             "average_score": 0,
@@ -1537,6 +858,283 @@ Return ONLY this JSON shape:
             "evidence_rating": 0,
             "created_at": str(self._now()),
         }
+
+    def _load_dossier(self, dossier_id: str) -> dict:
+        data = self.dossiers.get(dossier_id)
+        assert data is not None, "Dossier not found"
+        return json.loads(data)
+
+    def _load_manifest(self, dossier_id: str) -> dict:
+        data = self.evidence_manifests.get(dossier_id)
+        assert data is not None, "Evidence manifest not found"
+        return json.loads(data)
+
+    def _manifest_sources(self, manifest: dict) -> list:
+        sources = []
+        self._maybe_source(sources, "website", manifest.get("website", ""))
+        self._maybe_source(sources, "whitepaper", manifest.get("whitepaper_url", ""))
+        self._maybe_source(sources, "docs", manifest.get("docs_url", ""))
+        self._maybe_source(sources, "bug_bounty", manifest.get("bug_bounty_url", ""))
+        self._maybe_source(sources, "verification_document", manifest.get("verification_document_url", ""))
+        for repo in manifest.get("github_repos", []):
+            if isinstance(repo, dict):
+                self._maybe_source(sources, "github", repo.get("url", ""))
+            else:
+                self._maybe_source(sources, "github", repo)
+        for audit in manifest.get("audits", []):
+            if isinstance(audit, dict):
+                self._maybe_source(sources, "audit", audit.get("report_url", audit.get("url", "")))
+        for file_item in manifest.get("evidence_files", []):
+            if isinstance(file_item, dict):
+                self._maybe_source(sources, "evidence_file", file_item.get("url", ""))
+            else:
+                self._maybe_source(sources, "evidence_file", file_item)
+        return sources[:20]
+
+    def _maybe_source(self, sources: list, source_type: str, url: str) -> None:
+        text = self._clean_text(str(url), 500)
+        if len(text) > 0:
+            sources.append({
+                "source_type": source_type,
+                "url": text,
+                "status": "submitted",
+                "note": "Public source supplied for verification.",
+            })
+
+    def _missing_evidence(self, manifest: dict) -> list:
+        missing = []
+        if len(str(manifest.get("docs_url", ""))) == 0:
+            missing.append("Documentation URL missing")
+        if len(str(manifest.get("whitepaper_url", ""))) == 0:
+            missing.append("Whitepaper URL missing")
+        if len(manifest.get("github_repos", [])) == 0:
+            missing.append("GitHub repository evidence missing")
+        if len(manifest.get("audits", [])) == 0:
+            missing.append("Security audit evidence missing")
+        if len(manifest.get("team", [])) == 0:
+            missing.append("Team or governance evidence missing")
+        if len(str(manifest.get("bug_bounty_url", ""))) == 0:
+            missing.append("Bug bounty evidence missing")
+        if len(manifest.get("tokenomics", {}).keys()) == 0:
+            missing.append("Tokenomics evidence missing")
+        return missing
+
+    def _risk_flags(self, manifest: dict, source_count: int, missing: list) -> list:
+        flags = []
+        if len(manifest.get("audits", [])) == 0:
+            flags.append("MISSING_AUDIT")
+        if len(manifest.get("team", [])) == 0:
+            flags.append("UNVERIFIABLE_TEAM")
+        if len(str(manifest.get("docs_url", ""))) == 0:
+            flags.append("INACCESSIBLE_DOCS")
+        if len(manifest.get("github_repos", [])) == 0:
+            flags.append("THIN_GITHUB")
+        if len(manifest.get("tokenomics", {}).keys()) == 0:
+            flags.append("TOKENOMICS_UNCLEAR")
+        if len(str(manifest.get("roadmap", ""))) == 0:
+            flags.append("ROADMAP_UNVERIFIABLE")
+        if source_count < 3:
+            flags.append("LOW_SOURCE_COUNT")
+        if len(str(manifest.get("bug_bounty_url", ""))) == 0:
+            flags.append("SECURITY_EVIDENCE_WEAK")
+        return flags[:8]
+
+    def _fact_summary(self, status: str, source_count: int, missing: list) -> str:
+        if status == "VERIFIED":
+            return "Submitted claims have broad public source coverage."
+        if status == "PARTIAL":
+            return "Several claims are supported, but the dossier still has evidence gaps."
+        if status == "WEAK":
+            return "Public evidence is thin and important claims remain weakly supported."
+        return "The dossier cannot be verified from the supplied public evidence."
+
+    def _verified_claims(self, dossier: dict, manifest: dict, source_count: int) -> list:
+        claims = []
+        if source_count > 0:
+            claims.append("Issuer supplied public evidence URLs for verification.")
+        if len(str(manifest.get("website", ""))) > 0:
+            claims.append("Official website was supplied.")
+        if len(manifest.get("audits", [])) > 0:
+            claims.append("Security audit evidence was supplied.")
+        if len(manifest.get("github_repos", [])) > 0:
+            claims.append("GitHub repository evidence was supplied.")
+        return claims[:6]
+
+    def _strengths(self, manifest: dict, protocol: int, security: int, integrity: int) -> list:
+        strengths = []
+        if protocol >= 75:
+            strengths.append("Strong protocol documentation and architecture evidence.")
+        if security >= 75:
+            strengths.append("Security evidence includes audits or bug bounty coverage.")
+        if integrity >= 75:
+            strengths.append("Evidence manifest contains multiple public sources.")
+        if len(manifest.get("github_repos", [])) > 0:
+            strengths.append("Open repository evidence improves transparency.")
+        return strengths[:5]
+
+    def _recommendations(self, flags: list) -> list:
+        recommendations = []
+        if "MISSING_AUDIT" in flags:
+            recommendations.append("Add a public security audit report.")
+        if "THIN_GITHUB" in flags:
+            recommendations.append("Add relevant GitHub repositories or development evidence.")
+        if "UNVERIFIABLE_TEAM" in flags:
+            recommendations.append("Add verifiable team or governance documentation.")
+        if "TOKENOMICS_UNCLEAR" in flags:
+            recommendations.append("Add tokenomics documentation with supply and utility details.")
+        if "LOW_SOURCE_COUNT" in flags:
+            recommendations.append("Add more public evidence sources before refreshing verification.")
+        return recommendations[:6]
+
+    def _report_summary(self, level: str, risk_band: str, confidence: int) -> str:
+        return "Verification level " + level + " with " + str(confidence) + "% evidence confidence and " + risk_band + " risk."
+
+    def _status_from_report(self, report: dict) -> str:
+        level = str(report.get("verification_level", "UNVERIFIABLE"))
+        if level in ["VERIFIED_PLUS", "VERIFIED"]:
+            return "VERIFIED"
+        if level in ["SUBSTANTIATED", "DEVELOPING"]:
+            return "PARTIAL"
+        if level in ["LIMITED_EVIDENCE", "HIGH_RISK"]:
+            return "WEAK"
+        return "UNVERIFIABLE"
+
+    def _verification_level(self, score: int, flags: list) -> str:
+        bounded = self._bounded_score(score)
+        if "LOW_SOURCE_COUNT" in flags and bounded > 74:
+            bounded = 74
+        if "MISSING_AUDIT" in flags and bounded > 84:
+            bounded = 84
+        if bounded >= 95:
+            return "VERIFIED_PLUS"
+        if bounded >= 85:
+            return "VERIFIED"
+        if bounded >= 75:
+            return "SUBSTANTIATED"
+        if bounded >= 65:
+            return "DEVELOPING"
+        if bounded >= 50:
+            return "LIMITED_EVIDENCE"
+        if bounded >= 30:
+            return "HIGH_RISK"
+        return "UNVERIFIABLE"
+
+    def _risk_band(self, score: int, flags: list) -> str:
+        if len(flags) >= 7:
+            return "CRITICAL"
+        if score < 30:
+            return "CRITICAL"
+        if score < 50 or len(flags) >= 5:
+            return "HIGH"
+        if score < 65 or len(flags) >= 3:
+            return "ELEVATED"
+        if score < 80 or len(flags) >= 1:
+            return "MODERATE"
+        return "LOW"
+
+    def _legacy_tier(self, level: str) -> str:
+        if level == "VERIFIED_PLUS":
+            return "S+"
+        if level == "VERIFIED":
+            return "S"
+        if level == "SUBSTANTIATED":
+            return "A"
+        if level == "DEVELOPING":
+            return "B"
+        if level == "LIMITED_EVIDENCE":
+            return "C"
+        if level == "HIGH_RISK":
+            return "D"
+        return "F"
+
+    def _risk_sort_value(self, risk: str) -> int:
+        if risk == "LOW":
+            return 0
+        if risk == "MODERATE":
+            return 1
+        if risk == "ELEVATED":
+            return 2
+        if risk == "HIGH":
+            return 3
+        if risk == "CRITICAL":
+            return 4
+        return 5
+
+    def _has_text(self, value: str) -> int:
+        return 1 if len(str(value)) > 0 else 0
+
+    def _registry_key(self, category: str) -> str:
+        key = str(category).lower()
+        if key == "":
+            return "overall"
+        return key
+
+    def _generate_dossier_id(self, issuer: str, name: str) -> str:
+        raw = issuer + ":" + name + ":" + str(int(self.dossier_count)) + ":" + str(self._now())
+        return hashlib.sha256(raw.encode()).hexdigest()[:32]
+
+    def _generate_verification_id(self, dossier_id: str, timestamp: str) -> str:
+        raw = dossier_id + ":" + timestamp + ":" + str(int(self.verification_count))
+        return hashlib.sha256(raw.encode()).hexdigest()[:32]
+
+    def _hash(self, data: dict) -> str:
+        serialized = json.dumps(data, sort_keys=True)
+        return "0x" + hashlib.sha256(serialized.encode()).hexdigest()
+
+    def _collect_exact_fee(self, configured_fee: u256, fee_type: str) -> None:
+        required = configured_fee if self.fees_enabled else u256(0)
+        paid = gl.message.value
+        assert int(paid) == int(required), "Incorrect protocol fee sent"
+        if int(paid) > 0:
+            self.treasury = u256(int(self.treasury) + int(paid))
+            self._append_proof_event("treasury", str(gl.message.sender_address), "FEE_PAID", str(int(paid)), fee_type)
+
+    def _bounded_score(self, value) -> int:
+        try:
+            score = int(value)
+        except Exception:
+            score = 0
+        if score < 0:
+            return 0
+        if score > 100:
+            return 100
+        return score
+
+    def _safe_int(self, value) -> int:
+        try:
+            return int(value)
+        except Exception:
+            return 0
+
+    def _safe_json_array(self, raw: str) -> list:
+        if raw is None or raw == "":
+            return []
+        if isinstance(raw, list):
+            return raw
+        try:
+            parsed = json.loads(raw)
+            return parsed if isinstance(parsed, list) else []
+        except Exception:
+            return []
+
+    def _safe_json_object(self, raw: str) -> dict:
+        if raw is None or raw == "":
+            return {}
+        if isinstance(raw, dict):
+            return raw
+        try:
+            parsed = json.loads(raw)
+            return parsed if isinstance(parsed, dict) else {}
+        except Exception:
+            return {}
+
+    def _clean_text(self, value: str, max_len: int) -> str:
+        if value is None:
+            return ""
+        text = str(value)
+        if len(text) > max_len:
+            return text[:max_len]
+        return text
 
     def _now(self) -> int:
         try:

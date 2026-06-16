@@ -11,8 +11,8 @@ interface LeaderboardTableProps {
 export function LeaderboardTable({ entries, className }: LeaderboardTableProps) {
   if (entries.length === 0) {
     return (
-      <div className={cn('text-center py-16', className)} style={{ color: '#64748b' }}>
-        No submissions assessed yet.
+      <div className={cn('text-center py-16', className)} style={{ color: '#5f5a52' }}>
+        No dossiers verified yet.
       </div>
     );
   }
@@ -21,8 +21,8 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
     <div className={cn('overflow-x-auto', className)}>
       <table className="w-full text-sm">
         <thead>
-          <tr style={{ borderBottom: '1px solid rgba(0,217,255,0.08)' }}>
-            {['#', 'Project', 'Category', 'Score', 'Tier', 'Architecture', 'Governance', 'Traction'].map((h, i) => (
+          <tr style={{ borderBottom: '1px solid rgba(107,142,122,0.12)' }}>
+            {['Position', 'Dossier', 'Category', 'Confidence', 'Level', 'Architecture', 'Governance', 'Traction'].map((h, i) => (
               <th
                 key={h}
                 className={cn(
@@ -30,7 +30,7 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
                   i >= 5 && 'hidden lg:table-cell',
                   i === 2 && 'hidden sm:table-cell'
                 )}
-                style={{ color: '#64748b' }}
+                style={{ color: '#8a8178' }}
               >
                 {h}
               </th>
@@ -42,9 +42,9 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
             <tr
               key={entry.project_id}
               className="transition-colors"
-              style={{ borderBottom: '1px solid rgba(0,217,255,0.04)' }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = 'rgba(0,217,255,0.03)';
+            style={{ borderBottom: '1px solid rgba(107,142,122,0.08)' }}
+            onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = 'rgba(107,142,122,0.04)';
               }}
               onMouseLeave={(e) => {
                 (e.currentTarget as HTMLElement).style.background = 'transparent';
@@ -53,7 +53,7 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
               {/* Rank */}
               <td className="py-3 pr-4">
                 <span className="font-mono text-sm font-medium" style={{
-                  color: idx === 0 ? '#fbbf24' : idx === 1 ? '#00d9ff' : idx === 2 ? '#06b6d4' : '#64748b'
+                  color: idx === 0 ? '#4f8f68' : idx === 1 ? '#6b8e7a' : idx === 2 ? '#8b8a55' : '#8a8178'
                 }}>
                   {Math.round(safeNumber(entry.rank))}
                 </span>
@@ -62,11 +62,11 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
               {/* Name */}
               <td className="py-3 pr-4">
                 <Link
-                  href={`/project/${entry.project_id}`}
+                  href={`/dossier/${entry.project_id}`}
                   className="font-medium transition-colors"
-                  style={{ color: '#e2e8f0' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#00d9ff')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#e2e8f0')}
+                  style={{ color: '#1a1612' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#4f8f68')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#1a1612')}
                 >
                   {entry.project_name}
                 </Link>
@@ -74,7 +74,7 @@ export function LeaderboardTable({ entries, className }: LeaderboardTableProps) 
 
               {/* Category */}
               <td className="py-3 pr-4 hidden sm:table-cell">
-                <span className="text-[10px] uppercase tracking-widest" style={{ color: '#64748b' }}>
+                <span className="text-[10px] uppercase tracking-widest" style={{ color: '#8a8178' }}>
                   {entry.category}
                 </span>
               </td>

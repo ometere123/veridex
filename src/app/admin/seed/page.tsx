@@ -262,8 +262,8 @@ export default function AdminSeedPage() {
       >
         <strong>Each project requires 4 wallet approvals:</strong> create → lock → submit_evaluation → run_evaluation.
         Evaluation (non-det) takes 2-5 min per project. Have MetaMask open and on GenLayer Studionet.
-        Results appear on <a href="/tiers" style={{ color: '#6b8e7a', textDecoration: 'underline' }}>/tiers</a> and{' '}
-        <a href="/analytics" style={{ color: '#6b8e7a', textDecoration: 'underline' }}>/analytics</a> once finalized.
+        Results appear in <a href="/registry" style={{ color: '#6b8e7a', textDecoration: 'underline' }}>/registry</a> and{' '}
+        <a href="/signals" style={{ color: '#6b8e7a', textDecoration: 'underline' }}>/signals</a> once finalized.
       </div>
 
       {/* Seed all button */}
@@ -321,7 +321,7 @@ export default function AdminSeedPage() {
                 <div className="flex items-center gap-3">
                   {s.projectId && (
                     <a
-                      href={`/project/${s.projectId}`}
+                      href={`/dossier/${s.projectId}`}
                       className="text-xs font-mono"
                       style={{ color: '#6b8e7a' }}
                       target="_blank"
@@ -411,11 +411,11 @@ export default function AdminSeedPage() {
             GenLayer validators are finalizing scores. Results appear in 2-5 minutes.
           </p>
           <div className="flex gap-3">
-            <a href="/tiers" className="rounded-xl px-4 py-2 text-sm font-semibold" style={{ background: '#6b8e7a', color: '#ffffff' }}>
-              View Tiers →
+            <a href="/registry" className="rounded-xl px-4 py-2 text-sm font-semibold" style={{ background: '#6b8e7a', color: '#ffffff' }}>
+              View Registry →
             </a>
-            <a href="/analytics" className="rounded-xl px-4 py-2 text-sm font-semibold" style={{ background: 'rgba(107,142,122,0.08)', color: '#6b8e7a' }}>
-              Analytics →
+            <a href="/signals" className="rounded-xl px-4 py-2 text-sm font-semibold" style={{ background: 'rgba(107,142,122,0.08)', color: '#6b8e7a' }}>
+              Signals →
             </a>
             <a href="/leaderboard" className="rounded-xl px-4 py-2 text-sm font-semibold" style={{ background: 'rgba(107,142,122,0.08)', color: '#6b8e7a' }}>
               Index →

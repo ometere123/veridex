@@ -24,7 +24,7 @@ export function ProjectCard({ entry, className }: ProjectCardProps) {
 
   return (
     <Link
-      href={`/project/${entry.project_id}`}
+      href={`/dossier/${entry.project_id}`}
       className={cn('block rounded-lg p-5 transition-all duration-200 group', className)}
       style={{
         background: '#ffffff',
@@ -68,7 +68,7 @@ export function ProjectCard({ entry, className }: ProjectCardProps) {
         >
           {formatScore(entry.overall_score)}
         </span>
-        <span className="text-xs" style={{ color: '#9b938a' }}>assessment</span>
+        <span className="text-xs" style={{ color: '#9b938a' }}>confidence</span>
       </div>
 
       {/* Mini score grid */}

@@ -116,7 +116,7 @@ export default async function ProfilePage({ params }: Props) {
         ) : (
           <div>
             {projects.map((p: { project_id: string; name: string; category: string; status: string; created_at: string; evaluation: { overall_score: number; tier: RankTier } | null }, i: number) => (
-              <Link key={p.project_id} href={`/project/${p.project_id}`}
+              <Link key={p.project_id} href={`/dossier/${p.project_id}`}
                 className="flex items-center justify-between px-6 py-4 transition-all"
                 style={{ borderBottom: i < projects.length - 1 ? '1px solid rgba(107,142,122,0.06)' : undefined }}
                 onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = 'rgba(107,142,122,0.03)')}

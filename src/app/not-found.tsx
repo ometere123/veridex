@@ -14,8 +14,8 @@ export default function NotFound() {
           Page not found
         </h2>
         <p className="text-sm mb-8 leading-relaxed" style={{ color: '#6b6360' }}>
-          This route does not exist or has moved. It may also reference an initiative
-          that has not been assessed yet.
+          This route does not exist or has moved. It may also reference a dossier
+          that has not been verified yet.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
@@ -26,11 +26,11 @@ export default function NotFound() {
             Return home
           </Link>
           <Link
-            href="/tiers"
+            href="/registry"
             className="font-semibold px-6 py-3 rounded-full text-sm transition-all"
             style={{ background: 'rgba(107,142,122,0.08)', border: '1px solid rgba(107,142,122,0.18)', color: '#6b8e7a' }}
           >
-            View standings
+            Browse registry
           </Link>
         </div>
       </div>

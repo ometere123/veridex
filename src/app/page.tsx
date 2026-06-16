@@ -2,11 +2,11 @@ import Link from 'next/link';
 import { Coins, Rocket, ShieldCheck, TrendingUp, Users, Waypoints, type LucideIcon } from 'lucide-react';
 
 const FLOW_STEPS = [
-  { n: '01', label: 'Register Initiative',   desc: 'Upload whitepaper, GitHub, docs, tokenomics, and team data.' },
-  { n: '02', label: 'Finalize Evidence',     desc: 'Generate an immutable SHA-256 hash. Evidence is frozen.' },
-  { n: '03', label: 'GenLayer Assesses',     desc: 'AI agents evaluate the full 7-factor Veridex score model through Intelligent Contracts.' },
-  { n: '04', label: 'Validators Verify',     desc: 'Decentralized validators reach consensus on results.' },
-  { n: '05', label: 'Verification History Recorded', desc: 'Verification score, tier, and evidence history are recorded on-chain.' },
+  { n: '01', label: 'Submit public evidence', desc: 'Upload whitepaper, GitHub, docs, tokenomics, audit, team, and roadmap sources.' },
+  { n: '02', label: 'Lock evidence set', desc: 'Generate an immutable evidence hash that anchors the current verification cycle.' },
+  { n: '03', label: 'GenLayer fact-checks sources', desc: 'The contract treats claims as untrusted until supported by public evidence.' },
+  { n: '04', label: 'Verification report is stored', desc: 'Evidence confidence, risk band, dimensions, and warnings become on-chain output.' },
+  { n: '05', label: 'Proof ledger records history', desc: 'Dossier actions, hashes, and verification events remain auditable over time.' },
 ];
 
 const PROBLEMS = [
@@ -56,26 +56,26 @@ export default function LandingPage() {
             <div className="space-y-5">
               <h1 className="max-w-2xl text-5xl sm:text-6xl font-semibold leading-tight"
                 style={{ color: '#1a1612', fontFamily: 'var(--font-space-grotesk)' }}>
-                Evidence-first reputation for crypto projects that demand real verification.
+                Verify crypto projects by evidence, not hype.
               </h1>
 
               <p className="text-lg max-w-xl leading-8" style={{ color: '#6b6360' }}>
-                Veridex turns documentation, audit proofs, and public source evidence into an immutable verification profile on-chain. This is reputation backed by data, not opinions.
+                Veridex turns public project evidence into GenLayer-verified dossiers, source-grounded fact-check reports, transparent verification levels, risk signals, and proof history.
               </p>
 
               <div className="flex flex-col gap-3 sm:flex-row items-start">
                 <Link
-                  href="/register"
+                  href="/submit"
                   className="inline-flex items-center justify-center rounded-full px-8 py-4 text-sm font-semibold transition-all"
                   style={{
                     background: '#6b8e7a',
                     color: '#ffffff',
                   }}
                 >
-                  Submit a project
+                  Submit Evidence
                 </Link>
                 <Link
-                  href="/tiers"
+                  href="/registry"
                   className="inline-flex items-center justify-center rounded-full px-8 py-4 text-sm font-semibold transition-all border"
                   style={{
                     background: 'transparent',
@@ -83,7 +83,7 @@ export default function LandingPage() {
                     color: '#1a1612',
                   }}
                 >
-                  Explore tiers
+                  Browse Registry
                 </Link>
               </div>
             </div>
@@ -95,7 +95,7 @@ export default function LandingPage() {
                 Verification vault
               </div>
               <h2 className="text-2xl font-semibold" style={{ color: '#1a1612' }}>
-                Evidence, audit, and consensus in one place.
+                Evidence, risk, and proof history in one dossier.
               </h2>
             </div>
 
@@ -226,24 +226,24 @@ export default function LandingPage() {
               Proof-first reputation
             </p>
             <h2 className="text-4xl font-semibold leading-tight mb-6" style={{ color: '#1a1612' }}>
-              Make every claim accountable on-chain.
+                Make every project claim accountable on-chain.
             </h2>
             <p className="max-w-2xl text-base leading-8 mb-8" style={{ color: '#6b6360' }}>
               Veridex is built for the projects that want more than a label - they want verifiable on-chain proof of their claims and a transparent reputation path.
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                href="/register"
+              href="/submit"
                 className="inline-flex items-center justify-center rounded-full bg-[#6b8e7a] px-8 py-4 text-sm font-semibold text-white"
               >
                 Submit evidence
               </Link>
               <Link
-                href="/hub"
+              href="/issuer-hub"
                 className="inline-flex items-center justify-center rounded-full border border-[rgba(107,142,122,0.22)] px-8 py-4 text-sm font-semibold"
                 style={{ color: '#1a1612' }}
               >
-                Open the hub
+                Open issuer hub
               </Link>
             </div>
           </div>

@@ -22,7 +22,7 @@ export function ProjectFormWithUpload() {
         <div className="mb-4 flex items-center gap-2">
           <span style={{ color: 'var(--brand)' }}>^</span>
           <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--muted)' }}>
-            Proof Documents
+            Verification Documents
           </h2>
           <span
             className="ml-1 rounded px-1.5 py-0.5 text-[10px] font-medium"
@@ -32,7 +32,7 @@ export function ProjectFormWithUpload() {
           </span>
         </div>
         <p className="mb-4 text-xs" style={{ color: 'var(--muted-2)' }}>
-          Attach whitepapers, audit reports, or architecture diagrams. GenLayer fetches these URLs directly during on-chain assessment.
+          Attach whitepapers, audit reports, architecture diagrams, or source evidence. Files may be mirrored through Supabase Storage for public access, but verification truth is read from GenLayer.
         </p>
         <EvidenceUploadPanel onFilesChange={setUploadedFiles} />
       </div>
