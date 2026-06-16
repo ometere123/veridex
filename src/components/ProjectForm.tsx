@@ -164,12 +164,12 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
   // ── Stable label & style (based on mounted state only - no flash) ──
   const btnLabel = !mounted
-    ? '⬡ Submit Project'                          // same on server + first paint
+    ? '⬡ Register on Veridex'
     : submitting
       ? (step || '⬡ Submitting to GenLayer…')
       : !isConnected
         ? 'Connect wallet to continue'
-        : '⬡ Submit Project';
+        : '⬡ Register on Veridex';
 
   const btnDisabled = submitting || !mounted || !isConnected;
 
@@ -199,11 +199,11 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Basic Info ─────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>◈</span> Basic Information</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>◈</span> Initiative Identity</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Project Name" required>
             <input className={inputCls} style={INPUT_STYLE} value={form.name}
-              onChange={set('name')} placeholder="Proof submission title" required />
+              onChange={set('name')} placeholder="Your initiative name" required />
           </Field>
           <Field label="Category" required>
             <select className={inputCls} style={{ ...INPUT_STYLE, cursor: 'pointer' }}
@@ -225,7 +225,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Technical ──────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>⬡</span> Technical Evidence</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>⬡</span> Source Documentation</h2>
         <div className="space-y-4">
           <Field label="Whitepaper URL">
             <input className={inputCls} style={INPUT_STYLE} value={form.whitepaper_url}
@@ -254,7 +254,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Business ───────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>▷</span> Business & Roadmap</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>▷</span> Traction & Trajectory</h2>
         <div className="space-y-4">
           <Field label="Roadmap" required>
             <textarea className={cn(inputCls, 'resize-none h-28')} style={INPUT_STYLE}
@@ -305,7 +305,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Security ───────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>◇</span> Security</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>◇</span> Security Posture</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Audit Firm">
             <input className={inputCls} style={INPUT_STYLE} value={form.audit_auditor}
@@ -328,7 +328,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
 
       {/* ── Team ───────────────────────────────────────────────── */}
       <section style={sectionStyle}>
-        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>◈</span> Team</h2>
+        <h2 style={sectionHead}><span style={{ color: 'var(--brand)' }}>◈</span> Core Contributors</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Field label="Name">
             <input className={inputCls} style={INPUT_STYLE} value={form.team_name}

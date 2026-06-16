@@ -10,7 +10,7 @@ const FLOW_STEPS = [
 ];
 
 const PROBLEMS = [
-  { label: 'Noise-Driven Rankings', desc: 'Attention and sponsorship overpower evidence and audit history.' },
+  { label: 'Hype-Driven Scores', desc: 'Attention and sponsorship overpower evidence and audit history.' },
   { label: 'Influencer Amplification', desc: 'Loud narratives get rewarded while proof stays hidden.' },
   { label: 'Opaque Evaluation', desc: 'Scores are assigned without clear verification criteria.' },
   { label: 'Claim Without Trace', desc: 'Assertions lack a documented evidence trail to validate them.' },
@@ -26,16 +26,6 @@ const DIMENSIONS: { code: string; icon: LucideIcon; label: string }[] = [
   { code: 'evidence_integrity', icon: Waypoints, label: 'Evidence Integrity' },
 ];
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const TIERS = [
-  { tier: 'S+', range: '95–100', hex: '#c9704a' },
-  { tier: 'S',  range: '90–94',  hex: '#6b8e7a' },
-  { tier: 'A',  range: '80–89',  hex: '#8b7355' },
-  { tier: 'B',  range: '70–79',  hex: '#7a9b8e' },
-  { tier: 'C',  range: '60–69',  hex: '#a89b7a' },
-  { tier: 'D',  range: '50–59',  hex: '#b39b6b' },
-  { tier: 'F',  range: '0–49',   hex: '#a85c4a' },
-];
 
 export default function LandingPage() {
   return (
@@ -144,7 +134,7 @@ export default function LandingPage() {
               </div>
             </div>
             <p className="text-sm leading-7" style={{ color: '#6b6360' }}>
-              Today’s crypto rankings are shaped by marketing, promoters, and social buzz. Veridex reorients value around evidence, audit depth, and protocol transparency.
+              Today’s crypto scores are shaped by marketing, promoters, and social buzz. Veridex reorients value around evidence, audit depth, and protocol transparency.
             </p>
           </div>
 

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     template: '%s - Veridex',
   },
   description:
-    'Crypto project rankings powered by GenLayer Intelligent Contracts. Submit, lock evidence, let AI evaluate, build verifiable on-chain reputation.',
+    'On-chain crypto verification powered by GenLayer Intelligent Contracts. Submit evidence, lock it immutably, let AI evaluate, build a verifiable on-chain profile.',
   keywords: ['crypto', 'rankings', 'GenLayer', 'blockchain', 'AI', 'DeFi', 'evaluation', 'research'],
   authors: [{ name: 'Veridex' }],
   icons: {
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://veridex.app',
     siteName: 'Veridex',
     title: 'Veridex - On-Chain Crypto Intelligence',
-    description: 'Crypto project rankings powered by GenLayer Intelligent Contracts.',
+    description: 'On-chain crypto verification powered by GenLayer Intelligent Contracts.',
     images: [
       {
         url: '/og-image.svg',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Veridex - On-Chain Crypto Intelligence',
-    description: 'Crypto project rankings powered by GenLayer Intelligent Contracts.',
+    description: 'On-chain crypto verification powered by GenLayer Intelligent Contracts.',
     images: ['/og-image.svg'],
   },
   robots: { index: true, follow: true },

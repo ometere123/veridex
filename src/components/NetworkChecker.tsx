@@ -31,7 +31,7 @@ export function NetworkChecker() {
             method: 'wallet_addEthereumChain',
             params: [{
               chainId: `0x${GENLAYER_CHAIN_ID.toString(16)}`,
-              chainName: 'GenLayer Testnet',
+              chainName: 'GenLayer Studionet',
               nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
               rpcUrls: [RPC],
               blockExplorerUrls: ['https://studio.genlayer.com'],
@@ -61,16 +61,16 @@ export function NetworkChecker() {
       <span style={{ color: '#fbbf24' }}>⚠</span>
       <span style={{ color: '#cbd5e1' }}>
         Incorrect chain — connect to{' '}
-        <strong style={{ color: '#00d9ff' }}>GenLayer Testnet</strong>
+        <strong style={{ color: '#6b8e7a' }}>GenLayer Studionet</strong>
       </span>
       <button
         onClick={addAndSwitch}
         disabled={isPending || adding}
         className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-60"
         style={{
-          background: '#00d9ff',
-          color: '#0a0f1a',
-          boxShadow: '0 0 10px rgba(0,217,255,0.4)',
+          background: '#6b8e7a',
+          color: '#ffffff',
+          boxShadow: '0 4px 12px rgba(107,142,122,0.30)',
         }}
       >
         {isPending || adding ? 'Switching…' : 'Switch Network'}

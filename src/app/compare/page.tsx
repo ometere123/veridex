@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ProjectComparison } from '@/components/ProjectComparison';
-import type { Project, Evaluation, LeaderboardEntry } from '@/types';
+import { TIER_STARS } from '@/constants';
+import type { Project, Evaluation, LeaderboardEntry, RankTier } from '@/types';
 
 async function fetchProjectAndEval(id: string) {
   try {
@@ -83,7 +84,7 @@ function SearchInput({
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span className="font-mono text-xs" style={{ color: '#6b8e7a' }}>{p.overall_score}</span>
-                <span className="font-mono text-xs font-bold" style={{ color: '#6b6360' }}>{p.tier}</span>
+                <span className="font-mono text-xs font-bold" style={{ color: '#6b6360' }}>{TIER_STARS[p.tier as RankTier]}</span>
               </div>
             </button>
           ))}

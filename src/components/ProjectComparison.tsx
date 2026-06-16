@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { formatScore, getScoreHex, getScoreColor, cn, safeNumber } from '@/utils';
+import { formatScore, getScoreHex, safeNumber } from '@/utils';
 import { TierBadge } from './TierBadge';
 import { SCORE_LABELS } from '@/constants';
 import type { Evaluation, Project } from '@/types';
@@ -23,118 +23,91 @@ const SCORE_KEYS = [
   'evidence_integrity_score',
 ] as const;
 
-const ROW_STYLE = { borderBottom: '1px solid rgba(0,217,255,0.05)' };
-const HIGHLIGHT = { background: 'rgba(74,222,128,0.04)' };
+const ROW = { borderBottom: '1px solid rgba(107,142,122,0.07)' };
 
 export function ProjectComparison({ projectA, projectB, evalA, evalB, className }: ProjectComparisonProps) {
   return (
-    <div className={cn('overflow-x-auto', className)}>
+    <div className={`overflow-x-auto ${className ?? ''}`}>
       <table className="w-full text-sm">
         <thead>
-          <tr style={{ borderBottom: '1px solid rgba(0,217,255,0.10)' }}>
+          <tr style={{ borderBottom: '1px solid rgba(107,142,122,0.14)' }}>
             <th className="pb-3 pr-4 text-left text-xs font-semibold uppercase tracking-wider w-40"
-              style={{ color: '#64748b' }}>Metric</th>
-            <th className="pb-3 pr-4 text-center text-sm font-bold" style={{ color: '#00d9ff' }}>
+              style={{ color: '#9b938a' }}>Dimension</th>
+            <th className="pb-3 pr-4 text-center text-sm font-bold" style={{ color: '#6b8e7a' }}>
               {projectA.name}
             </th>
-            <th className="pb-3 text-center text-sm font-bold" style={{ color: '#00d9ff' }}>
+            <th className="pb-3 text-center text-sm font-bold" style={{ color: '#b8633f' }}>
               {projectB.name}
             </th>
           </tr>
         </thead>
         <tbody>
-
-          {/* Category */}
-          <tr style={ROW_STYLE}>
-            <td className="py-3 pr-4 text-xs" style={{ color: '#64748b' }}>Category</td>
-            <td className="py-3 pr-4 text-center text-xs uppercase tracking-wider" style={{ color: '#94a3b8' }}>{projectA.category}</td>
-            <td className="py-3 text-center text-xs uppercase tracking-wider"      style={{ color: '#94a3b8' }}>{projectB.category}</td>
+          <tr style={ROW}>
+            <td className="py-3 pr-4 text-xs" style={{ color: '#9b938a' }}>Category</td>
+            <td className="py-3 pr-4 text-center text-xs uppercase tracking-wider" style={{ color: '#6b6360' }}>{projectA.category}</td>
+            <td className="py-3 text-center text-xs uppercase tracking-wider" style={{ color: '#6b6360' }}>{projectB.category}</td>
           </tr>
-
-          {/* Tier */}
-          <tr style={ROW_STYLE}>
-            <td className="py-3 pr-4 text-xs" style={{ color: '#64748b' }}>Tier</td>
+          <tr style={ROW}>
+            <td className="py-3 pr-4 text-xs" style={{ color: '#9b938a' }}>Star Tier</td>
             <td className="py-3 pr-4 text-center">
-              {evalA ? <TierBadge tier={evalA.tier} size="sm" /> : <span style={{ color: '#334155' }}>-</span>}
+              {evalA ? <TierBadge tier={evalA.tier} size="sm" /> : <span style={{ color: '#c8c0b8' }}>-</span>}
             </td>
             <td className="py-3 text-center">
-              {evalB ? <TierBadge tier={evalB.tier} size="sm" /> : <span style={{ color: '#334155' }}>-</span>}
+              {evalB ? <TierBadge tier={evalB.tier} size="sm" /> : <span style={{ color: '#c8c0b8' }}>-</span>}
             </td>
           </tr>
-
-          {/* Overall */}
-          <tr style={{ ...ROW_STYLE, background: 'rgba(0,217,255,0.03)' }}>
-            <td className="py-3 pr-4 text-xs font-semibold" style={{ color: '#cbd5e1' }}>Overall Score</td>
+          <tr style={{ ...ROW, background: 'rgba(107,142,122,0.03)' }}>
+            <td className="py-3 pr-4 text-xs font-semibold" style={{ color: '#1a1612' }}>Verification Score</td>
             <td className="py-3 pr-4 text-center">
               {evalA
-                ? <span className={cn('font-mono font-black text-xl', getScoreColor(evalA.overall_score))}
-                    style={{ textShadow: `0 0 10px ${getScoreHex(evalA.overall_score)}44` }}>
+                ? <span className="font-mono font-black text-xl" style={{ color: getScoreHex(evalA.overall_score) }}>
                     {formatScore(evalA.overall_score)}
                   </span>
-                : <span style={{ color: '#334155' }}>-</span>}
+                : <span style={{ color: '#c8c0b8' }}>-</span>}
             </td>
             <td className="py-3 text-center">
               {evalB
-                ? <span className={cn('font-mono font-black text-xl', getScoreColor(evalB.overall_score))}
-                    style={{ textShadow: `0 0 10px ${getScoreHex(evalB.overall_score)}44` }}>
+                ? <span className="font-mono font-black text-xl" style={{ color: getScoreHex(evalB.overall_score) }}>
                     {formatScore(evalB.overall_score)}
                   </span>
-                : <span style={{ color: '#334155' }}>-</span>}
+                : <span style={{ color: '#c8c0b8' }}>-</span>}
             </td>
           </tr>
-
-          {/* Individual scores */}
           {SCORE_KEYS.map((key) => {
             const aVal = evalA ? safeNumber(evalA[key]) : null;
             const bVal = evalB ? safeNumber(evalB[key]) : null;
             const aWins = aVal !== null && bVal !== null && aVal > bVal;
             const bWins = aVal !== null && bVal !== null && bVal > aVal;
-
             return (
-              <tr key={key} style={ROW_STYLE}>
-                <td className="py-3 pr-4 text-xs" style={{ color: '#64748b' }}>
-                  {SCORE_LABELS[key]}
-                </td>
-                <td className="py-3 pr-4 text-center" style={aWins ? HIGHLIGHT : {}}>
+              <tr key={key} style={ROW}>
+                <td className="py-3 pr-4 text-xs" style={{ color: '#9b938a' }}>{SCORE_LABELS[key]}</td>
+                <td className="py-3 pr-4 text-center" style={aWins ? { background: 'rgba(107,142,122,0.06)' } : {}}>
                   {aVal !== null
-                    ? <span className={cn('font-mono text-sm', aWins && 'font-bold', getScoreColor(aVal))}>
+                    ? <span className="font-mono text-sm" style={{ color: getScoreHex(aVal), fontWeight: aWins ? 700 : 400 }}>
                         {formatScore(aVal)}
                       </span>
-                    : <span style={{ color: '#334155' }}>-</span>}
+                    : <span style={{ color: '#c8c0b8' }}>-</span>}
                 </td>
-                <td className="py-3 text-center" style={bWins ? HIGHLIGHT : {}}>
+                <td className="py-3 text-center" style={bWins ? { background: 'rgba(184,99,63,0.05)' } : {}}>
                   {bVal !== null
-                    ? <span className={cn('font-mono text-sm', bWins && 'font-bold', getScoreColor(bVal))}>
+                    ? <span className="font-mono text-sm" style={{ color: getScoreHex(bVal), fontWeight: bWins ? 700 : 400 }}>
                         {formatScore(bVal)}
                       </span>
-                    : <span style={{ color: '#334155' }}>-</span>}
+                    : <span style={{ color: '#c8c0b8' }}>-</span>}
                 </td>
               </tr>
             );
           })}
-
-          {/* Audits */}
-          <tr style={ROW_STYLE}>
-            <td className="py-3 pr-4 text-xs" style={{ color: '#64748b' }}>Audits</td>
-            <td className="py-3 pr-4 text-center text-xs" style={{ color: '#94a3b8' }}>
-              {projectA.audits?.length ?? 0}
-            </td>
-            <td className="py-3 text-center text-xs" style={{ color: '#94a3b8' }}>
-              {projectB.audits?.length ?? 0}
-            </td>
+          <tr style={ROW}>
+            <td className="py-3 pr-4 text-xs" style={{ color: '#9b938a' }}>Audits on file</td>
+            <td className="py-3 pr-4 text-center text-xs" style={{ color: '#6b6360' }}>{projectA.audits?.length ?? 0}</td>
+            <td className="py-3 text-center text-xs" style={{ color: '#6b6360' }}>{projectB.audits?.length ?? 0}</td>
           </tr>
-
-          {/* GitHub repos */}
-          <tr style={ROW_STYLE}>
-            <td className="py-3 pr-4 text-xs" style={{ color: '#64748b' }}>GitHub Repos</td>
-            <td className="py-3 pr-4 text-center text-xs" style={{ color: '#94a3b8' }}>
-              {projectA.github_repos?.length ?? 0}
-            </td>
-            <td className="py-3 text-center text-xs" style={{ color: '#94a3b8' }}>
-              {projectB.github_repos?.length ?? 0}
-            </td>
+          <tr style={ROW}>
+            <td className="py-3 pr-4 text-xs" style={{ color: '#9b938a' }}>GitHub repos</td>
+            <td className="py-3 pr-4 text-center text-xs" style={{ color: '#6b6360' }}>{projectA.github_repos?.length ?? 0}</td>
+            <td className="py-3 text-center text-xs" style={{ color: '#6b6360' }}>{projectB.github_repos?.length ?? 0}</td>
           </tr>
-
         </tbody>
       </table>
     </div>

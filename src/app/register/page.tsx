@@ -7,18 +7,18 @@ export const metadata: Metadata = {
 };
 
 const STEPS = [
-  { n: 1, title: 'Enter details', body: 'Name, category, website, team, tokenomics, and roadmap.' },
-  { n: 2, title: 'Upload evidence', body: 'Whitepaper, audits, and supporting documents.' },
-  { n: 3, title: 'Lock submission', body: 'Sign and finalize on-chain. No changes after this step.' },
-  { n: 4, title: 'GenLayer assesses', body: 'Intelligent contract fetches sources and scores your evidence.' },
-  { n: 5, title: 'Receive your score', body: 'Tier and verification score recorded on-chain permanently.' },
+  { n: 1, title: 'Identity & sources', body: 'Name, category, website, team, tokenomics, and roadmap.' },
+  { n: 2, title: 'Attach proof docs', body: 'Whitepaper, audits, GitHub, and any verifiable source URLs.' },
+  { n: 3, title: 'Lock on-chain', body: 'Sign to finalize. Data is immutable from this point forward.' },
+  { n: 4, title: 'GenLayer assesses', body: 'Intelligent contract fetches each source URL live and scores all 7 dimensions.' },
+  { n: 5, title: 'Verification issued', body: 'Star tier and 7-factor score written permanently on-chain.' },
 ];
 
 export default function RegisterPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <div className="mb-8">
-        <p className="mb-2 text-[10px] uppercase tracking-[0.28em]" style={{ color: '#9b938a' }}>Registration</p>
+        <p className="mb-2 text-[10px] uppercase tracking-[0.28em]" style={{ color: '#9b938a' }}>On-chain submission</p>
         <h1 className="text-3xl font-semibold" style={{ color: '#1a1612' }}>Register Your Initiative</h1>
       </div>
 

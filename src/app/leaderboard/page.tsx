@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { CATEGORIES, TIER_HEX } from '@/constants';
-import type { LeaderboardEntry } from '@/types';
+import { CATEGORIES, TIER_HEX, TIER_STARS } from '@/constants';
+import type { LeaderboardEntry, RankTier } from '@/types';
 
 const ALL_CATS = ['Overall', ...CATEGORIES];
 
@@ -98,10 +98,10 @@ export default function LeaderboardPage() {
 
                   {/* Tier badge */}
                   <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md font-mono text-xs font-black"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md font-mono text-[11px] font-black"
                     style={{ background: `${TIER_HEX[e.tier]}15`, color: TIER_HEX[e.tier] }}
                   >
-                    {e.tier}
+                    {TIER_STARS[e.tier as RankTier]}
                   </span>
 
                   {/* Name + category */}

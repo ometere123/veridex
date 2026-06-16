@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { CATEGORIES, RANK_TIERS, TIER_HEX } from '@/constants';
-import type { LeaderboardEntry } from '@/types';
+import { CATEGORIES, RANK_TIERS, TIER_HEX, TIER_STARS } from '@/constants';
+import type { LeaderboardEntry, RankTier } from '@/types';
 
 const TIER_DESC: Record<string, string> = {
   'S+': 'Best-in-class verified',
@@ -100,10 +100,10 @@ export default function TiersPage() {
                 }
               >
                 <span
-                  className="w-8 shrink-0 text-center font-mono text-xl font-black leading-none"
+                  className="w-8 shrink-0 text-center font-mono text-base font-black leading-none"
                   style={{ color: active ? '#ffffff' : TIER_HEX[t.tier] }}
                 >
-                  {t.tier}
+                  {TIER_STARS[t.tier as RankTier]}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium" style={{ color: active ? '#ffffff' : '#1a1612' }}>
@@ -187,10 +187,10 @@ export default function TiersPage() {
                   onMouseLeave={(el) => (el.currentTarget.style.borderColor = 'rgba(107,142,122,0.10)')}
                 >
                   <span
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-mono text-sm font-black"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-mono text-xs font-black"
                     style={{ background: `${TIER_HEX[e.tier]}18`, color: TIER_HEX[e.tier] }}
                   >
-                    {e.tier}
+                    {TIER_STARS[e.tier as RankTier]}
                   </span>
                   <span className="w-5 shrink-0 text-right font-mono text-[11px]" style={{ color: '#c8c0b8' }}>
                     {e.rank}

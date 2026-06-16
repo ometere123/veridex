@@ -44,11 +44,11 @@ function buildProof(
   evaluation: Awaited<ReturnType<typeof getEvaluation>>,
 ): GenLayerProof {
   const steps: GenLayerProofStep[] = [
-    { label: 'Project Submitted', status: 'complete', timestamp: project.created_at, method: 'create_project' },
-    { label: 'Evidence Locked', status: project.evidence_hash ? 'complete' : 'pending', timestamp: project.locked_at, method: 'lock_project_data' },
-    { label: 'Evaluation Started', status: ['evaluating', 'ranked', 'reevaluation_pending'].includes(project.status) ? 'complete' : 'pending', method: 'submit_evaluation' },
-    { label: 'Evaluation Finalized', status: evaluation?.evaluation_id ? 'complete' : 'pending', timestamp: evaluation?.evaluated_at, method: 'run_evaluation' },
-    { label: 'Ranking Updated', status: ['ranked', 'reevaluation_pending'].includes(project.status) ? 'complete' : 'pending', method: 'run_evaluation' },
+    { label: 'Initiative Submitted', status: 'complete', timestamp: project.created_at, method: 'create_project' },
+    { label: 'Source Data Locked', status: project.evidence_hash ? 'complete' : 'pending', timestamp: project.locked_at, method: 'lock_project_data' },
+    { label: 'Assessment Started', status: ['evaluating', 'ranked', 'reevaluation_pending'].includes(project.status) ? 'complete' : 'pending', method: 'submit_evaluation' },
+    { label: 'Assessment Finalized', status: evaluation?.evaluation_id ? 'complete' : 'pending', timestamp: evaluation?.evaluated_at, method: 'run_evaluation' },
+    { label: 'Verification Indexed', status: ['ranked', 'reevaluation_pending'].includes(project.status) ? 'complete' : 'pending', method: 'run_evaluation' },
   ];
 
   return {

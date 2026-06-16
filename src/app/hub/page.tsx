@@ -104,8 +104,8 @@ export default function HubPage() {
           {[
             { label: 'Registrations', value: totalProjects },
             { label: 'Assessments', value: totalEvals },
-            { label: 'Avg Score', value: formatScore(avgScore) },
-            { label: 'Peak Score', value: formatScore(bestScore) },
+            { label: 'Avg Assessment', value: formatScore(avgScore) },
+            { label: 'Peak Assessment', value: formatScore(bestScore) },
           ].map((s, i) => (
             <div
               key={s.label}
@@ -167,7 +167,7 @@ export default function HubPage() {
               className="h-4 w-4 animate-spin rounded-full border-2"
               style={{ borderColor: 'rgba(107,142,122,0.2)', borderTopColor: '#6b8e7a' }}
             />
-            Loading...
+            Retrieving initiatives...
           </div>
         ) : projects.length === 0 ? (
           <div

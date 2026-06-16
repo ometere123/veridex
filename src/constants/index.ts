@@ -1,7 +1,7 @@
 import type { ProjectCategory, RankTier } from '@/types';
 
 export const APP_NAME = 'Veridex';
-export const APP_TAGLINE = 'Crypto project rankings powered by GenLayer intelligence.';
+export const APP_TAGLINE = 'On-chain verification scores powered by GenLayer intelligence.';
 
 export const CATEGORIES: ProjectCategory[] = [
   'DeFi', 'AI', 'Gaming', 'Infrastructure', 'RWA', 'DePIN', 'Consumer', 'Other',

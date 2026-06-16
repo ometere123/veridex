@@ -1,53 +1,36 @@
-import Link from 'next/link';
+﻿import Link from 'next/link';
 
 export default function NotFound() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="text-center max-w-md">
-        {/* Large 404 */}
         <div
           className="text-8xl font-black font-mono mb-4 select-none"
-          style={{
-            background: 'linear-gradient(135deg, #00d9ff 0%, #06b6d4 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            filter: 'drop-shadow(0 0 24px rgba(0,217,255,0.3))',
-          }}
+          style={{ color: 'rgba(107,142,122,0.18)' }}
         >
           404
         </div>
-
-        <h2 className="text-2xl font-bold mb-3" style={{ color: 'var(--foreground)' }}>
-          Route Not Found
+        <h2 className="text-2xl font-semibold mb-3" style={{ color: '#1a1612' }}>
+          Page not found
         </h2>
-        <p className="text-sm mb-8 leading-relaxed" style={{ color: 'var(--muted)' }}>
-          This route does not exist or has been relocated.
-          It could also reference a submission that has not been assessed yet.
+        <p className="text-sm mb-8 leading-relaxed" style={{ color: '#6b6360' }}>
+          This route does not exist or has moved. It may also reference an initiative
+          that has not been assessed yet.
         </p>
-
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/"
-            className="font-semibold px-6 py-3 rounded-sm text-sm transition-all"
-            style={{
-              background: '#00d9ff',
-              color: '#0a0f1a',
-              boxShadow: '0 0 16px rgba(0,217,255,0.3)',
-            }}
+            className="font-semibold px-6 py-3 rounded-full text-sm transition-all"
+            style={{ background: '#6b8e7a', color: '#ffffff' }}
           >
-            Return Home
+            Return home
           </Link>
           <Link
             href="/tiers"
-            className="font-semibold px-6 py-3 rounded-sm text-sm transition-all"
-            style={{
-              background: 'rgba(0,217,255,0.06)',
-              border: '1px solid rgba(0,217,255,0.16)',
-              color: '#00d9ff',
-            }}
+            className="font-semibold px-6 py-3 rounded-full text-sm transition-all"
+            style={{ background: 'rgba(107,142,122,0.08)', border: '1px solid rgba(107,142,122,0.18)', color: '#6b8e7a' }}
           >
-            View Standings
+            View standings
           </Link>
         </div>
       </div>

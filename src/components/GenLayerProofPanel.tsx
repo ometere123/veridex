@@ -1,4 +1,4 @@
-import { truncateHash, formatDateTime } from '@/utils';
+﻿import { truncateHash, formatDateTime } from '@/utils';
 import type { GenLayerProof } from '@/types';
 
 interface GenLayerProofPanelProps {
@@ -7,9 +7,9 @@ interface GenLayerProofPanelProps {
 }
 
 const STATUS_ICON = {
-  complete: { icon: '✓', color: '#4ade80', bg: 'rgba(74,222,128,0.08)' },
-  failed:   { icon: '✗', color: '#f87171', bg: 'rgba(248,113,113,0.08)' },
-  pending:  { icon: '○', color: '#64748b', bg: 'rgba(107,84,144,0.08)' },
+  complete: { icon: '✓', color: '#6b8e7a', bg: 'rgba(107,142,122,0.10)' },
+  failed:   { icon: '✗', color: '#b8633f', bg: 'rgba(184,99,63,0.10)' },
+  pending:  { icon: '○', color: '#9b938a', bg: 'rgba(107,142,122,0.06)' },
 };
 
 export function GenLayerProofPanel({ proof, className }: GenLayerProofPanelProps) {
@@ -17,34 +17,32 @@ export function GenLayerProofPanel({ proof, className }: GenLayerProofPanelProps
     <div
       className={className}
       style={{
-        background: '#0a0f1a',
-        border: '1px solid rgba(0,217,255,0.12)',
-        borderRadius: '12px',
+        background: '#ffffff',
+        border: '1px solid rgba(107,142,122,0.12)',
+        borderRadius: '20px',
         padding: '20px',
       }}
     >
-      {/* Header */}
       <div className="flex items-center gap-2 mb-5">
         <div
-          className="w-6 h-6 rounded flex items-center justify-center text-xs font-bold"
-          style={{ background: 'linear-gradient(135deg,#00d9ff,#00d9ff)', color: '#fff' }}
+          className="w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold"
+          style={{ background: 'rgba(107,142,122,0.10)', color: '#6b8e7a' }}
         >
           ⬡
         </div>
-        <h3 className="font-semibold text-sm" style={{ color: '#e2e8f0' }}>
-          GenLayer Proof
+        <h3 className="font-semibold text-sm" style={{ color: '#1a1612' }}>
+          GenLayer Proof Chain
         </h3>
       </div>
 
-      {/* Steps */}
       <div className="space-y-px mb-5">
         {proof.steps.map((step, i) => {
           const s = STATUS_ICON[step.status];
           return (
             <div
               key={i}
-              className="flex items-center gap-3 py-2.5 px-3 rounded-lg"
-              style={{ background: i % 2 === 0 ? 'rgba(0,217,255,0.02)' : 'transparent' }}
+              className="flex items-center gap-3 py-2.5 px-3 rounded-xl"
+              style={{ background: i % 2 === 0 ? 'rgba(107,142,122,0.03)' : 'transparent' }}
             >
               <div
                 className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
@@ -53,17 +51,17 @@ export function GenLayerProofPanel({ proof, className }: GenLayerProofPanelProps
                 {s.icon}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium" style={{ color: '#cbd5e1' }}>
+                <div className="text-xs font-medium" style={{ color: '#1a1612' }}>
                   {step.label}
                 </div>
                 {step.timestamp && (
-                  <div className="text-[10px]" style={{ color: '#64748b' }}>
+                  <div className="text-[10px]" style={{ color: '#9b938a' }}>
                     {formatDateTime(step.timestamp)}
                   </div>
                 )}
               </div>
               {step.tx_hash && (
-                <code className="text-[10px] font-mono hidden sm:block" style={{ color: '#00d9ff' }}>
+                <code className="text-[10px] font-mono hidden sm:block" style={{ color: '#6b8e7a' }}>
                   {truncateHash(step.tx_hash, 5)}
                 </code>
               )}
@@ -72,29 +70,28 @@ export function GenLayerProofPanel({ proof, className }: GenLayerProofPanelProps
         })}
       </div>
 
-      {/* Metadata */}
       <div
         className="space-y-2 text-xs pt-4"
-        style={{ borderTop: '1px solid rgba(0,217,255,0.08)' }}
+        style={{ borderTop: '1px solid rgba(107,142,122,0.10)' }}
       >
         <div className="flex items-center justify-between">
-          <span style={{ color: '#64748b' }}>Contract</span>
-          <code className="font-mono" style={{ color: '#94a3b8' }}>
+          <span style={{ color: '#9b938a' }}>Contract</span>
+          <code className="font-mono" style={{ color: '#6b6360' }}>
             {truncateHash(proof.contract_address, 7)}
           </code>
         </div>
         {proof.evidence_hash && (
           <div className="flex items-center justify-between">
-            <span style={{ color: '#64748b' }}>Evidence Hash</span>
-            <code className="font-mono" style={{ color: '#4ade80' }}>
+            <span style={{ color: '#9b938a' }}>Source Hash</span>
+            <code className="font-mono" style={{ color: '#6b8e7a' }}>
               {truncateHash(proof.evidence_hash, 7)}
             </code>
           </div>
         )}
         {proof.evaluation_hash && (
           <div className="flex items-center justify-between">
-            <span style={{ color: '#64748b' }}>Assessment Hash</span>
-            <code className="font-mono" style={{ color: '#00d9ff' }}>
+            <span style={{ color: '#9b938a' }}>Assessment Hash</span>
+            <code className="font-mono" style={{ color: '#b8633f' }}>
               {truncateHash(proof.evaluation_hash, 7)}
             </code>
           </div>
