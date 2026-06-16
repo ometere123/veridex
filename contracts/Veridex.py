@@ -584,10 +584,14 @@ Return this JSON shape:
             return self._normalize_fact_check_payload(parsed, fetched_sources)
 
         def validator_fn(leader_result) -> bool:
-            if not isinstance(leader_result, gl.vm.Return):
+            if isinstance(leader_result, gl.vm.Return):
+                raw = leader_result.calldata
+            elif isinstance(leader_result, dict):
+                raw = leader_result
+            else:
                 return False
 
-            leader_data = self._normalize_fact_check_payload(leader_result.calldata, [])
+            leader_data = self._normalize_fact_check_payload(raw, [])
             validator_data = leader_fn()
 
             return self._fact_checks_close_enough(leader_data, validator_data)
@@ -686,10 +690,14 @@ Return ONLY this JSON shape:
             return self._apply_fact_check_weighting(normalized, fact_check)
 
         def validator_fn(leader_result) -> bool:
-            if not isinstance(leader_result, gl.vm.Return):
+            if isinstance(leader_result, gl.vm.Return):
+                raw = leader_result.calldata
+            elif isinstance(leader_result, dict):
+                raw = leader_result
+            else:
                 return False
 
-            leader_data = self._normalize_score_payload(leader_result.calldata)
+            leader_data = self._normalize_score_payload(raw)
             validator_data = leader_fn()
 
             return self._scores_close_enough(leader_data, validator_data)
