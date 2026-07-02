@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { CATEGORIES } from '@/constants';
+import { formatDateTime } from '@/utils';
 import type { RegistryEntry, RiskBand, VerificationLevel } from '@/types';
 
 const LEVELS = ['ALL', 'VERIFIED_PLUS', 'VERIFIED', 'SUBSTANTIATED', 'DEVELOPING', 'LIMITED_EVIDENCE', 'HIGH_RISK', 'UNVERIFIABLE'];
@@ -162,7 +163,7 @@ function RegistryDossierCard({ entry }: { entry: RegistryEntry }) {
       </div>
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[#8effc31f] pt-4 text-xs text-[#9bb4a6]">
-        <span>Last verified: {entry.last_verified_at || 'Pending'}</span>
+        <span>Last verified: {formatDateTime(entry.last_verified_at)}</span>
         <span className={stale ? 'text-[#d4ad63]' : 'text-[#8effc3]'}>{stale ? 'Stale' : 'Active'}</span>
       </div>
     </Link>

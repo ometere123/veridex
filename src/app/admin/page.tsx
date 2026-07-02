@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Dispatch, FormEvent, ReactNode, SetStateAction } from 'react';
 import { useAccount, useDisconnect } from 'wagmi';
 import { formatEther, parseEther } from 'viem';
+import { formatDateTime } from '@/utils';
 import { WalletConnectButton } from '@/components/WalletConnectButton';
 import {
   getProofLedger,
@@ -539,7 +540,7 @@ function TreasuryProofEvents({ events }: { events: ProofEvent[] }) {
             <div key={event.event_id} className="rounded-3xl border border-[#8effc31f] bg-[#ffffff08] p-4 font-mono text-xs">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <span className="rounded-full bg-[#8effc314] px-3 py-1 text-[#8effc3]">{event.event_type}</span>
-                <span className="text-[#6fae8e]">{event.timestamp}</span>
+                <span className="text-[#6fae8e]">{formatDateTime(event.timestamp)}</span>
               </div>
               <p className="mt-3 text-[#f5fff7]">{event.summary}</p>
               <p className="mt-2 break-all text-[#9bb4a6]">event hash: {event.event_hash}</p>

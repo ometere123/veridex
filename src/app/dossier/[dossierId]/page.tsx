@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { DossierLockPanel } from '@/components/DossierLockPanel';
 import { DossierVerificationPanel } from '@/components/DossierVerificationPanel';
 import { DossierTxHistory } from '@/components/DossierTxHistory';
+import { formatDateTime } from '@/utils';
 import type { Dossier, EvidenceManifest, FactCheckReport, HistoricalScore, ProofEvent, VerificationReport } from '@/types';
 
 interface DossierPayload {
@@ -94,7 +95,7 @@ export default function DossierPage() {
         <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Metric label="Verification Level" value={friendly(dossier.current_verification_level)} />
           <Metric label="Evidence Confidence" value={`${dossier.evidence_confidence}%`} />
-          <Metric label="Last Verified" value={dossier.last_verified_at || 'Pending'} />
+          <Metric label="Last Verified" value={formatDateTime(dossier.last_verified_at)} />
           <Metric label="Verified Sources" value={String(dossier.verified_source_count)} />
         </div>
       </section>
@@ -154,8 +155,8 @@ export default function DossierPage() {
           <EvidenceRow label="Dossier ID" value={dossier.dossier_id} />
           <EvidenceRow label="Issuer" value={dossier.issuer} />
           <EvidenceRow label="Status" value={dossier.status} />
-          <EvidenceRow label="Evidence locked" value={dossier.locked_at || 'Pending'} />
-          <EvidenceRow label="Expires" value={dossier.expires_at || 'Not set'} />
+          <EvidenceRow label="Evidence locked" value={formatDateTime(dossier.locked_at)} />
+          <EvidenceRow label="Expires" value={formatDateTime(dossier.expires_at)} />
           <EvidenceRow label="Verification history" value={`${history.length} cycle${history.length === 1 ? '' : 's'}`} />
         </Panel>
       </div>
@@ -309,7 +310,7 @@ function ProofTimeline({ events }: { events: ProofEvent[] }) {
         <div key={event.event_id} className="proof-terminal rounded-3xl p-4 font-mono text-xs">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="rounded-full bg-[#8effc314] px-3 py-1 text-[#8effc3]">{event.event_type}</span>
-            <span className="text-[#6fae8e]">{event.timestamp}</span>
+            <span className="text-[#6fae8e]">{formatDateTime(event.timestamp)}</span>
           </div>
           <p className="mt-3 text-[#f5fff7]">{event.summary}</p>
           <p className="mt-2 break-all text-[#9bb4a6]">event: {event.event_hash}</p>

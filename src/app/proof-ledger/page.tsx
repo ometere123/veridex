@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { formatDateTime } from '@/utils';
 import type { ProofEvent } from '@/types';
 
 export default function ProofLedgerPage() {
@@ -66,7 +67,7 @@ export default function ProofLedgerPage() {
               <div key={event.event_id} className="rounded-3xl border border-[#8effc31f] bg-[#ffffff08] p-4 font-mono text-xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="rounded-full bg-[#8effc314] px-3 py-1 text-[#8effc3]">{event.event_type}</span>
-                  <span className="text-[#6fae8e]">{event.timestamp}</span>
+                  <span className="text-[#6fae8e]">{formatDateTime(event.timestamp)}</span>
                 </div>
                 <p className="mt-3 font-sans text-sm text-[#f5fff7]">{event.summary}</p>
                 <TerminalLine label="event hash" value={event.event_hash} />
