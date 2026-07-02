@@ -7,6 +7,7 @@ import { cn } from '@/utils';
 import { CATEGORIES } from '@/constants';
 import { contractCreateDossier } from '@/lib/genlayer-write';
 import { saveProjectLocally } from '@/lib/local-projects';
+import { TxLink } from './TxLink';
 import type { ProjectCategory } from '@/types';
 
 interface ProjectFormData {
@@ -67,6 +68,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep]         = useState('');
   const [error, setError]       = useState('');
+  const [txHash, setTxHash]     = useState('');
   // mounted guard: only affects RENDER OUTPUT, never skips hooks
   const [mounted, setMounted]   = useState(false);
 
@@ -91,6 +93,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
     setSubmitting(true);
     setError('');
     setStep('');
+    setTxHash('');
 
     try {
       setStep('Sending dossier to GenLayer - approve in your wallet...');
@@ -127,6 +130,9 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
           type: file.type,
           url: file.url,
         })),
+      }, (hash) => {
+        setTxHash(hash);
+        setStep('Waiting for GenLayer consensus - this can take a few minutes...');
       });
 
       // ── Save to localStorage immediately (works even without Supabase) ──
@@ -366,6 +372,13 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
         <div className="rounded-xl p-4 text-sm"
           style={{ background: 'rgba(107,142,122,0.08)', border: '1px solid rgba(107,142,122,0.15)', color: 'var(--brand-deep)' }}>
           Connect your wallet to create a public verification dossier.
+        </div>
+      )}
+
+      {mounted && submitting && txHash && (
+        <div className="rounded-xl p-4 text-sm text-center"
+          style={{ background: 'rgba(142,255,195,0.06)', border: '1px solid rgba(142,255,195,0.16)' }}>
+          <TxLink hash={txHash} label="Transaction submitted - view on explorer" />
         </div>
       )}
 

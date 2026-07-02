@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { truncateHash, formatDateTime } from '@/utils';
 import { contractLockEvidence } from '@/lib/genlayer-write';
+import { TxLink } from './TxLink';
 import type { Dossier } from '@/types';
 
 interface DossierLockPanelProps {
@@ -16,6 +17,7 @@ export function DossierLockPanel({ dossier, onLock, className }: DossierLockPane
   const { address } = useAccount();
   const [locking, setLocking] = useState(false);
   const [error, setError] = useState('');
+  const [txHash, setTxHash] = useState('');
 
   const isIssuer = address?.toLowerCase() === dossier.issuer?.toLowerCase();
   const isLocked = dossier.status !== 'DRAFT';
@@ -25,8 +27,9 @@ export function DossierLockPanel({ dossier, onLock, className }: DossierLockPane
     if (!address) return;
     setLocking(true);
     setError('');
+    setTxHash('');
     try {
-      await contractLockEvidence(address, dossier.dossier_id);
+      await contractLockEvidence(address, dossier.dossier_id, setTxHash);
       onLock?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to lock evidence');
@@ -88,6 +91,11 @@ export function DossierLockPanel({ dossier, onLock, className }: DossierLockPane
             ⚠ Locking is permanent. No edits after this action.
           </div>
           {error && <p className="text-sm text-[#e07a5f]">{error}</p>}
+          {locking && txHash && (
+            <div className="rounded-2xl p-3 text-xs" style={{ background: 'rgba(142,255,195,0.06)', border: '1px solid rgba(142,255,195,0.16)' }}>
+              <TxLink hash={txHash} label="Submitted - view on explorer" />
+            </div>
+          )}
           {canLock && (
             <button
               onClick={handleLock}

@@ -88,7 +88,13 @@ function getBrowserClient(account: string) {
  * Send a write tx - returns tx hash immediately after wallet signs.
  * Does NOT wait for finalization. Use glSubmitAndWait for blocking calls.
  */
-export async function glSubmit(method: string, args: ContractArg[], account: string, value: bigint = BigInt(0)): Promise<string> {
+export async function glSubmit(
+  method: string,
+  args: ContractArg[],
+  account: string,
+  value: bigint = BigInt(0),
+  onTxHash?: (hash: string) => void,
+): Promise<string> {
   await ensureGenLayerChain();
   const client = getBrowserClient(account);
   const txHash = await client.writeContract({
@@ -97,6 +103,7 @@ export async function glSubmit(method: string, args: ContractArg[], account: str
     args,
     value,
   });
+  onTxHash?.(txHash as string);
   return txHash as string;
 }
 
@@ -110,9 +117,10 @@ export async function glSubmitAndWait(
   args: ContractArg[],
   account: string,
   timeoutMs = 300_000,
-  value: bigint = BigInt(0)
+  value: bigint = BigInt(0),
+  onTxHash?: (hash: string) => void,
 ): Promise<string> {
-  const txHash = await glSubmit(method, args, account, value);
+  const txHash = await glSubmit(method, args, account, value, onTxHash);
   try {
     const client = getBrowserClient(account);
     const timeoutP = new Promise<never>((_, rej) =>
@@ -160,8 +168,14 @@ async function fetchTxResult(txHash: string): Promise<string | null> {
   } catch { return null; }
 }
 
-async function glWriteAndGetResult(method: string, args: ContractArg[], account: string, value: bigint = BigInt(0)): Promise<unknown> {
-  const txHash = await glSubmitAndWait(method, args, account, 300_000, value);
+async function glWriteAndGetResult(
+  method: string,
+  args: ContractArg[],
+  account: string,
+  value: bigint = BigInt(0),
+  onTxHash?: (hash: string) => void,
+): Promise<unknown> {
+  const txHash = await glSubmitAndWait(method, args, account, 300_000, value, onTxHash);
   const fromRpc = await fetchTxResult(txHash);
   if (fromRpc) return fromRpc;
   try {
@@ -183,7 +197,7 @@ export async function contractCreateDossier(account: string, params: {
   ecosystem_integrations: string[];
   verification_document_url: string;
   evidence_files?: object[];
-}): Promise<string> {
+}, onTxHash?: (hash: string) => void): Promise<string> {
   const args = [
     params.name, params.category, params.website, params.description,
     params.whitepaper_url || '', params.docs_url || '',
@@ -207,7 +221,7 @@ export async function contractCreateDossier(account: string, params: {
     console.warn('Failed to fetch fees:', e);
   }
   
-  const result = await glWriteAndGetResult('create_dossier', args, account, feeValue);
+  const result = await glWriteAndGetResult('create_dossier', args, account, feeValue, onTxHash);
   if (typeof result === 'string' && result.length > 0 && !result.startsWith('0x')) return result;
   throw new Error(
     `Dossier created on-chain (tx: ${result}), but could not decode dossier ID. ` +
@@ -215,20 +229,24 @@ export async function contractCreateDossier(account: string, params: {
   );
 }
 
-export async function contractCreateProject(account: string, params: Parameters<typeof contractCreateDossier>[1]): Promise<string> {
-  return contractCreateDossier(account, params);
+export async function contractCreateProject(
+  account: string,
+  params: Parameters<typeof contractCreateDossier>[1],
+  onTxHash?: (hash: string) => void,
+): Promise<string> {
+  return contractCreateDossier(account, params, onTxHash);
 }
 
-export async function contractLockEvidence(account: string, dossierId: string): Promise<string> {
-  return glSubmitAndWait('lock_evidence', [dossierId], account, 180_000);
+export async function contractLockEvidence(account: string, dossierId: string, onTxHash?: (hash: string) => void): Promise<string> {
+  return glSubmitAndWait('lock_evidence', [dossierId], account, 180_000, BigInt(0), onTxHash);
 }
 
-export async function contractLockProject(account: string, projectId: string): Promise<string> {
-  return contractLockEvidence(account, projectId);
+export async function contractLockProject(account: string, projectId: string, onTxHash?: (hash: string) => void): Promise<string> {
+  return contractLockEvidence(account, projectId, onTxHash);
 }
 
 /** Step 3: changes status to VERIFYING. Waits for confirmation. */
-export async function contractSubmitVerification(account: string, dossierId: string): Promise<string> {
+export async function contractSubmitVerification(account: string, dossierId: string, onTxHash?: (hash: string) => void): Promise<string> {
   let feeValue = BigInt(0);
   try {
     const { getDossier, getProtocolFees } = await import('./genlayer');
@@ -243,24 +261,24 @@ export async function contractSubmitVerification(account: string, dossierId: str
   } catch (e) {
     console.warn('Failed to fetch fees:', e);
   }
-  
-  return glSubmitAndWait('submit_verification', [dossierId], account, 120_000, feeValue);
+
+  return glSubmitAndWait('submit_verification', [dossierId], account, 120_000, feeValue, onTxHash);
 }
 
-export async function contractSubmitEvaluation(account: string, projectId: string): Promise<string> {
-  return contractSubmitVerification(account, projectId);
+export async function contractSubmitEvaluation(account: string, projectId: string, onTxHash?: (hash: string) => void): Promise<string> {
+  return contractSubmitVerification(account, projectId, onTxHash);
 }
 
 /** Step 4: run_verification. Callers poll get_dossier/get_verification_report. */
-export async function contractRunVerification(account: string, dossierId: string): Promise<string> {
-  return glSubmit('run_verification', [dossierId], account);
+export async function contractRunVerification(account: string, dossierId: string, onTxHash?: (hash: string) => void): Promise<string> {
+  return glSubmit('run_verification', [dossierId], account, BigInt(0), onTxHash);
 }
 
-export async function contractRunEvaluation(account: string, projectId: string): Promise<string> {
-  return contractRunVerification(account, projectId);
+export async function contractRunEvaluation(account: string, projectId: string, onTxHash?: (hash: string) => void): Promise<string> {
+  return contractRunVerification(account, projectId, onTxHash);
 }
 
-export async function contractRequestVerificationRefresh(account: string, dossierId: string): Promise<string> {
+export async function contractRequestVerificationRefresh(account: string, dossierId: string, onTxHash?: (hash: string) => void): Promise<string> {
   let feeValue = BigInt(0);
   try {
     const { getProtocolFees } = await import('./genlayer');
@@ -271,11 +289,11 @@ export async function contractRequestVerificationRefresh(account: string, dossie
   } catch (e) {
     console.warn('Failed to fetch fees:', e);
   }
-  return glSubmitAndWait('request_verification_refresh', [dossierId], account, 120_000, feeValue);
+  return glSubmitAndWait('request_verification_refresh', [dossierId], account, 120_000, feeValue, onTxHash);
 }
 
-export async function contractRequestReevaluation(account: string, projectId: string): Promise<string> {
-  return contractRequestVerificationRefresh(account, projectId);
+export async function contractRequestReevaluation(account: string, projectId: string, onTxHash?: (hash: string) => void): Promise<string> {
+  return contractRequestVerificationRefresh(account, projectId, onTxHash);
 }
 
 export async function contractSetProtocolFees(

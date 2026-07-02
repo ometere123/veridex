@@ -12,6 +12,7 @@ import {
   updatePendingEvalStage, STAGE_LABEL,
   type EvalStage,
 } from '@/lib/pending-tx';
+import { TxLink } from './TxLink';
 import type { Dossier, VerificationReport } from '@/types';
 
 interface DossierVerificationPanelProps {
@@ -57,6 +58,7 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
   const [stage, setStage] = useState<EvalStage | null>(null);
   const [error, setError] = useState('');
   const [pollCount, setPollCount] = useState(0);
+  const [txHash, setTxHash] = useState('');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => setReport(initialReport ?? null), [initialReport]);
@@ -108,6 +110,7 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
       const elapsed = Date.now() - pending.started_at;
       if (elapsed < 300_000) {
         setStage(pending.stage === 'completed' ? 'validating' : pending.stage);
+        if (pending.tx_hash) setTxHash(pending.tx_hash);
         startPolling();
       } else {
         setStage('stalled');
@@ -120,13 +123,14 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
   async function handleVerify(skipSubmit: boolean) {
     if (!address) return;
     setError('');
+    setTxHash('');
 
     try {
       if (!skipSubmit) {
         setStage('signing');
         savePendingEval({ project_id: dossier.dossier_id, method: 'submit_evaluation', stage: 'signing', started_at: Date.now() });
 
-        const submitTx = await contractSubmitVerification(address, dossier.dossier_id);
+        const submitTx = await contractSubmitVerification(address, dossier.dossier_id, setTxHash);
         setStage('submitted');
         updatePendingEvalStage('submitted', { tx_hash: submitTx });
 
@@ -141,7 +145,7 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
       setStage('signing');
       updatePendingEvalStage('signing', { method: 'run_evaluation' });
 
-      const runTx = await contractRunVerification(address, dossier.dossier_id);
+      const runTx = await contractRunVerification(address, dossier.dossier_id, setTxHash);
 
       setStage('validating');
       updatePendingEvalStage('validating', { tx_hash: runTx });
@@ -158,9 +162,10 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
   async function handleRequestRefresh() {
     if (!address) return;
     setError('');
+    setTxHash('');
     setStage('signing');
     try {
-      await contractRequestVerificationRefresh(address, dossier.dossier_id);
+      await contractRequestVerificationRefresh(address, dossier.dossier_id, setTxHash);
       setStage(null);
       onVerify?.();
     } catch (e) {
@@ -201,8 +206,9 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
             </div>
           </div>
           <p className="text-sm text-[#9bb4a6] leading-6">{report.summary}</p>
-          <div className="text-[10px] pt-3 text-[#6fae8e]" style={{ borderTop: '1px solid rgba(142,255,195,0.06)' }}>
-            Verified by GenLayer validators
+          <div className="text-[10px] pt-3 text-[#6fae8e] flex flex-wrap items-center gap-x-2 gap-y-1" style={{ borderTop: '1px solid rgba(142,255,195,0.06)' }}>
+            <span>Verified by GenLayer validators</span>
+            {txHash && <TxLink hash={txHash} label="last transaction" className="text-[10px]" />}
           </div>
 
           {canRequestRefresh && (
@@ -216,6 +222,12 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
       ) : (
         <div className="space-y-3">
           {stage && <StageChip stage={stage} />}
+
+          {stage && txHash && (
+            <div className="rounded-2xl p-3 text-xs" style={{ background: 'rgba(142,255,195,0.06)', border: '1px solid rgba(142,255,195,0.16)' }}>
+              <TxLink hash={txHash} label="Submitted - view on explorer" />
+            </div>
+          )}
 
           {isPolling && pollCount > 0 && (
             <div className="text-[11px] text-[#6fae8e]">
