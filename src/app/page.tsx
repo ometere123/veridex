@@ -94,9 +94,9 @@ export default function LandingPage() {
               Once locked, this evidence set becomes the basis for the current GenLayer verification cycle.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap content-center items-center gap-2">
             {EVIDENCE_TYPES.map((type) => (
-              <span key={type} className="rounded-full border border-[#8effc326] bg-[#8effc30f] px-4 py-2 text-sm text-[#dfffee]">
+              <span key={type} className="inline-flex items-center rounded-full border border-[#8effc326] bg-[#8effc30f] px-4 py-2 text-sm leading-none text-[#dfffee]">
                 {type}
               </span>
             ))}
