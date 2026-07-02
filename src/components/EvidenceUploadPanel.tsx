@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { cn } from '@/utils';
+import { supabase } from '@/lib/supabase';
 
 interface UploadedFile {
   name: string;
@@ -31,6 +32,8 @@ const ACCEPTED = {
   'image/jpeg': ['.jpg', '.jpeg'],
 };
 
+const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
+
 export function EvidenceUploadPanel({ onFilesChange, disabled, className }: EvidenceUploadPanelProps) {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [dragging, setDragging] = useState(false);
@@ -44,12 +47,24 @@ export function EvidenceUploadPanel({ onFilesChange, disabled, className }: Evid
 
     try {
       for (const file of incoming) {
-        const body = new FormData();
-        body.append('file', file);
-        const res = await fetch('/api/upload', { method: 'POST', body });
-        const json = await res.json();
-        if (!res.ok) throw new Error(json.error || 'Upload failed');
-        uploaded.push({ name: file.name, size: file.size, type: file.type, url: json.url, path: json.path });
+        if (file.size > MAX_BYTES) throw new Error(`${file.name} exceeds the 20 MB limit`);
+
+        // Ask the server for a signed upload slot (small JSON request)...
+        const signRes = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename: file.name }),
+        });
+        const signed = await signRes.json();
+        if (!signRes.ok) throw new Error(signed.error || 'Could not prepare upload');
+
+        // ...then PUT the file bytes straight to Supabase Storage, bypassing our server entirely.
+        const { error: uploadError } = await supabase.storage
+          .from(signed.bucket)
+          .uploadToSignedUrl(signed.path, signed.token, file);
+        if (uploadError) throw new Error(uploadError.message);
+
+        uploaded.push({ name: file.name, size: file.size, type: file.type, url: signed.publicUrl, path: signed.path });
       }
     } catch (uploadError) {
       setError(uploadError instanceof Error ? uploadError.message : 'Evidence upload failed');

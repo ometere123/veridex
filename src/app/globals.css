@@ -41,6 +41,13 @@
 
 html {
   background: #07110d;
+  color-scheme: dark;
+}
+
+select,
+select option {
+  background-color: #0b1712;
+  color: var(--foreground);
 }
 
 body {

@@ -261,7 +261,17 @@ export async function contractRunEvaluation(account: string, projectId: string):
 }
 
 export async function contractRequestVerificationRefresh(account: string, dossierId: string): Promise<string> {
-  return glSubmitAndWait('request_verification_refresh', [dossierId], account);
+  let feeValue = BigInt(0);
+  try {
+    const { getProtocolFees } = await import('./genlayer');
+    const fees = await getProtocolFees();
+    if (fees.fees_enabled) {
+      feeValue = BigInt(fees.refresh_fee || fees.reevaluation_fee || '0');
+    }
+  } catch (e) {
+    console.warn('Failed to fetch fees:', e);
+  }
+  return glSubmitAndWait('request_verification_refresh', [dossierId], account, 120_000, feeValue);
 }
 
 export async function contractRequestReevaluation(account: string, projectId: string): Promise<string> {

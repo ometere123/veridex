@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { DossierLockPanel } from '@/components/DossierLockPanel';
+import { DossierVerificationPanel } from '@/components/DossierVerificationPanel';
 import type { Dossier, EvidenceManifest, FactCheckReport, HistoricalScore, ProofEvent, VerificationReport } from '@/types';
 
 interface DossierPayload {
@@ -30,14 +32,18 @@ export default function DossierPage() {
   const [payload, setPayload] = useState<DossierPayload | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const reload = useCallback(() => {
     if (!dossierId) return;
-    fetch(`/api/dossier/${dossierId}`)
+    return fetch(`/api/dossier/${dossierId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setPayload(data))
-      .catch(() => setPayload(null))
-      .finally(() => setLoading(false));
+      .catch(() => setPayload(null));
   }, [dossierId]);
+
+  useEffect(() => {
+    setLoading(true);
+    reload()?.finally(() => setLoading(false));
+  }, [reload]);
 
   if (loading) {
     return <Shell><div className="rounded-[36px] border border-[#8effc326] bg-[#0b1712cc] p-12 text-sm text-[#9bb4a6]">Opening investigation file...</div></Shell>;
@@ -60,6 +66,8 @@ export default function DossierPage() {
 
   return (
     <Shell>
+      <DossierIdBanner dossierId={dossier.dossier_id} />
+
       <section className="scan-surface rounded-[42px] border border-[#8effc333] bg-[#0b1712cc] p-7 shadow-[0_30px_120px_rgba(0,0,0,0.34)] backdrop-blur-xl">
         <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
           <div>
@@ -87,6 +95,11 @@ export default function DossierPage() {
           <Metric label="Verified Sources" value={String(dossier.verified_source_count)} />
         </div>
       </section>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <DossierLockPanel dossier={dossier} onLock={reload} />
+        <DossierVerificationPanel dossier={dossier} report={report} onVerify={reload} />
+      </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <Panel title="Fact Check Summary" eyebrow="Source-grounded layer">
@@ -134,6 +147,31 @@ export default function DossierPage() {
 
 function Shell({ children }: { children: ReactNode }) {
   return <main className="mx-auto max-w-7xl px-4 py-12">{children}</main>;
+}
+
+function DossierIdBanner({ dossierId }: { dossierId: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function copy() {
+    navigator.clipboard?.writeText(dossierId).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  return (
+    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-2xl border border-[#8effc326] bg-[#8effc30f] px-4 py-3">
+      <span className="text-[10px] uppercase tracking-[0.2em] text-[#6fae8e]">Dossier ID</span>
+      <code className="flex-1 min-w-0 break-all font-mono text-sm text-[#dfffee]">{dossierId}</code>
+      <button
+        onClick={copy}
+        className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold"
+        style={{ background: copied ? 'rgba(142,255,195,0.24)' : 'rgba(142,255,195,0.12)', color: '#8effc3', border: '1px solid rgba(142,255,195,0.28)' }}
+      >
+        {copied ? 'Copied ✓' : 'Copy'}
+      </button>
+    </div>
+  );
 }
 
 function ConfidenceRing({ value }: { value: number }) {
