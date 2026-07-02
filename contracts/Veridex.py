@@ -1264,16 +1264,27 @@ class Veridex(gl.Contract):
             return "WEAK"
         return "UNVERIFIABLE"
 
+    def _flag_weight(self, flags: list) -> float:
+        # Soft flags ("could not confirm in fetched content") count half;
+        # hard flags (contradictions, unreachable sources, unverifiable identity) count full.
+        soft_suffixes = ("_NOT_CONFIRMED", "_PARTIAL", "_UNCLEAR", "_UNVERIFIED")
+        weight = 0.0
+        for flag in flags:
+            name = str(flag)
+            weight += 0.5 if name.endswith(soft_suffixes) else 1.0
+        return weight
+
     def _risk_band(self, score: int, flags: list) -> str:
-        if len(flags) >= 7:
+        weight = self._flag_weight(flags)
+        if weight >= 7:
             return "CRITICAL"
         if score < 30:
             return "CRITICAL"
-        if score < 50 or len(flags) >= 5:
+        if score < 50 or weight >= 5:
             return "HIGH"
-        if score < 65 or len(flags) >= 3:
+        if score < 65 or weight >= 3:
             return "ELEVATED"
-        if score < 80 or len(flags) >= 1:
+        if score < 80 or weight >= 1:
             return "MODERATE"
         return "LOW"
 
