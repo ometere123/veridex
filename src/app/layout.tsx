@@ -95,6 +95,7 @@ function Footer() {
         <div className="flex flex-wrap items-center justify-center gap-5 text-xs" style={{ color: 'var(--muted-2)' }}>
           <a href="/registry" className="hover:text-[#8effc3] transition-colors tracking-wide">Registry</a>
           <a href="/submit" className="hover:text-[#8effc3] transition-colors tracking-wide">Submit Evidence</a>
+          <a href="/dossiers" className="hover:text-[#8effc3] transition-colors tracking-wide">Dossiers</a>
           <a href="/verification-levels" className="hover:text-[#8effc3] transition-colors tracking-wide">Verification Levels</a>
           <a href="/proof-ledger" className="hover:text-[#8effc3] transition-colors tracking-wide">Proof Ledger</a>
           <a href="/signals" className="hover:text-[#8effc3] transition-colors tracking-wide">Signals</a>
