@@ -61,7 +61,8 @@ export default function RegistryPage() {
             Browse public verification dossiers backed by GenLayer state.
           </h1>
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[#9bb4a6]">
-            Filter by evidence confidence, verification level, risk band, source coverage, and active/stale state. Registry position is context, not the product.
+            Only dossiers that completed a GenLayer verification cycle appear here, ranked by risk band and evidence confidence.
+            Looking for drafts and in-progress submissions? Browse <Link href="/dossiers" className="text-[#8effc3] underline underline-offset-2">all dossiers</Link>.
           </p>
         </div>
 
