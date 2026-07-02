@@ -395,9 +395,23 @@ class Veridex(gl.Contract):
             "- short_reason: exactly one sentence summarizing the overall verdict"
         )
 
+        ai_criteria = (
+            "The output must be a single valid JSON object matching the veridex_verification_v1 schema "
+            "with no markdown fences or extra text. "
+            "The verdict must be one of VERIFIED, PARTIALLY_VERIFIED, UNVERIFIABLE, CONFLICTING_EVIDENCE, REJECTED "
+            "and must be consistent with the fetched source evidence: "
+            "claims backed by reachable source content may be SUPPORTED; "
+            "claims with unreachable sources must be UNVERIFIABLE, not SUPPORTED. "
+            "All numeric scores must be integers between 0 and 100 and must be grounded in the fetched content, "
+            "not in the submitted claims alone. "
+            "material_findings must reference only URLs that appear in fetched_sources. "
+            "Minor wording differences and score differences of up to 10 points are acceptable."
+        )
+
         verdict_json = gl.eq_principle.prompt_non_comparative(
             get_ai_input,
             task=ai_task,
+            criteria=ai_criteria,
         )
 
         # ---- Stage 3: Parse verdict and build final on-chain report ----
