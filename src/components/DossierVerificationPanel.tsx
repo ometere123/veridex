@@ -12,6 +12,7 @@ import {
   updatePendingEvalStage, STAGE_LABEL,
   type EvalStage,
 } from '@/lib/pending-tx';
+import { appendTxHistory } from '@/lib/tx-history';
 import { TxLink } from './TxLink';
 import type { Dossier, VerificationReport } from '@/types';
 
@@ -130,7 +131,10 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
         setStage('signing');
         savePendingEval({ project_id: dossier.dossier_id, method: 'submit_evaluation', stage: 'signing', started_at: Date.now() });
 
-        const submitTx = await contractSubmitVerification(address, dossier.dossier_id, setTxHash);
+        const submitTx = await contractSubmitVerification(address, dossier.dossier_id, (hash) => {
+          setTxHash(hash);
+          appendTxHistory(dossier.dossier_id, { op: 'submit_verification', hash, timestamp: Date.now() });
+        });
         setStage('submitted');
         updatePendingEvalStage('submitted', { tx_hash: submitTx });
 
@@ -145,7 +149,10 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
       setStage('signing');
       updatePendingEvalStage('signing', { method: 'run_evaluation' });
 
-      const runTx = await contractRunVerification(address, dossier.dossier_id, setTxHash);
+      const runTx = await contractRunVerification(address, dossier.dossier_id, (hash) => {
+        setTxHash(hash);
+        appendTxHistory(dossier.dossier_id, { op: 'run_verification', hash, timestamp: Date.now() });
+      });
 
       setStage('validating');
       updatePendingEvalStage('validating', { tx_hash: runTx });
@@ -165,7 +172,10 @@ export function DossierVerificationPanel({ dossier, report: initialReport, onVer
     setTxHash('');
     setStage('signing');
     try {
-      await contractRequestVerificationRefresh(address, dossier.dossier_id, setTxHash);
+      await contractRequestVerificationRefresh(address, dossier.dossier_id, (hash) => {
+        setTxHash(hash);
+        appendTxHistory(dossier.dossier_id, { op: 'request_refresh', hash, timestamp: Date.now() });
+      });
       setStage(null);
       onVerify?.();
     } catch (e) {

@@ -7,6 +7,7 @@ import { cn } from '@/utils';
 import { CATEGORIES } from '@/constants';
 import { contractCreateDossier } from '@/lib/genlayer-write';
 import { saveProjectLocally } from '@/lib/local-projects';
+import { appendTxHistory } from '@/lib/tx-history';
 import { TxLink } from './TxLink';
 import type { ProjectCategory } from '@/types';
 
@@ -98,6 +99,7 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
     try {
       setStep('Sending dossier to GenLayer - approve in your wallet...');
 
+      let createTxHash = '';
       const dossier_id = await contractCreateDossier(address!, {
         name:        form.name.trim(),
         category:    form.category,
@@ -131,9 +133,14 @@ export function ProjectForm({ uploadedFiles = [] }: ProjectFormProps) {
           url: file.url,
         })),
       }, (hash) => {
+        createTxHash = hash;
         setTxHash(hash);
         setStep('Waiting for GenLayer consensus - this can take a few minutes...');
       });
+
+      if (createTxHash && dossier_id && !dossier_id.startsWith('0x')) {
+        appendTxHistory(dossier_id, { op: 'create_dossier', hash: createTxHash, timestamp: Date.now() });
+      }
 
       // ── Save to localStorage immediately (works even without Supabase) ──
       saveProjectLocally({

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAccount } from 'wagmi';
 import { truncateHash, formatDateTime } from '@/utils';
 import { contractLockEvidence } from '@/lib/genlayer-write';
+import { appendTxHistory } from '@/lib/tx-history';
 import { TxLink } from './TxLink';
 import type { Dossier } from '@/types';
 
@@ -29,7 +30,10 @@ export function DossierLockPanel({ dossier, onLock, className }: DossierLockPane
     setError('');
     setTxHash('');
     try {
-      await contractLockEvidence(address, dossier.dossier_id, setTxHash);
+      await contractLockEvidence(address, dossier.dossier_id, (hash) => {
+        setTxHash(hash);
+        appendTxHistory(dossier.dossier_id, { op: 'lock_evidence', hash, timestamp: Date.now() });
+      });
       onLock?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to lock evidence');

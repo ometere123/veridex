@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { DossierLockPanel } from '@/components/DossierLockPanel';
 import { DossierVerificationPanel } from '@/components/DossierVerificationPanel';
+import { DossierTxHistory } from '@/components/DossierTxHistory';
 import type { Dossier, EvidenceManifest, FactCheckReport, HistoricalScore, ProofEvent, VerificationReport } from '@/types';
 
 interface DossierPayload {
@@ -31,9 +32,11 @@ export default function DossierPage() {
   const dossierId = params.dossierId;
   const [payload, setPayload] = useState<DossierPayload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [txRefreshKey, setTxRefreshKey] = useState(0);
 
   const reload = useCallback(() => {
     if (!dossierId) return;
+    setTxRefreshKey((k) => k + 1);
     return fetch(`/api/dossier/${dossierId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setPayload(data))
@@ -101,9 +104,12 @@ export default function DossierPage() {
         <DossierVerificationPanel dossier={dossier} report={report} onVerify={reload} />
       </div>
 
+      <DossierTxHistory dossierId={dossier.dossier_id} refreshKey={txRefreshKey} className="mt-6" />
+
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
         <Panel title="Fact Check Summary" eyebrow="Source-grounded layer">
           <p className="text-sm leading-7 text-[#9bb4a6]">{factCheck?.summary || 'No fact-check report has been stored yet.'}</p>
+          <MaterialFindings findings={(factCheck as { material_findings?: MaterialFinding[] } | null)?.material_findings ?? []} />
           <PillList title="Verified claims" items={factCheck?.verified_claims ?? []} />
           <PillList title="Missing evidence" items={factCheck?.missing_evidence ?? []} tone="warn" />
         </Panel>
@@ -119,6 +125,18 @@ export default function DossierPage() {
 
       <Panel title="Verification Dimensions" eyebrow="GenLayer verification report" className="mt-6">
         <p className="mb-5 text-sm leading-7 text-[#9bb4a6]">{report?.summary || 'Run verification after locking evidence to generate the report.'}</p>
+        {(() => {
+          const r = report as (VerificationReport & { ai_verdict?: string; submission_completeness_score?: number; sources_checked?: number; sources_failed?: number }) | null;
+          if (!r?.ai_verdict) return null;
+          return (
+            <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <Metric label="AI Verdict" value={friendly(r.ai_verdict)} />
+              <Metric label="Submission Completeness" value={`${r.submission_completeness_score ?? 0}%`} />
+              <Metric label="Sources Reached" value={String(r.sources_checked ?? 0)} />
+              <Metric label="Sources Unreachable" value={String(r.sources_failed ?? 0)} />
+            </div>
+          );
+        })()}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {Object.entries(report?.verification_dimensions ?? {}).map(([key, value]) => (
             <Metric key={key} label={key.replace(/_/g, ' ')} value={`${value}%`} />
@@ -240,6 +258,44 @@ function PillList({ title, items, tone = 'good' }: { title: string; items: strin
             {item}
           </span>
         ))}
+      </div>
+    </div>
+  );
+}
+
+interface MaterialFinding {
+  claim: string;
+  status: 'SUPPORTED' | 'PARTIAL' | 'CONTRADICTED' | 'UNVERIFIABLE';
+  source_url: string;
+  reason: string;
+}
+
+const FINDING_COLOR: Record<string, string> = {
+  SUPPORTED: '#8effc3',
+  PARTIAL: '#b8d878',
+  CONTRADICTED: '#e07a5f',
+  UNVERIFIABLE: '#d4ad63',
+};
+
+function MaterialFindings({ findings }: { findings: MaterialFinding[] }) {
+  if (!findings.length) return null;
+  return (
+    <div className="mt-5">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#6fae8e]">Material findings</h3>
+      <div className="space-y-2">
+        {findings.map((finding, i) => {
+          const color = FINDING_COLOR[finding.status] ?? '#9bb4a6';
+          return (
+            <div key={`${finding.claim}-${i}`} className="rounded-2xl p-3 text-xs" style={{ background: `${color}0d`, border: `1px solid ${color}2e` }}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-semibold text-[#dfffee]">{finding.claim}</span>
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold" style={{ background: `${color}1f`, color }}>{finding.status}</span>
+              </div>
+              {finding.reason && <p className="mt-2 leading-5 text-[#9bb4a6]">{finding.reason}</p>}
+              {finding.source_url && <p className="mt-1 break-all text-[10px] text-[#6fae8e]">{finding.source_url}</p>}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
