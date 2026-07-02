@@ -10,10 +10,12 @@ Evidence first. Verified on GenLayer. Rankings only after proof.
 
 - **Verification dossiers** - each project creates a public dossier with issuer, evidence hash, verification level, evidence confidence, risk band, and status.
 - **Evidence manifests** - websites, docs, whitepapers, GitHub repos, audits, team/governance data, tokenomics, bug bounty links, and uploaded evidence files are captured as the verification basis.
-- **Source-grounded fact checks** - submitted claims are treated as untrusted until public sources support them.
-- **Verification reports** - GenLayer stores verification dimensions, source integrity, proof completeness, missing evidence, recommendations, and critical warnings.
-- **Proof ledger** - dossier creation, updates, evidence locks, verification submissions, fact checks, reports, fee events, and archives append auditable proof events.
-- **Registry, not leaderboard-first** - users browse dossiers by verification level, evidence confidence, risk band, source count, and registry position.
+- **AI source verification** - GenLayer validators fetch each submitted source URL live (`gl.nondet.web.render` / `gl.nondet.web.get`) and an LLM evaluates the submitted claims against the fetched content, under Equivalence Principle consensus. Unreachable sources are flagged, never silently scored as valid.
+- **Readiness pre-check** - a deterministic submission-completeness score is stored for transparency, but it never decides the verdict.
+- **Verification reports** - GenLayer stores the AI verdict, evidence confidence, per-dimension scores, material findings (SUPPORTED / PARTIAL / CONTRADICTED / UNVERIFIABLE per claim), risk flags, and recommendations.
+- **Proof ledger** - dossier creation, updates, evidence locks, verification submissions, readiness checks, reports, fee events, and archives append auditable proof events.
+- **Transaction history** - every write (create, lock, submit, run, refresh) is recorded per dossier with a GenLayer explorer link.
+- **Registry, not leaderboard-first** - the registry lists dossiers that completed a verification cycle, ranked by risk band and confidence; `/dossiers` browses every dossier in any lifecycle stage.
 - **Protocol fee transparency** - create-dossier, verification, and refresh fees are managed on-chain by the contract owner.
 
 ## Tech Stack
@@ -64,8 +66,9 @@ Compatibility wrappers such as `create_project`, `get_project`, `get_evaluation`
 
 - `/` - evidence-first landing page
 - `/submit` - create an evidence manifest and dossier
-- `/registry` - public verification registry
-- `/dossier/[dossierId]` - public dossier, report, manifest, and proof ledger
+- `/registry` - verified dossiers only, ranked by risk band and confidence
+- `/dossiers` - browse all dossiers in any lifecycle stage (draft through verified)
+- `/dossier/[dossierId]` - public dossier, report, manifest, proof ledger, and transaction history
 - `/issuer-hub` - issuer dashboard and dossier lookup
 - `/verification-levels` - verification model explanation
 - `/proof-ledger` - proof event lookup
