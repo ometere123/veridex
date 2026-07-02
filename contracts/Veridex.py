@@ -288,27 +288,45 @@ class Veridex(gl.Contract):
 
         # Step 2a: Fetch all source URLs with strict equivalence.
         # All validators must agree on the fetched content before AI analysis proceeds.
+        # render(mode="text") gives readable page text (JS-rendered pages included);
+        # web.get is the fallback for non-HTML resources like PDFs, with tags stripped.
         def fetch_all_sources() -> str:
+            import re as _re
+
+            def _strip_html(raw: str) -> str:
+                raw = _re.sub(r"(?is)<(script|style|head|noscript)[^>]*>.*?</\1>", " ", raw)
+                raw = _re.sub(r"<[^>]+>", " ", raw)
+                return " ".join(raw.split())
+
             results = []
             for src_type, url in source_pairs:
                 if not url:
                     continue
+                text = ""
+                reachable = False
                 try:
-                    resp = gl.nondet.web.get(url)
-                    text = resp.body.decode("utf-8", errors="replace")[:1200]
-                    results.append({
-                        "source_type": src_type,
-                        "url": url,
-                        "reachable": True,
-                        "content_preview": text,
-                    })
+                    text = str(gl.nondet.web.render(url, mode="text"))
+                    reachable = True
                 except Exception:
-                    results.append({
-                        "source_type": src_type,
-                        "url": url,
-                        "reachable": False,
-                        "content_preview": "",
-                    })
+                    pass
+                if len(text.strip()) < 80:
+                    # Rendered text empty or too thin (PDF, plain file, render failure):
+                    # fall back to raw fetch and strip markup.
+                    try:
+                        resp = gl.nondet.web.get(url)
+                        raw = resp.body.decode("utf-8", errors="replace")
+                        stripped = _strip_html(raw)
+                        if len(stripped.strip()) > len(text.strip()):
+                            text = stripped
+                        reachable = True
+                    except Exception:
+                        pass
+                results.append({
+                    "source_type": src_type,
+                    "url": url,
+                    "reachable": reachable,
+                    "content_preview": " ".join(text.split())[:3000],
+                })
             return json.dumps(results)
 
         fetched_json = gl.eq_principle.strict_eq(fetch_all_sources)
