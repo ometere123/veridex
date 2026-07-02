@@ -1,9 +1,10 @@
-# v0.3.0
+# v0.2.18
 # { "Depends": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6" }
 
 from genlayer import *
 import json
 import hashlib
+import datetime
 
 
 @gl.evm.contract_interface
@@ -1349,7 +1350,8 @@ class Veridex(gl.Contract):
         return text
 
     def _now(self) -> int:
+        # GenLayer has no gl.block API; GenVM pins datetime deterministically per tx.
         try:
-            return int(gl.block.timestamp)
+            return int(datetime.datetime.now(datetime.timezone.utc).timestamp())
         except Exception:
             return 0
