@@ -52,7 +52,7 @@ async function ensureGenLayerChain(): Promise<void> {
     chainName: 'GenLayer Studionet',
     nativeCurrency: { name: 'GEN', symbol: 'GEN', decimals: 18 },
     rpcUrls: [RPC_ENDPOINT],
-    blockExplorerUrls: ['https://studio.genlayer.com'],
+    blockExplorerUrls: [process.env.NEXT_PUBLIC_GENLAYER_EXPLORER_URL || 'https://explorer-studio.genlayer.com'],
   };
   try {
     await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID_HEX }] });

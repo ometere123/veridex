@@ -13,7 +13,7 @@ export const genLayerChain = {
     public:  { http: [RPC_URL] },
   },
   blockExplorers: {
-    default: { name: 'GenLayer Explorer', url: 'https://studio.genlayer.com' },
+    default: { name: 'GenLayer Explorer', url: process.env.NEXT_PUBLIC_GENLAYER_EXPLORER_URL || 'https://explorer-studio.genlayer.com' },
   },
 } as const;
 
